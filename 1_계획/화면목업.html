@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>나만의 유튜브 창 — 목업</title>
+<style>
+  :root{
+    --bg:#f6f6f4; --panel:#ffffff; --ink:#1d1d1b; --sub:#6b6b66; --line:#e3e2dd;
+    --accent:#c8372d; --accent-soft:#fbe9e7; --chip:#efeee9;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#141413; --panel:#1f1f1d; --ink:#f0efe9; --sub:#a3a29b; --line:#33332f;
+      --accent:#ff6b5e; --accent-soft:#3a1f1c; --chip:#2a2a27;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#141413; --panel:#1f1f1d; --ink:#f0efe9; --sub:#a3a29b; --line:#33332f;
+    --accent:#ff6b5e; --accent-soft:#3a1f1c; --chip:#2a2a27;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:15px;line-height:1.45}
+  .note{max-width:1100px;margin:0 auto;padding:14px 16px;color:var(--sub);font-size:13px}
+  .note b{color:var(--accent)}
+  header{position:sticky;top:0;z-index:5;background:var(--panel);border-bottom:1px solid var(--line)}
+  .bar{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:10px 16px}
+  .logo{font-weight:800;font-size:17px;white-space:nowrap}
+  .logo span{color:var(--accent)}
+  .sp{flex:1}
+  .btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer}
+  .btn.main{background:var(--accent);border-color:var(--accent);color:#fff}
+  nav{max-width:1100px;margin:0 auto;display:flex;gap:6px;padding:0 16px 10px;overflow-x:auto;scrollbar-width:none}
+  nav::-webkit-scrollbar{display:none}
+  .tab{flex:none;border:none;background:var(--chip);color:var(--ink);border-radius:999px;padding:7px 14px;font:inherit;font-size:14px;cursor:pointer}
+  .tab .n{color:var(--sub);font-size:12px;margin-left:4px}
+  .tab.on{background:var(--ink);color:var(--panel)}
+  .tab.on .n{color:inherit;opacity:.7}
+  main{max-width:1100px;margin:0 auto;padding:14px 16px 60px}
+  .status{font-size:13px;color:var(--sub);margin-bottom:12px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+  .card.seen{opacity:.45}
+  .thumb{aspect-ratio:16/9;position:relative;display:flex;align-items:flex-end;justify-content:flex-end;padding:6px}
+  .dur{background:rgba(0,0,0,.75);color:#fff;font-size:12px;border-radius:4px;padding:1px 5px}
+  .flag{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.55);color:#fff;font-size:12px;border-radius:4px;padding:1px 6px}
+  .body{padding:10px 12px;flex:1}
+  .t{font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .m{color:var(--sub);font-size:13px;margin-top:4px}
+  .cat{display:inline-block;background:var(--accent-soft);color:var(--accent);border-radius:4px;font-size:11px;padding:0 6px;margin-right:4px}
+  .acts{display:flex;border-top:1px solid var(--line)}
+  .acts button{flex:1;border:none;background:none;color:var(--ink);font:inherit;font-size:13px;padding:9px 0;cursor:pointer}
+  .acts button+button{border-left:1px solid var(--line)}
+  .acts button:hover{background:var(--chip)}
+  .find{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .find input,.find select{font:inherit;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+  .find input{flex:1;min-width:180px}
+  .hidden{display:none}
+  @media (max-width:560px){
+    .grid{grid-template-columns:1fr}
+    .hide-m{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="note"><b>목업</b> — 모양을 보기 위한 가짜 화면입니다. 영상은 예시이고, 탭과 단추는 눌러 볼 수 있습니다. 휴대폰 폭으로 줄이면 한 줄에 한 장씩 나옵니다.</div>
+
+<header>
+  <div class="bar">
+    <div class="logo">나만의 <span>▶</span> 유튜브</div>
+    <div class="sp"></div>
+    <span class="status hide-m" style="margin:0">마지막으로 모은 때 : 오늘 14:00</span>
+    <button class="btn">＋ 채널 추가</button>
+  </div>
+  <nav id="tabs"></nav>
+</header>
+
+<main>
+  <div id="findBox" class="find hidden">
+    <input placeholder="찾을 낱말 (예: street food, AI agents)">
+    <select><option>영어</option><option>일본어</option><option>스페인어</option><option>한국어</option></select>
+    <select><option>미국</option><option>영국</option><option>일본</option><option>태국</option><option>나라 가리지 않음</option></select>
+    <button class="btn main">찾기</button>
+    <div style="width:100%;font-size:12px;color:var(--sub)">이 검색은 내 시청 기록과 상관없는 결과입니다. 마음에 드는 채널은 「이 채널 담기」로 카테고리에 넣습니다.</div>
+  </div>
+  <div class="status" id="status"></div>
+  <div class="grid" id="grid"></div>
+</main>
+
+<script>
+const V = [
+  {c:'AI', t:'Building AI agents that actually work — a practical guide', ch:'AI Explained', f:'🇬🇧 영어', h:'3시간 전', d:'18:42', g:'#3b4a8c,#7a5cc2'},
+  {c:'AI', t:'이번 주 AI 소식 정리 — 새 모델 셋 비교', ch:'국내 AI 채널', f:'🇰🇷', h:'5시간 전', d:'12:10', g:'#1f6f6b,#58b3a1'},
+  {c:'여행', t:'48 Hours in Kyoto — hidden spots locals love', ch:'Travel Channel A', f:'🇯🇵 영어', h:'어제', d:'22:05', g:'#b4532a,#e7a35b'},
+  {c:'음식/레시피', t:'Thai street food tour in Bangkok — 20 dishes', ch:'Food Ranger', f:'🇹🇭 영어', h:'어제', d:'31:17', g:'#8a2b2b,#e06b3f'},
+  {c:'음식/레시피', t:'Perfect Neapolitan pizza at home (no special oven)', ch:'Italian Kitchen', f:'🇮🇹 영어', h:'2일 전', d:'14:33', g:'#6a7d2a,#c3b54b'},
+  {c:'여행', t:'Patagonia on a budget — full route & costs', ch:'Nomad Diary', f:'🇦🇷 스페인어', h:'3일 전', d:'26:48', g:'#27506e,#6fa6c9'},
+  {c:'AI', t:'Claude Code로 업무 도구 만들기 — 처음부터', ch:'국내 개발 채널', f:'🇰🇷', h:'3일 전', d:'35:02', g:'#4a3a2a,#b08a5a'},
+  {c:'음식/레시피', t:'和食の基本 — だし巻き卵の作り方', ch:'Japanese Cooking', f:'🇯🇵 일본어', h:'4일 전', d:'09:21', g:'#7a3050,#d58aa0'},
+];
+const TABS = ['전체','AI','여행','음식/레시피','나중에 보기','찾기'];
+let cur='전체'; const later=new Set(), seen=new Set(), gone=new Set();
+
+function count(t){
+  if(t==='찾기') return '';
+  if(t==='나중에 보기') return later.size;
+  return V.filter((v,i)=>!gone.has(i)&&!seen.has(i)&&(t==='전체'||v.c===t)).length;
+}
+function drawTabs(){
+  const n=document.getElementById('tabs'); n.innerHTML='';
+  TABS.forEach(t=>{
+    const b=document.createElement('button'); b.className='tab'+(t===cur?' on':'');
+    const c=count(t); b.innerHTML=t+(c!==''?`<span class="n">${c}</span>`:'');
+    b.onclick=()=>{cur=t;draw()}; n.appendChild(b);
+  });
+}
+function draw(){
+  drawTabs();
+  const finding=cur==='찾기';
+  document.getElementById('findBox').classList.toggle('hidden',!finding);
+  const g=document.getElementById('grid'); g.innerHTML='';
+  let list=V.map((v,i)=>({...v,i})).filter(v=>!gone.has(v.i));
+  if(cur==='나중에 보기') list=list.filter(v=>later.has(v.i));
+  else if(finding) list=list.filter(v=>v.f.indexOf('🇰🇷')<0).slice(0,3);
+  else if(cur!=='전체') list=list.filter(v=>v.c===cur);
+  document.getElementById('status').textContent = finding
+    ? '찾기 결과 예시 — 아직 담지 않은 해외 채널'
+    : `${cur} · 새 영상 ${list.filter(v=>!seen.has(v.i)).length}개 · 최신순 · 쇼츠 뺌`;
+  list.forEach(v=>{
+    const d=document.createElement('div'); d.className='card'+(seen.has(v.i)?' seen':'');
+    d.innerHTML=`<div class="thumb" style="background:linear-gradient(135deg,${v.g})"><span class="flag">${v.f}</span><span class="dur">${v.d}</span></div>
+      <div class="body"><div class="t">${v.t}</div><div class="m"><span class="cat">${v.c}</span>${v.ch} · ${v.h}</div></div>
+      <div class="acts">${finding
+        ? '<button>▶ 보기</button><button>＋ 이 채널 담기</button>'
+        : `<button data-a="seen">${seen.has(v.i)?'✓ 봤음':'봤음'}</button><button data-a="later">${later.has(v.i)?'★ 나중에':'나중에'}</button><button data-a="gone">숨김</button>`}</div>`;
+    d.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{
+      const a=b.dataset.a, s={seen,later,gone}[a];
+      s.has(v.i)?s.delete(v.i):s.add(v.i); draw();
+    });
+    g.appendChild(d);
+  });
+}
+draw();
+</script>
+</body>
+</html>
