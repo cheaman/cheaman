@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>나만의 유튜브</title>
+<style>
+  :root{
+    --bg:#f6f6f4; --panel:#ffffff; --ink:#1d1d1b; --sub:#6b6b66; --line:#e3e2dd;
+    --accent:#c8372d; --accent-soft:#fbe9e7; --chip:#efeee9; --shade:rgba(0,0,0,.55);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#141413; --panel:#1f1f1d; --ink:#f0efe9; --sub:#a3a29b; --line:#33332f;
+      --accent:#ff6b5e; --accent-soft:#3a1f1c; --chip:#2a2a27; --shade:rgba(0,0,0,.7);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#141413; --panel:#1f1f1d; --ink:#f0efe9; --sub:#a3a29b; --line:#33332f;
+    --accent:#ff6b5e; --accent-soft:#3a1f1c; --chip:#2a2a27; --shade:rgba(0,0,0,.7);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:15px;line-height:1.45}
+  header{position:sticky;top:0;z-index:5;background:var(--panel);border-bottom:1px solid var(--line)}
+  .bar{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:8px;padding:10px 16px}
+  .logo{font-weight:800;font-size:17px;white-space:nowrap}
+  .logo span{color:var(--accent)}
+  .sp{flex:1}
+  .btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn.main{background:var(--accent);border-color:var(--accent);color:#fff}
+  nav{max-width:1200px;margin:0 auto;display:flex;gap:6px;padding:0 16px 10px;overflow-x:auto;scrollbar-width:none}
+  nav::-webkit-scrollbar{display:none}
+  .tab{flex:none;border:none;background:var(--chip);color:var(--ink);border-radius:999px;padding:7px 14px;font:inherit;font-size:14px;cursor:pointer}
+  .tab .n{color:var(--sub);font-size:12px;margin-left:4px}
+  .tab.on{background:var(--ink);color:var(--panel)}
+  .tab.on .n{color:inherit;opacity:.7}
+  main{max-width:1200px;margin:0 auto;padding:12px 16px 60px}
+  .status{font-size:13px;color:var(--sub);margin-bottom:12px;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center}
+  .status label{display:flex;gap:4px;align-items:center;cursor:pointer}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+  .card.seen .thumb,.card.seen .body{opacity:.45}
+  .thumb{aspect-ratio:16/9;position:relative;background:var(--chip) center/cover no-repeat;cursor:pointer;display:block;width:100%;border:0;padding:0}
+  .dur{position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,.78);color:#fff;font-size:12px;border-radius:4px;padding:1px 5px}
+  .flag{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.6);color:#fff;font-size:12px;border-radius:4px;padding:1px 6px}
+  .body{padding:10px 12px;flex:1}
+  .t{font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .m{color:var(--sub);font-size:13px;margin-top:4px}
+  .cat{display:inline-block;background:var(--accent-soft);color:var(--accent);border-radius:4px;font-size:11px;padding:0 6px;margin-right:4px}
+  .acts{display:flex;border-top:1px solid var(--line)}
+  .acts button{flex:1;border:none;background:none;color:var(--ink);font:inherit;font-size:13px;padding:10px 0;cursor:pointer}
+  .acts button+button{border-left:1px solid var(--line)}
+  .acts button:hover{background:var(--chip)}
+  .acts button.on{color:var(--accent);font-weight:700}
+  .acts button:disabled{color:var(--sub);cursor:default}
+  .find{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  input,select{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);max-width:100%}
+  .find input{flex:1;min-width:180px}
+  .hint{width:100%;font-size:12px;color:var(--sub)}
+  .empty{background:var(--panel);border:1px dashed var(--line);border-radius:12px;padding:28px 16px;text-align:center;color:var(--sub)}
+  .more{display:block;margin:18px auto 0}
+  .hidden{display:none !important}
+  /* 창 */
+  .modal{position:fixed;inset:0;background:var(--shade);z-index:20;display:flex;align-items:center;justify-content:center;padding:16px}
+  .sheet{background:var(--panel);border-radius:14px;width:100%;max-width:440px;padding:18px;display:flex;flex-direction:column;gap:10px}
+  .sheet h3{margin:0;font-size:17px}
+  .sheet .row{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
+  .sheet input,.sheet select{width:100%}
+  .player{background:#000;border-radius:14px;width:100%;max-width:960px;overflow:hidden}
+  .player .frame{aspect-ratio:16/9;width:100%}
+  .player iframe{width:100%;height:100%;border:0;display:block}
+  .player .row{display:flex;gap:8px;padding:10px;background:var(--panel);align-items:center}
+  .player .row .pt{flex:1;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:10px;font-size:14px;z-index:30;max-width:calc(100% - 32px)}
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:r 0.8s linear infinite;vertical-align:-2px}
+  @keyframes r{to{transform:rotate(360deg)}}
+  @media (max-width:560px){
+    .grid{grid-template-columns:1fr}
+    .hide-m{display:none}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="logo">나만의 <span>▶</span> 유튜브</div>
+    <div class="sp"></div>
+    <button class="btn" id="btnCollect" title="지금 새 영상 모으기">↻ <span class="hide-m">지금 모으기</span></button>
+    <button class="btn" id="btnAdd">＋ 채널</button>
+  </div>
+  <nav id="tabs"></nav>
+</header>
+
+<main>
+  <div id="findBox" class="find hidden">
+    <input id="q" placeholder="찾을 낱말 (예: street food, AI agents)" enterkeyhint="search">
+    <select id="lang">
+      <option value="en">영어</option><option value="ja">일본어</option><option value="es">스페인어</option>
+      <option value="fr">프랑스어</option><option value="zh-Hans">중국어</option><option value="ko">한국어</option>
+      <option value="">언어 가리지 않음</option>
+    </select>
+    <select id="region">
+      <option value="US">미국</option><option value="GB">영국</option><option value="JP">일본</option>
+      <option value="TH">태국</option><option value="IT">이탈리아</option><option value="FR">프랑스</option>
+      <option value="ES">스페인</option><option value="KR">한국</option><option value="">나라 가리지 않음</option>
+    </select>
+    <button class="btn main" id="btnFind">찾기</button>
+    <div class="hint">이 검색은 내 시청 기록과 상관없는 결과입니다. 마음에 드는 채널은 「＋ 이 채널 담기」로 카테고리에 넣습니다.</div>
+  </div>
+  <div class="status" id="status"><span><span class="spin"></span> 불러오는 중…</span></div>
+  <div class="grid" id="grid"></div>
+  <button class="btn more hidden" id="btnMore">더 보기</button>
+</main>
+
+<!-- 채널 담기 창 -->
+<div class="modal hidden" id="addModal">
+  <div class="sheet">
+    <h3 id="addTitle">채널 담기</h3>
+    <input id="addUrl" placeholder="채널 주소 (예: https://www.youtube.com/@MarkWiens)">
+    <select id="addCat"></select>
+    <input id="addNewCat" class="hidden" placeholder="새 카테고리 이름">
+    <div class="hint" id="addMsg"></div>
+    <div class="row">
+      <button class="btn" id="addCancel">닫기</button>
+      <button class="btn main" id="addOk">담기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 재생 창 -->
+<div class="modal hidden" id="playModal">
+  <div class="player">
+    <div class="frame"><iframe id="frame" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
+    <div class="row">
+      <div class="pt" id="playTitle"></div>
+      <a class="btn" id="playOpen" target="_blank" rel="noopener">유튜브에서 열기</a>
+      <button class="btn main" id="playClose">닫기</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<script>
+const PAGE = 60;
+const NEW_CAT = '__new__';
+const S = { cats: [], videos: [], channelIds: [], last: 0, lastResult: '', canSearch: true,
+            tab: '전체', shown: PAGE, showSeen: true, results: null };
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// 서버 부르기
+function call(fn, ...args) {
+  return new Promise((ok, fail) => {
+    google.script.run.withSuccessHandler(ok).withFailureHandler(e => fail(e && e.message ? e : new Error(String(e))))[fn](...args);
+  });
+}
+
+function toast(msg, ms) {
+  const t = $('toast'); t.textContent = msg; t.classList.remove('hidden');
+  clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.add('hidden'), ms || 3000);
+}
+
+function ago(ms) {
+  if (!ms) return '';
+  const m = Math.floor((Date.now() - ms) / 60000);
+  if (m < 1) return '방금';
+  if (m < 60) return m + '분 전';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + '시간 전';
+  const d = Math.floor(h / 24);
+  if (d === 1) return '어제';
+  if (d < 30) return d + '일 전';
+  const x = new Date(ms); return x.getFullYear() + '.' + (x.getMonth() + 1) + '.' + x.getDate();
+}
+
+function clock(sec) {
+  if (sec == null || sec === '' || isNaN(sec)) return '';
+  sec = Number(sec);
+  const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+  const pad = n => String(n).padStart(2, '0');
+  return h ? h + ':' + pad(m) + ':' + pad(s) : m + ':' + pad(s);
+}
+
+const safeId = id => String(id).replace(/[^\w-]/g, '');
+function thumb(id) { return 'https://i.ytimg.com/vi/' + safeId(id) + '/mqdefault.jpg'; }
+
+async function load() {
+  try {
+    Object.assign(S, await call('getFeed'));
+    if (S.tab !== '전체' && S.tab !== '나중에 보기' && S.tab !== '찾기' && S.cats.indexOf(S.tab) < 0) S.tab = '전체';
+    draw();
+  } catch (e) {
+    $('status').innerHTML = '';
+    $('grid').innerHTML = '<div class="empty">불러오지 못했습니다 — ' + esc(e.message) + '<br><br><button class="btn" onclick="load()">다시 해 보기</button></div>';
+  }
+}
+
+function listFor(tab) {
+  if (tab === '나중에 보기') return S.videos.filter(v => v.st === '나중에');
+  if (tab === '전체') return S.videos;
+  return S.videos.filter(v => v.cat === tab);
+}
+
+function newCount(tab) {
+  if (tab === '나중에 보기') return listFor(tab).length;
+  return listFor(tab).filter(v => v.st === '새 영상').length;
+}
+
+function drawTabs() {
+  const tabs = ['전체', ...S.cats, '나중에 보기', '찾기'];
+  const n = $('tabs'); n.innerHTML = '';
+  tabs.forEach(t => {
+    const b = document.createElement('button');
+    b.className = 'tab' + (t === S.tab ? ' on' : '');
+    const c = t === '찾기' ? '' : newCount(t);
+    b.innerHTML = esc(t) + (c !== '' ? '<span class="n">' + c + '</span>' : '');
+    b.onclick = () => { S.tab = t; S.shown = PAGE; draw(); window.scrollTo(0, 0); };
+    n.appendChild(b);
+  });
+}
+
+function draw() {
+  drawTabs();
+  const finding = S.tab === '찾기';
+  $('findBox').classList.toggle('hidden', !finding);
+  if (finding) return drawResults();
+
+  let list = listFor(S.tab);
+  if (!S.showSeen) list = list.filter(v => v.st !== '봤음');
+  const st = $('status');
+  st.innerHTML =
+    '<span>' + esc(S.tab) + ' · 새 영상 ' + newCount(S.tab) + '개 · 최신순</span>' +
+    '<label><input type="checkbox" id="chkSeen"' + (S.showSeen ? ' checked' : '') + '> 본 영상도 보기</label>' +
+    '<span title="' + esc(S.lastResult) + '">마지막으로 모은 때 ' + (S.last ? ago(S.last) : '없음') + '</span>';
+  $('chkSeen').onchange = e => { S.showSeen = e.target.checked; S.shown = PAGE; draw(); };
+
+  const g = $('grid'); g.innerHTML = '';
+  if (!list.length) {
+    g.innerHTML = '<div class="empty">' + (S.tab === '나중에 보기'
+      ? '「나중에」로 둔 영상이 없습니다.'
+      : S.videos.length ? '이 카테고리에 보여 줄 영상이 없습니다.'
+      : '아직 모은 영상이 없습니다. 위의 ↻ 를 눌러 지금 모으거나, ＋ 채널로 채널을 담아 주세요.') + '</div>';
+  }
+  list.slice(0, S.shown).forEach(v => g.appendChild(card(v)));
+  $('btnMore').classList.toggle('hidden', list.length <= S.shown);
+}
+
+function card(v) {
+  const d = document.createElement('div');
+  d.className = 'card' + (v.st === '봤음' ? ' seen' : '');
+  d.innerHTML =
+    '<button class="thumb" style="background-image:url(\'' + thumb(v.id) + '\')" aria-label="재생">' +
+      (v.cc ? '<span class="flag">' + esc(v.cc) + '</span>' : '') +
+      (v.dur != null ? '<span class="dur">' + clock(v.dur) + '</span>' : '') + '</button>' +
+    '<div class="body"><div class="t">' + esc(v.t) + '</div>' +
+      '<div class="m"><span class="cat">' + esc(v.cat) + '</span>' + esc(v.ch) + ' · ' + ago(v.pub) + '</div></div>' +
+    '<div class="acts">' +
+      '<button data-s="봤음" class="' + (v.st === '봤음' ? 'on' : '') + '">' + (v.st === '봤음' ? '✓ 봤음' : '봤음') + '</button>' +
+      '<button data-s="나중에" class="' + (v.st === '나중에' ? 'on' : '') + '">' + (v.st === '나중에' ? '★ 나중에' : '나중에') + '</button>' +
+      '<button data-s="숨김">숨김</button></div>';
+  d.querySelector('.thumb').onclick = () => { play(v.id, v.t); if (v.st === '새 영상') setState(v, '봤음', true); };
+  d.querySelectorAll('[data-s]').forEach(b => b.onclick = () => {
+    const want = b.dataset.s;
+    setState(v, v.st === want ? '새 영상' : want);
+  });
+  return d;
+}
+
+// 단추를 누르면 화면부터 바꾸고, 시트 저장이 실패하면 되돌림
+async function setState(v, st, quiet) {
+  const before = v.st;
+  if (st === '숨김') S.videos = S.videos.filter(x => x !== v); else v.st = st;
+  draw();
+  try {
+    await call('setState', v.id, st);
+    if (st === '숨김' && !quiet) toast('숨겼습니다 — 시트 「영상」에서 상태를 지우면 되살아납니다', 3500);
+  } catch (e) {
+    if (st === '숨김') S.videos.push(v); v.st = before;
+    S.videos.sort((a, b) => b.pub - a.pub);
+    draw(); toast('저장하지 못했습니다 — ' + e.message, 4000);
+  }
+}
+
+function play(id, title) {
+  $('frame').src = 'https://www.youtube-nocookie.com/embed/' + safeId(id) + '?autoplay=1&rel=0&modestbranding=1&playsinline=1';
+  $('playTitle').textContent = title || '';
+  $('playOpen').href = 'https://www.youtube.com/watch?v=' + safeId(id);
+  $('playModal').classList.remove('hidden');
+}
+function closePlay() { $('frame').src = 'about:blank'; $('playModal').classList.add('hidden'); }
+
+/* 찾기 */
+function drawResults() {
+  const g = $('grid'); g.innerHTML = ''; $('btnMore').classList.add('hidden');
+  if (!S.canSearch) {
+    $('status').textContent = '';
+    g.innerHTML = '<div class="empty">찾기를 쓰려면 유튜브 API 서비스를 켜야 합니다 (설치 안내 3번).</div>';
+    return;
+  }
+  if (S.results === null) { $('status').textContent = '낱말과 언어 · 나라를 고르고 「찾기」를 누르세요. 하루 100번쯤 찾을 수 있습니다.'; return; }
+  $('status').textContent = '찾은 영상 ' + S.results.length + '개';
+  if (!S.results.length) g.innerHTML = '<div class="empty">찾은 것이 없습니다. 낱말이나 언어를 바꿔 보세요.</div>';
+  S.results.forEach(r => {
+    const have = S.channelIds.indexOf(r.chId) >= 0;
+    const d = document.createElement('div'); d.className = 'card';
+    d.innerHTML =
+      '<button class="thumb" style="background-image:url(\'' + thumb(r.id) + '\')" aria-label="재생"></button>' +
+      '<div class="body"><div class="t"></div><div class="m">' + esc(r.ch) + ' · ' + ago(r.pub) + '</div></div>' +
+      '<div class="acts"><button data-a="play">▶ 보기</button>' +
+      '<button data-a="add"' + (have ? ' disabled' : '') + '>' + (have ? '✓ 이미 담음' : '＋ 이 채널 담기') + '</button></div>';
+    // 검색 제목은 유튜브가 이미 &amp; 꼴로 줌 — 태그만 막는다
+    d.querySelector('.t').textContent = decode(r.t);
+    d.querySelector('.thumb').onclick = () => play(r.id, decode(r.t));
+    d.querySelector('[data-a=play]').onclick = () => play(r.id, decode(r.t));
+    d.querySelector('[data-a=add]').onclick = () => openAdd('https://www.youtube.com/channel/' + safeId(r.chId), r.ch);
+    g.appendChild(d);
+  });
+}
+function decode(s) { const x = document.createElement('textarea'); x.innerHTML = s; return x.value; }
+
+async function doFind() {
+  const q = $('q').value.trim();
+  if (!q) { toast('찾을 낱말을 넣어 주세요'); return; }
+  $('btnFind').disabled = true;
+  $('status').innerHTML = '<span class="spin"></span> 찾는 중…'; $('grid').innerHTML = '';
+  try { S.results = await call('search', q, $('lang').value, $('region').value); drawResults(); }
+  catch (e) { $('status').textContent = ''; toast('찾지 못했습니다 — ' + e.message, 4500); }
+  finally { $('btnFind').disabled = false; }
+}
+
+/* 채널 담기 */
+function openAdd(url, name) {
+  const sel = $('addCat');
+  const cur = S.cats.indexOf(S.tab) >= 0 ? S.tab : S.cats[0];
+  sel.innerHTML = S.cats.map(c => '<option' + (c === cur ? ' selected' : '') + '>' + esc(c) + '</option>').join('') +
+    '<option value="' + NEW_CAT + '">새 카테고리…</option>';
+  if (!S.cats.length) sel.value = NEW_CAT;
+  $('addNewCat').classList.toggle('hidden', sel.value !== NEW_CAT);
+  $('addNewCat').value = '';
+  $('addUrl').value = url || '';
+  $('addUrl').classList.toggle('hidden', !!url);
+  $('addTitle').textContent = name ? '「' + decode(name) + '」 담기' : '채널 담기';
+  $('addMsg').textContent = url ? '어느 카테고리에 넣을까요?' : '유튜브 앱에서 채널 → 공유 → 링크 복사 한 주소를 붙여 넣으세요.';
+  $('addOk').disabled = false;
+  $('addModal').classList.remove('hidden');
+  if (!url) setTimeout(() => $('addUrl').focus(), 50);
+}
+
+async function doAdd() {
+  const url = $('addUrl').value.trim();
+  const cat = $('addCat').value === NEW_CAT ? $('addNewCat').value.trim() : $('addCat').value;
+  if (!url) { $('addMsg').textContent = '채널 주소를 넣어 주세요.'; return; }
+  if (!cat) { $('addMsg').textContent = '카테고리 이름을 넣어 주세요.'; return; }
+  $('addOk').disabled = true;
+  $('addMsg').innerHTML = '<span class="spin"></span> 채널을 찾고 최근 영상을 받는 중…';
+  try {
+    const r = await call('addChannel', url, cat);
+    $('addModal').classList.add('hidden');
+    toast('「' + r.name + '」을 ' + cat + '에 담았습니다 · ' + r.message, 4500);
+    await load();
+  } catch (e) {
+    $('addMsg').textContent = e.message; $('addOk').disabled = false;
+  }
+}
+
+async function doCollect() {
+  const b = $('btnCollect'); b.disabled = true;
+  toast('새 영상을 모으는 중… 채널 수에 따라 1분쯤 걸립니다', 60000);
+  try { const msg = await call('collectNow'); toast(msg, 4500); await load(); }
+  catch (e) { toast('모으지 못했습니다 — ' + e.message, 4500); }
+  finally { b.disabled = false; }
+}
+
+$('btnMore').onclick = () => { S.shown += PAGE; draw(); };
+$('btnAdd').onclick = () => openAdd('', '');
+$('btnCollect').onclick = doCollect;
+$('btnFind').onclick = doFind;
+$('q').onkeydown = e => { if (e.key === 'Enter') doFind(); };
+$('addCat').onchange = e => { $('addNewCat').classList.toggle('hidden', e.target.value !== NEW_CAT); if (e.target.value === NEW_CAT) $('addNewCat').focus(); };
+$('addCancel').onclick = () => $('addModal').classList.add('hidden');
+$('addOk').onclick = doAdd;
+$('playClose').onclick = closePlay;
+$('playModal').onclick = e => { if (e.target === $('playModal')) closePlay(); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closePlay(); $('addModal').classList.add('hidden'); } });
+
+load();
+</script>
+</body>
+</html>
