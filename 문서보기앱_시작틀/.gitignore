@@ -1,0 +1,9 @@
+# 회사 자료 — GitHub에 올리지 않는다
+3_시험/받은문서/
+
+# 묶을 때 생기는 것
+4_설치파일/*.apk
+2_앱/**/build/
+2_앱/.gradle/
+2_앱/local.properties
+.idea/
