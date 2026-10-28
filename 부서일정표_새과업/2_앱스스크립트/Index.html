@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="ko" class="dsm">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>구조부 일정</title>
+<style>
+/* ── DSM 밝은 판 B (부품 dsm.css v1.7 값을 옮겨 적음 · 앱스 스크립트는 바깥 css 를 못 부름) ── */
+:root{
+  --dsm-bg:#dde1e6; --dsm-panel:#f2f4f6; --dsm-line:#cdd3da; --dsm-line2:#aab3bd;
+  --dsm-ink:#1f2328; --dsm-dim:#545d68; --dsm-th-bg:#e9ecef;
+  --dsm-head:#1f2328; --dsm-head2:#2b3036;
+  --dsm-c:#76b900; --dsm-c-light:#eef7dc; --dsm-c-ink:#3d6400;
+  --dsm-c-btn:#3f7300; --dsm-on-btn:#fff; --dsm-brand:#e8743b;
+  --dsm-in:#f8f9fa; --dsm-in-line:#b9c1ca; --bad:#b03a3a; --warn:#b25000;
+}
+*{box-sizing:border-box} html,body{margin:0}
+body{background:var(--dsm-bg);color:var(--dsm-ink);font:15px/1.45 "Pretendard Variable",Pretendard,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-variant-numeric:tabular-nums;-webkit-tap-highlight-color:transparent}
+b{font-weight:700} button{font:inherit;cursor:pointer;color:inherit} .hidden{display:none!important}
+.head{background:var(--dsm-head);color:#fff;height:44px;display:flex;align-items:center;gap:12px;padding:0 14px;position:sticky;top:0;z-index:20}
+.head .who{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px;white-space:nowrap}
+.head .who .ic{width:26px;height:26px;border-radius:6px;background:#a23b72;display:grid;place-items:center;flex:none}
+.head .who .ic i{display:block;width:14px;height:12px;border:2px solid #fff;border-top-width:4px;border-radius:2px}
+.head .job{color:#c9d0d8;font-size:13px}
+.head .sp{flex:1}
+.head .ver{font-size:12px;color:#c9d0d8}
+.head .btn{height:30px;padding:0 10px;border-radius:8px;border:1px solid #4a515a;background:transparent;color:#dfe4ea;font-size:13px}
+.now{background:var(--dsm-head2);color:#dfe4ea;font-size:13px;padding:6px 14px;line-height:1.4}
+.now b{color:#fff} .now.bad{background:#5a1f1f}
+.now button{margin-left:8px;height:24px;padding:0 8px;border-radius:6px;border:1px solid #6a717a;background:transparent;color:#fff;font-size:12px}
+.wrap{max-width:1200px;margin:0 auto;padding:14px 14px 96px}
+.panel{background:var(--dsm-panel);border:1px solid var(--dsm-line);border-radius:14px;padding:14px;min-width:0}
+.panel-head{display:flex;align-items:center;gap:10px;margin:-14px -14px 12px;padding:9px 14px;background:var(--dsm-th-bg);border-bottom:1px solid var(--dsm-line);border-radius:14px 14px 0 0;font-weight:700}
+.panel-head .cnt{font-weight:400;color:var(--dsm-dim);font-size:13px}
+.panel-head .sp{flex:1}
+.grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:14px;align-items:start}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
+.lab{font-size:13px;color:var(--dsm-dim);margin-right:2px}
+.chip{height:30px;padding:0 11px;border-radius:15px;border:1px solid var(--dsm-line2);background:#f8f9fa;font-size:13.5px;display:inline-flex;align-items:center;gap:6px;color:var(--dsm-ink);white-space:nowrap}
+.chip.on{background:var(--dsm-c-light);border:2px solid var(--dsm-ink);font-weight:700}
+.chip i{width:9px;height:9px;border-radius:50%;background:var(--k,#8a929c);display:inline-block;flex:none}
+.chip small{color:var(--dsm-dim)}
+.chip:focus-visible,.btn:focus-visible,.in:focus-visible{outline:2px solid var(--dsm-c);outline-offset:1px}
+.cal-nav{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.cal-nav h2{font-size:18px;margin:0 6px}
+.btn{height:32px;padding:0 12px;border-radius:9px;border:1px solid var(--dsm-line2);background:#f8f9fa;font-size:13.5px}
+.btn.go{border-color:var(--dsm-ink)}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-top:1px solid var(--dsm-line2);border-left:1px solid var(--dsm-line)}
+.cal .dow{font-size:12.5px;color:var(--dsm-dim);text-align:center;padding:5px 0;background:var(--dsm-th-bg);border-right:1px solid var(--dsm-line);border-bottom:1px solid var(--dsm-line)}
+.cal .dow.sun{color:var(--bad)}.cal .dow.sat{color:#2d5fa6}
+.cal .d{min-height:92px;border-right:1px solid var(--dsm-line);border-bottom:1px solid var(--dsm-line);padding:4px 5px;font-size:12.5px;cursor:pointer;background:none;border-top:0;border-left:0;text-align:left;display:block;width:100%}
+.cal .d .n{color:var(--dsm-dim);font-size:12px;margin-bottom:3px;white-space:nowrap}
+.cal .d.other{background:#eceff2}.cal .d.other .n{color:#aab3bd}
+.cal .d.wk .n{color:var(--bad)}
+.cal .d.today{background:var(--dsm-c-light);box-shadow:inset 3px 0 0 var(--dsm-ink)}.cal .d.today .n{color:var(--dsm-ink);font-weight:700}
+.cal .d.sel{outline:2px solid var(--dsm-ink);outline-offset:-2px}
+.ev{display:block;border-left:4px solid var(--k);background:#fff;border-radius:4px;padding:1px 5px;margin:2px 0;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--dsm-ink)}
+.ev.span{border-left-color:transparent;background:var(--k);color:#fff;border-radius:0}
+.ev.span.first{border-radius:4px 0 0 4px}.ev.span.last{border-radius:0 4px 4px 0}.ev.span.first.last{border-radius:4px}
+.more{font-size:11.5px;color:var(--dsm-dim)}
+.tcap{display:flex;gap:10px;align-items:baseline;margin:0 0 6px}.tcap b{font-size:15px}.tcap span{font-size:12.5px;color:var(--dsm-dim)}
+.tsum{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.twrap{overflow-x:auto;min-width:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th{background:var(--dsm-th-bg);color:var(--dsm-dim);font-weight:700;font-size:12.5px;text-align:left;padding:7px 8px;border-bottom:1px solid var(--dsm-line2);border-right:1px solid var(--dsm-line)}
+td{padding:7px 8px;border-bottom:1px solid var(--dsm-line);border-right:1px solid var(--dsm-line);vertical-align:top}
+th:last-child,td:last-child{border-right:0}
+tr.row{cursor:pointer} tr.row:hover td{background:#eef1f4}
+tr.is-now td{background:#e3efcf}tr.is-now td:first-child{box-shadow:inset 3px 0 0 var(--dsm-ink)}
+.st{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.st i{width:9px;height:9px;border-radius:50%;background:var(--k)}
+.dim{color:var(--dsm-dim)} .empty{color:var(--dsm-dim);font-size:13.5px;padding:10px 4px}
+/* 오늘 판 */
+.todaybox .days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:10px}
+.todaybox .day{display:flex;flex-direction:column;align-items:center;padding:5px 0 4px;border-radius:9px;border:1px solid var(--dsm-line);background:#f8f9fa;min-height:52px}
+.todaybox .day small{font-size:11px;color:var(--dsm-dim)}.todaybox .day b{font-size:15px}
+.todaybox .day.wk small,.todaybox .day.wk b{color:var(--bad)}
+.todaybox .day.on{background:var(--dsm-c-light);border:2px solid var(--dsm-ink)}
+.todaybox .day .dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;margin-top:2px}
+.todaybox .day .dots i{width:6px;height:6px;border-radius:50%;background:var(--k);display:inline-block}
+.todaybox .sub{font-weight:700;margin:14px 0 6px;font-size:14px}
+.todaybox .inside{font-size:13px;color:var(--dsm-dim);margin-top:8px}
+.cards{display:grid;gap:8px}
+.card{background:#fff;border:1px solid var(--dsm-line);border-radius:11px;padding:10px 12px;border-left:5px solid var(--k);min-width:0;text-align:left;width:100%}
+.card .l1{display:flex;gap:8px;align-items:baseline}
+.card .l1 b{font-size:15px}.card .l1 .k{font-size:12.5px;color:var(--k);font-weight:700}
+.card .when{margin-left:auto;font-size:12.5px;color:var(--dsm-dim);white-space:nowrap}
+.card .l2{font-size:13px;color:var(--dsm-dim);margin-top:2px}
+.card.now{background:#e3efcf}
+/* 올리기 */
+.form .row{margin-bottom:12px}
+.form .row>label{display:block;font-size:13px;color:var(--dsm-dim);margin-bottom:5px}.form .row>label b{color:var(--dsm-ink)}
+.in{height:38px;width:100%;border:1px solid var(--dsm-in-line);background:var(--dsm-in);border-radius:9px;padding:0 10px;font:inherit;font-size:14.5px;color:var(--dsm-ink)}
+.in.need{border-left:4px solid var(--warn)}
+.two{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center}.two span{color:var(--dsm-dim)}
+.quick{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}.quick .chip{height:26px;font-size:12.5px}
+.main{height:44px;width:100%;border:0;border-radius:11px;background:var(--dsm-c-btn);color:var(--dsm-on-btn);font-size:16px;font-weight:700}
+.main:disabled{opacity:.55;cursor:default}
+.row2{display:flex;gap:8px;margin-top:8px}.row2 .btn{flex:1;height:38px}.btn.danger{color:var(--bad);border-color:#d9a3a3}
+.result{margin-top:10px;background:#fff;border:1px solid var(--dsm-line);border-radius:9px;padding:9px 11px;font-size:13.5px;min-height:20px}
+.result.ok b{color:#2b7a3d}.result.bad{border-color:#d9a3a3;color:var(--bad)}
+.preview{font-size:13px;color:var(--dsm-dim);margin-top:4px}
+.fab{position:fixed;right:24px;bottom:40px;height:48px;padding:0 20px;border:0;border-radius:24px;background:var(--dsm-c-btn);color:#fff;font-size:16px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.18);z-index:15}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:100px;background:var(--dsm-head);color:#fff;padding:10px 14px;border-radius:10px;font-size:14px;z-index:30;display:flex;gap:12px;align-items:center;max-width:92vw;box-shadow:0 3px 10px rgba(0,0,0,.25)}
+.toast button{border:1px solid #fff;background:transparent;color:#fff;border-radius:7px;height:28px;padding:0 10px;font-size:13px;white-space:nowrap}
+.sign{text-align:center;color:var(--dsm-dim);font-size:13px;padding:18px 0 6px}
+.sheet-bg{display:none}
+/* ── 폰 ── */
+@media (max-width:640px){
+  .head{height:48px;padding:0 12px}.head .job{display:none}
+  .wrap{padding:10px 10px 110px}
+  .grid{grid-template-columns:1fr}
+  .pc-only{display:none!important}
+  .cal .d{min-height:54px;padding:3px 3px}.cal .ev{display:none}
+  .cal .dots{display:flex;gap:2px;flex-wrap:wrap}.cal .dots i{width:7px;height:7px;border-radius:50%;background:var(--k)}
+  .calbox .panel-head{cursor:pointer}
+  .fab{left:12px;right:12px;bottom:14px;height:52px;border-radius:14px;font-size:17px}
+  .form{position:fixed;left:0;right:0;bottom:0;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;z-index:40;transform:translateY(105%);transition:transform .2s}
+  .form.open{transform:none}
+  .sheet-bg.open{display:block;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:35}
+  .form .panel-head{position:sticky;top:-14px;z-index:1}
+}
+@media (min-width:641px){
+  .cal .dots,.phone-only,.fab,.todaybox,.form .close{display:none!important}
+  .calbox .body{display:block!important}
+}
+</style>
+</head>
+<body>
+<div class="head">
+  <span class="who"><span class="ic"><i></i></span>구조부 일정</span>
+  <span class="job">출장 · 휴가 · 외근을 올리고 함께 봅니다</span>
+  <span class="sp"></span>
+  <span class="ver" id="ver" title="판"></span>
+  <button class="btn" id="btnReload" title="자료 다시 받기">↻</button>
+</div>
+<div class="now" id="now">자료 받는 중…</div>
+
+<div class="wrap">
+  <div class="grid">
+    <!-- 폰 첫 화면 — 오늘 -->
+    <div class="panel todaybox phone-only" id="todayPanel">
+      <div class="panel-head">오늘 <span class="cnt" id="todayCnt"></span><span class="sp"></span><span class="cnt" id="todayAll"></span></div>
+      <div class="days" id="days"></div>
+      <div id="todayCards"></div>
+    </div>
+
+    <!-- 달력 -->
+    <div class="panel calbox" id="calbox">
+      <div class="panel-head" id="calHead">달력 <span class="cnt" id="calCnt"></span><span class="sp"></span><span class="phone-only" id="calToggle" style="font-size:13px;color:var(--dsm-c-ink);font-weight:700">▾ 달력 보기</span></div>
+      <div class="body hidden" id="calBody">
+        <div class="chips" id="kindChips"></div>
+        <div class="chips pc-only" id="whoChips"></div>
+        <div class="cal-nav">
+          <button class="btn" id="prevM" title="지난달">◀</button><h2 id="calTitle"></h2><button class="btn" id="nextM" title="다음달">▶</button>
+          <button class="btn go" id="goToday">오늘</button>
+        </div>
+        <div class="cal" id="cal"></div>
+        <div class="pc-only" style="margin-top:16px">
+          <div class="tcap"><b id="weekTitle">이번 주 일정</b><span id="weekRange"></span></div>
+          <div class="tsum" id="weekSum"></div>
+          <div class="twrap"><table>
+            <thead><tr><th style="width:150px">날짜</th><th style="width:76px">종류</th><th style="width:84px">누가</th><th style="width:160px">어디</th><th>메모</th><th style="width:90px">과업</th><th style="width:120px">올린</th></tr></thead>
+            <tbody id="weekRows"></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 올리기 · 고치기 -->
+    <div class="sheet-bg" id="sheetBg"></div>
+    <div class="panel form" id="form">
+      <div class="panel-head"><span id="formTitle">일정 올리기</span> <span class="cnt">다섯 칸 · 30초</span><span class="sp"></span><button class="btn close" id="btnClose" style="height:28px">닫기</button></div>
+      <div class="row"><label><b>누가</b> <span class="dim">· 처음 한 번 고르면 기억</span></label><div class="chips" id="whoPick" style="margin:0"></div></div>
+      <div class="row"><label><b>종류</b></label><div class="chips" id="kindPick" style="margin:0"></div></div>
+      <div class="row"><label><b>날짜</b> <span class="dim">· 하루면 왼쪽만</span></label>
+        <div class="two"><input class="in need" type="date" id="d1"><span>~</span><input class="in" type="date" id="d2"></div>
+        <div class="quick">
+          <button class="chip" data-q="오늘">오늘</button><button class="chip" data-q="내일">내일</button><button class="chip" data-q="금">이번 주 금</button>
+          <button class="chip" data-h="오전">오전만</button><button class="chip" data-h="오후">오후만</button>
+        </div></div>
+      <div class="row"><label><b>어디</b> <span class="dim">· 비워도 됨</span></label><input class="in" id="where" maxlength="80" placeholder="대전 · 발주처"></div>
+      <div class="row"><label><b>한 줄 메모</b> <span class="dim">· 비워도 됨</span></label><input class="in" id="memo" maxlength="200" placeholder="심의 · 현장 확인 …"></div>
+      <div class="row" id="taskRow"><label><b>과업</b> <span class="dim">· 비워도 됨</span></label><div class="chips" id="taskPick" style="margin:0"></div></div>
+      <div class="preview" id="preview"></div>
+      <button class="main" id="btnSave" style="margin-top:10px">올리기</button>
+      <div class="row2 hidden" id="editBtns"><button class="btn danger" id="btnDel">지우기</button><button class="btn" id="btnNew">새로 올리기</button></div>
+      <div class="result" id="result"></div>
+      <div class="pc-only" style="margin-top:16px;font-size:13px;color:var(--dsm-dim);line-height:1.6">
+        <b style="color:var(--dsm-ink)">내 캘린더에서도 보기</b><br>
+        폰 구글 · 삼성 캘린더 = 공유 수락 1번 → 저절로<br>
+        PC 아웃룩 · 아이폰 · 노션 = 구독 주소 → 그 앱의 「캘린더 구독」 에 붙이기 (전무님께 받기)
+      </div>
+    </div>
+  </div>
+  <div class="sign">DSM · 구조부 일정 · <span id="ver2"></span></div>
+</div>
+
+<button class="fab" id="fab">＋ 일정 올리기</button>
+<div class="toast hidden" id="toast"><span id="toastMsg"></span><button id="toastBtn" class="hidden"></button></div>
+
+<script>
+const 열쇠 = '<?= 열쇠 ?>';
+const 판 = '<?= 판 ?>';
+const DAY = 86400000;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const 폰 = () => matchMedia('(max-width:640px)').matches;
+const 요일 = ['일', '월', '화', '수', '목', '금', '토'];
+
+// 날짜 글 ↔ Date (모두 자정 기준 · 'YYYY-MM-DD')
+const P = s => { const m = String(s).split('-'); return new Date(+m[0], +m[1] - 1, +m[2]); };
+const F = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const addD = (s, n) => { const d = P(s); d.setDate(d.getDate() + n); return F(d); };
+const 짧게 = s => { const d = P(s); return (d.getMonth() + 1) + '/' + d.getDate() + '(' + 요일[d.getDay()] + ')'; };
+const 월요일 = s => { const d = P(s); const k = (d.getDay() + 6) % 7; d.setDate(d.getDate() - k); return F(d); };
+const 기간 = (e, s) => e.시작 <= s && s <= e.끝;
+
+const S = { 오늘: F(new Date()), 고른날: F(new Date()), 보는달: null, 부서원: [], 종류: [], 과업: [], 일정: [], 거름종류: '전체', 거름사람: '전체',
+  고치는: null, 입력: { 누가: '', 종류: '', 시간대: '', 과업: '' }, 떴음: false };
+const 색 = k => (S.종류.find(x => x.종류 === k) || {}).색 || '#8a929c';
+let 나 = ''; try { 나 = localStorage.getItem('구조부일정.나') || ''; } catch (e) {}
+const 화면이름 = () => (나 || '?') + (폰() ? ' 폰' : ' PC');
+
+function call(fn, ...args) {
+  return new Promise((ok, fail) => {
+    google.script.run.withSuccessHandler(ok).withFailureHandler(e => fail(e && e.message ? e : new Error(String(e))))[fn](열쇠, ...args);
+  });
+}
+function 신호(s) { try { window.top.postMessage({ 부서일정: s }, '*'); } catch (e) {} }
+
+/* ── 자료 받기 ── */
+async function load(기준) {
+  $('now').className = 'now'; $('now').textContent = '자료 받는 중…';
+  try {
+    const r = await call('화면자료', 기준 || null);
+    S.오늘 = r.오늘; S.부서원 = r.부서원; S.종류 = r.종류; S.과업 = r.과업; S.일정 = r.일정;
+    if (!S.보는달) { S.보는달 = S.오늘.slice(0, 7); S.고른날 = S.오늘; }
+    if (!나 || !S.부서원.some(p => p.이름 === 나)) { 나 = ''; }
+    if (!S.입력.누가) S.입력.누가 = 나;
+    if (!S.떴음) { S.떴음 = true; 신호('떴음'); }
+    renderAll();
+  } catch (e) {
+    $('now').className = 'now bad';
+    $('now').innerHTML = '안 됨 · ' + esc(e.message) + ' <button id="retry">다시</button>';
+    $('retry').onclick = () => load();
+    신호('못받음');
+  }
+}
+
+/* ── 셈 ── */
+const 보이는 = () => S.일정.filter(e => (S.거름종류 === '전체' || e.종류 === S.거름종류) && (S.거름사람 === '전체' || e.누가 === S.거름사람));
+const 순서 = n => { const i = S.부서원.findIndex(p => p.이름 === n); return i < 0 ? 999 : i; };
+function 그날(s) { return S.일정.filter(e => 기간(e, s)).sort((a, b) => 순서(a.누가) - 순서(b.누가)); }
+function 요약(s) {
+  const 밖 = 그날(s); const 이름 = {}; 밖.forEach(e => { 이름[e.누가] = true; });
+  return { 밖, 밖수: Object.keys(이름).length, 자리: S.부서원.map(p => p.이름).filter(n => !이름[n]), 전체: S.부서원.length };
+}
+function 진행(e, s) {
+  if (e.시작 === e.끝) return e.시간대 ? e.시간대 : '하루';
+  const n = Math.round((P(e.끝) - P(e.시작)) / DAY) + 1, i = Math.round((P(s) - P(e.시작)) / DAY) + 1;
+  return 짧게(e.시작).slice(0, -3) + ' ~ ' + 짧게(e.끝).slice(0, -3) + ' · ' + (i === n ? '마지막 날' : i === 1 ? '첫날' : i + '/' + n + ' 일째');
+}
+
+/* ── 그리기 ── */
+function renderAll() { renderNow(); renderToday(); renderChips(); renderCal(); renderWeek(); renderForm(); $('ver').textContent = 판; $('ver2').textContent = 판; }
+
+function renderNow() {
+  const q = 요약(S.오늘); const d = P(S.오늘);
+  const 종류별 = {}; q.밖.forEach(e => { 종류별[e.종류] = (종류별[e.종류] || 0) + 1; });
+  const 풀이 = Object.keys(종류별).map(k => k + ' ' + 종류별[k]).join(' · ');
+  $('now').className = 'now';
+  $('now').innerHTML = '지금 : <b>' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일(' + 요일[d.getDay()] + ')</b> · 오늘 부서 밖 <b>' + q.밖수 + '명</b>' + (풀이 ? ' (' + esc(풀이) + ')' : '') + ' → 올릴 것이 있으면 <b>[＋ 일정 올리기]</b>';
+}
+
+function renderToday() {
+  const s = S.고른날; const q = 요약(s);
+  $('todayCnt').textContent = 짧게(s) + ' · 부서 밖 ' + q.밖수 + '명';
+  $('todayAll').textContent = '전체 ' + q.전체 + '명';
+  // 날짜 띠 — 고른 날이 든 주 (월 ~ 일)
+  const m = 월요일(s); let h = '';
+  for (let i = 0; i < 7; i++) {
+    const d = addD(m, i); const wk = i >= 5; const 점 = 그날(d).slice(0, 4).map(e => '<i style="--k:' + 색(e.종류) + '"></i>').join('');
+    h += '<button class="day' + (d === s ? ' on' : '') + (wk ? ' wk' : '') + '" data-d="' + d + '"><small>' + 요일[(i + 1) % 7] + '</small><b>' + P(d).getDate() + '</b><div class="dots">' + 점 + '</div></button>';
+  }
+  $('days').innerHTML = h;
+  $('days').querySelectorAll('.day').forEach(b => b.onclick = () => { S.고른날 = b.dataset.d; S.보는달 = S.고른날.slice(0, 7); renderToday(); renderCal(); renderWeek(); });
+  // 카드
+  const 카드 = (e, now) => '<button class="card' + (now ? ' now' : '') + '" style="--k:' + 색(e.종류) + '" data-id="' + esc(e.id) + '"><div class="l1"><b>' + esc(e.누가) + '</b><span class="k">' + esc(e.종류) + '</span><span class="when">' + esc(진행(e, now ? s : e.시작)) + (now ? '' : ' · ' + 짧게(e.시작)) + '</span></div>' + ((e.어디 || e.메모 || e.과업) ? '<div class="l2">' + esc([e.어디, e.메모, e.과업].filter(Boolean).join(' · ')) + '</div>' : '') + '</button>';
+  let out = '';
+  out += q.밖.length ? '<div class="cards">' + q.밖.map(e => 카드(e, true)).join('') + '</div>' : '<div class="empty">' + (s === S.오늘 ? '오늘은' : '이날은') + ' 모두 자리에 있습니다</div>';
+  out += '<div class="inside">자리에 있음 · ' + (q.자리.length ? esc(q.자리.join(' · ')) : '없음') + '</div>';
+  const 내일 = addD(s, 1); const q2 = 요약(내일);
+  out += '<div class="sub">내일 ' + 짧게(내일) + ' <span class="dim">· ' + q2.밖수 + '명</span></div>';
+  out += q2.밖.length ? '<div class="cards">' + q2.밖.map(e => '<button class="card" style="--k:' + 색(e.종류) + '" data-id="' + esc(e.id) + '"><div class="l1"><b>' + esc(e.누가) + '</b><span class="k">' + esc(e.종류) + '</span><span class="when">' + esc(진행(e, 내일)) + '</span></div>' + (e.어디 ? '<div class="l2">' + esc(e.어디) + '</div>' : '') + '</button>').join('') + '</div>' : '<div class="empty">없음</div>';
+  const 주끝 = addD(m, 6);
+  const 나머지 = S.일정.filter(e => e.끝 >= addD(s, 2) && e.시작 <= 주끝 && !기간(e, s) && !기간(e, 내일));
+  out += '<div class="sub">이번 주 나머지 <span class="dim">· ' + 나머지.length + '건</span></div>';
+  out += 나머지.length ? '<div class="cards">' + 나머지.map(e => 카드(e, false)).join('') + '</div>' : '<div class="empty">없음</div>';
+  $('todayCards').innerHTML = out;
+  $('todayCards').querySelectorAll('.card').forEach(b => b.onclick = () => openEdit(b.dataset.id));
+}
+
+function renderChips() {
+  const ym = S.보는달; const 달일정 = S.일정.filter(e => e.시작.slice(0, 7) <= ym && e.끝.slice(0, 7) >= ym);
+  const n = {}; 달일정.forEach(e => { n[e.종류] = (n[e.종류] || 0) + 1; });
+  $('kindChips').innerHTML = '<span class="lab">종류</span><button class="chip' + (S.거름종류 === '전체' ? ' on' : '') + '" data-k="전체"><i style="--k:var(--dsm-ink)"></i>전체 <small>' + 달일정.length + '</small></button>' +
+    S.종류.map(k => '<button class="chip' + (S.거름종류 === k.종류 ? ' on' : '') + '" data-k="' + esc(k.종류) + '" style="--k:' + k.색 + '"><i></i>' + esc(k.종류) + ' <small>' + (n[k.종류] || 0) + '</small></button>').join('');
+  $('kindChips').querySelectorAll('.chip').forEach(b => b.onclick = () => { S.거름종류 = b.dataset.k; renderChips(); renderCal(); renderWeek(); });
+  $('whoChips').innerHTML = '<span class="lab">사람</span><button class="chip' + (S.거름사람 === '전체' ? ' on' : '') + '" data-w="전체">전체</button>' +
+    S.부서원.map(p => '<button class="chip' + (S.거름사람 === p.이름 ? ' on' : '') + '" data-w="' + esc(p.이름) + '">' + esc(p.이름) + '</button>').join('');
+  $('whoChips').querySelectorAll('.chip').forEach(b => b.onclick = () => { S.거름사람 = b.dataset.w; renderChips(); renderCal(); renderWeek(); });
+  $('calCnt').textContent = ym.slice(0, 4) + '년 ' + +ym.slice(5) + '월 · 일정 ' + 달일정.length + '건';
+}
+
+function renderCal() {
+  const [y, mo] = S.보는달.split('-').map(Number);
+  $('calTitle').textContent = y + '년 ' + mo + '월';
+  const first = F(new Date(y, mo - 1, 1)); const start = 월요일(first);
+  const list = 보이는();
+  let h = ['월', '화', '수', '목', '금', '토', '일'].map((w, i) => '<div class="dow' + (i === 5 ? ' sat' : i === 6 ? ' sun' : '') + '">' + w + '</div>').join('');
+  for (let i = 0; i < 42; i++) {
+    const d = addD(start, i); const dd = P(d); const other = dd.getMonth() !== mo - 1; const wk = i % 7 >= 5;
+    const evs = list.filter(e => 기간(e, d));
+    let body = '';
+    evs.slice(0, 3).forEach(e => {
+      const span = e.시작 !== e.끝; const cls = 'ev' + (span ? ' span' + (e.시작 === d ? ' first' : '') + (e.끝 === d ? ' last' : '') : '');
+      const txt = (e.시작 === d || !span || i % 7 === 0) ? e.종류 + ' ' + e.누가 + (e.어디 ? ' · ' + e.어디 : '') : ' ';
+      body += '<span class="' + cls + '" style="--k:' + 색(e.종류) + '" title="' + esc(e.제목) + '">' + esc(txt) + '</span>';
+    });
+    if (evs.length > 3) body += '<span class="more">+' + (evs.length - 3) + '</span>';
+    const dots = '<div class="dots">' + evs.slice(0, 4).map(e => '<i style="--k:' + 색(e.종류) + '"></i>').join('') + '</div>';
+    h += '<button class="d' + (other ? ' other' : '') + (wk ? ' wk' : '') + (d === S.오늘 ? ' today' : '') + (d === S.고른날 ? ' sel' : '') + '" data-d="' + d + '"><div class="n">' + dd.getDate() + (d === S.오늘 ? ' 오늘' : '') + '</div>' + body + dots + '</button>';
+  }
+  $('cal').innerHTML = h;
+  $('cal').querySelectorAll('.d').forEach(b => b.onclick = () => { S.고른날 = b.dataset.d; if (폰()) { S.보는달 = S.고른날.slice(0, 7); } renderToday(); renderCal(); renderWeek(); if (!폰()) { prefillDate(S.고른날); } });
+}
+
+function renderWeek() {
+  const m = 월요일(S.고른날); const e7 = addD(m, 6);
+  const list = 보이는().filter(e => e.끝 >= m && e.시작 <= e7);
+  $('weekTitle').textContent = (m <= S.오늘 && S.오늘 <= e7) ? '이번 주 일정' : '그 주 일정';
+  $('weekRange').textContent = 짧게(m) + ' ~ ' + 짧게(e7);
+  const n = {}; list.forEach(e => { n[e.종류] = (n[e.종류] || 0) + 1; });
+  $('weekSum').innerHTML = '<span class="chip">이 주 <b>' + list.length + '</b></span>' + Object.keys(n).map(k => '<span class="chip" style="--k:' + 색(k) + '"><i></i>' + esc(k) + ' <b>' + n[k] + '</b></span>').join('');
+  $('weekRows').innerHTML = list.length ? list.map(e => '<tr class="row' + (기간(e, S.오늘) ? ' is-now' : '') + '" data-id="' + esc(e.id) + '"><td>' + 짧게(e.시작) + (e.끝 !== e.시작 ? ' ~ ' + 짧게(e.끝) : '') + (e.시간대 ? ' ' + e.시간대 : '') + '</td><td><span class="st" style="--k:' + 색(e.종류) + '"><i></i>' + esc(e.종류) + '</span></td><td>' + esc(e.누가) + '</td><td>' + (e.어디 ? esc(e.어디) : '<span class="dim">—</span>') + '</td><td>' + (e.메모 ? esc(e.메모) : '<span class="dim">—</span>') + '</td><td>' + (e.과업 ? esc(e.과업) : '<span class="dim">—</span>') + '</td><td class="dim">' + esc(e.올린 ? e.올린.split(' ')[0] : (e.화면밖 ? '캘린더 앱' : '')) + '</td></tr>').join('')
+    : '<tr><td colspan="7" class="empty">이 주에는 올린 일정이 없습니다</td></tr>';
+  $('weekRows').querySelectorAll('tr.row').forEach(r => r.onclick = () => openEdit(r.dataset.id));
+}
+
+/* ── 올리기 · 고치기 ── */
+function renderForm() {
+  const v = S.입력;
+  $('whoPick').innerHTML = S.부서원.map(p => '<button class="chip' + (v.누가 === p.이름 ? ' on' : '') + '" data-v="' + esc(p.이름) + '">' + esc(p.이름) + '</button>').join('') || '<span class="dim">시트 「부서원」 이 비어 있습니다</span>';
+  $('whoPick').querySelectorAll('.chip').forEach(b => b.onclick = () => { v.누가 = b.dataset.v; if (!S.고치는) { 나 = v.누가; try { localStorage.setItem('구조부일정.나', 나); } catch (e) {} } renderForm(); });
+  $('kindPick').innerHTML = S.종류.map(k => '<button class="chip' + (v.종류 === k.종류 ? ' on' : '') + '" data-v="' + esc(k.종류) + '" style="--k:' + k.색 + '"><i></i>' + esc(k.종류) + '</button>').join('');
+  $('kindPick').querySelectorAll('.chip').forEach(b => b.onclick = () => { v.종류 = b.dataset.v; renderForm(); });
+  $('taskRow').classList.toggle('hidden', !S.과업.length);
+  $('taskPick').innerHTML = '<button class="chip' + (!v.과업 ? ' on' : '') + '" data-v="">없음</button>' + S.과업.map(t => '<button class="chip' + (v.과업 === t.번호 ? ' on' : '') + '" data-v="' + esc(t.번호) + '" title="' + esc(t.이름) + '">' + esc(t.번호) + (t.이름 ? ' <small>' + esc(t.이름) + '</small>' : '') + '</button>').join('');
+  $('taskPick').querySelectorAll('.chip').forEach(b => b.onclick = () => { v.과업 = b.dataset.v; renderForm(); });
+  document.querySelectorAll('.quick [data-h]').forEach(b => b.classList.toggle('on', v.시간대 === b.dataset.h));
+  $('formTitle').textContent = S.고치는 ? '일정 고치기' : '일정 올리기';
+  $('btnSave').textContent = S.고치는 ? '저장' : '올리기';
+  $('editBtns').classList.toggle('hidden', !S.고치는);
+  preview();
+}
+function preview() {
+  const v = S.입력; const d1 = $('d1').value, d2 = $('d2').value || d1;
+  const 어디 = $('where').value.trim();
+  if (!v.누가 || !v.종류 || !d1) { $('preview').textContent = '누가 · 종류 · 날짜를 고르면 여기에 미리 보입니다'; return; }
+  let t = '[' + v.종류 + '] ' + v.누가 + (어디 ? ' · ' + 어디 : '') + (v.과업 ? ' · ' + v.과업 : '') + (v.시간대 ? ' (' + v.시간대 + ')' : '');
+  $('preview').innerHTML = '캘린더에 이렇게 들어갑니다 → <b style="color:var(--dsm-ink)">' + esc(t) + '</b> (' + 짧게(d1) + (d2 !== d1 ? ' ~ ' + 짧게(d2) : '') + ')';
+}
+function prefillDate(d) { $('d1').value = d; if (!$('d2').value || $('d2').value < d) $('d2').value = ''; preview(); }
+function openNew(d) {
+  S.고치는 = null; S.입력 = { 누가: 나, 종류: S.입력.종류 || (S.종류[0] || {}).종류 || '', 시간대: '', 과업: '' };
+  $('d1').value = d || S.고른날; $('d2').value = ''; $('where').value = ''; $('memo').value = ''; $('result').textContent = ''; $('result').className = 'result';
+  renderForm(); showForm();
+}
+function openEdit(id) {
+  const e = S.일정.find(x => x.id === id); if (!e) return;
+  S.고치는 = e; S.입력 = { 누가: e.누가, 종류: e.종류, 시간대: e.시간대, 과업: e.과업 };
+  $('d1').value = e.시작; $('d2').value = e.끝 === e.시작 ? '' : e.끝; $('where').value = e.어디; $('memo').value = e.메모;
+  $('result').textContent = e.올린 ? '올린 : ' + e.올린 : (e.화면밖 ? '캘린더 앱에서 바로 넣은 일정입니다' : ''); $('result').className = 'result';
+  renderForm(); showForm();
+}
+function showForm() { $('form').classList.add('open'); $('sheetBg').classList.add('open'); if (폰()) $('form').scrollTop = 0; else $('form').scrollIntoView({ block: 'nearest' }); }
+function hideForm() { $('form').classList.remove('open'); $('sheetBg').classList.remove('open'); }
+
+async function save() {
+  const v = S.입력; const 입 = { 누가: v.누가, 종류: v.종류, 시작: $('d1').value, 끝: $('d2').value || $('d1').value, 시간대: v.시간대, 어디: $('where').value, 메모: $('memo').value, 과업: v.과업, 화면: 화면이름() };
+  const r = $('result'); r.className = 'result'; r.textContent = '보내는 중…'; $('btnSave').disabled = true;
+  try {
+    if (S.고치는) {
+      const out = await call('일정고치기', S.고치는.id, 입);
+      S.일정 = S.일정.map(x => x.id === out.id ? out : x); S.고치는 = out;
+      r.className = 'result ok'; r.innerHTML = '<b>됨</b> · 고쳤습니다 → ' + esc(out.제목) + ' (' + 짧게(out.시작) + (out.끝 !== out.시작 ? ' ~ ' + 짧게(out.끝) : '') + ')';
+      toast('고침 · ' + out.제목);
+    } else {
+      const out = await call('일정올리기', 입);
+      S.일정.push(out);
+      r.className = 'result ok'; r.innerHTML = '<b>됨</b> · ' + esc(out.제목) + ' (' + 짧게(out.시작) + (out.끝 !== out.시작 ? ' ~ ' + 짧게(out.끝) : '') + ') → 1분 안에 부서원 캘린더에 보임';
+      $('where').value = ''; $('memo').value = '';
+      toast('올림 · ' + out.제목, '되돌리기', () => undoAdd(out.id));
+      if (폰()) setTimeout(hideForm, 900);
+    }
+    renderAll();
+  } catch (e) { r.className = 'result bad'; r.textContent = '안 됨 · ' + e.message; }
+  $('btnSave').disabled = false;
+}
+async function del() {
+  if (!S.고치는) return; const e = S.고치는; const r = $('result');
+  r.className = 'result'; r.textContent = '지우는 중…'; $('btnDel').disabled = true;
+  try {
+    const out = await call('일정지우기', e.id, 화면이름());
+    S.일정 = S.일정.filter(x => x.id !== e.id); S.고치는 = null;
+    renderAll(); hideForm();
+    toast('지움 · ' + out.제목, '되돌리기', () => undoDel(out));
+  } catch (err) { r.className = 'result bad'; r.textContent = '안 됨 · ' + err.message; }
+  $('btnDel').disabled = false;
+}
+async function undoAdd(id) { try { await call('일정지우기', id, 화면이름() + ' 되돌리기'); S.일정 = S.일정.filter(x => x.id !== id); renderAll(); toast('되돌렸습니다'); } catch (e) { toast('안 됨 · ' + e.message); } }
+async function undoDel(o) { try { const out = await call('일정올리기', { 누가: o.누가, 종류: o.종류, 시작: o.시작, 끝: o.끝, 시간대: o.시간대, 어디: o.어디, 메모: o.메모, 과업: o.과업, 화면: 화면이름() + ' 되돌리기' }); S.일정.push(out); renderAll(); toast('되돌렸습니다 · ' + out.제목); } catch (e) { toast('안 됨 · ' + e.message); } }
+
+function toast(msg, btn, fn) {
+  const t = $('toast'); $('toastMsg').textContent = msg; const b = $('toastBtn');
+  b.classList.toggle('hidden', !btn); b.textContent = btn || ''; b.onclick = () => { t.classList.add('hidden'); fn && fn(); };
+  t.classList.remove('hidden'); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.add('hidden'), btn ? 9000 : 3000);
+}
+
+/* ── 단추 ── */
+$('fab').onclick = () => openNew();
+$('btnClose').onclick = hideForm; $('sheetBg').onclick = hideForm;
+$('btnSave').onclick = save; $('btnDel').onclick = del; $('btnNew').onclick = () => openNew();
+$('btnReload').onclick = () => load(S.고른날);
+$('prevM').onclick = () => { const [y, m] = S.보는달.split('-').map(Number); S.보는달 = F(new Date(y, m - 2, 1)).slice(0, 7); renderChips(); renderCal(); };
+$('nextM').onclick = () => { const [y, m] = S.보는달.split('-').map(Number); S.보는달 = F(new Date(y, m, 1)).slice(0, 7); renderChips(); renderCal(); };
+$('goToday').onclick = () => { S.고른날 = S.오늘; S.보는달 = S.오늘.slice(0, 7); renderToday(); renderChips(); renderCal(); renderWeek(); };
+$('calHead').onclick = () => { if (폰()) { const b = $('calBody'); b.classList.toggle('hidden'); $('calToggle').textContent = b.classList.contains('hidden') ? '▾ 달력 보기' : '▴ 접기'; } };
+['d1', 'd2', 'where'].forEach(id => $(id).oninput = preview);
+document.querySelectorAll('.quick [data-q]').forEach(b => b.onclick = () => {
+  const q = b.dataset.q; let d = S.오늘;
+  if (q === '내일') d = addD(S.오늘, 1);
+  if (q === '금') { const m = 월요일(S.오늘); d = addD(m, 4); if (d < S.오늘) d = addD(d, 7); }
+  $('d1').value = d; $('d2').value = ''; preview();
+});
+document.querySelectorAll('.quick [data-h]').forEach(b => b.onclick = () => { S.입력.시간대 = S.입력.시간대 === b.dataset.h ? '' : b.dataset.h; $('d2').value = ''; renderForm(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') hideForm(); });
+if (!폰()) $('calBody').classList.remove('hidden');
+matchMedia('(min-width:641px)').addEventListener('change', m => { if (m.matches) { $('calBody').classList.remove('hidden'); } });
+load();
+</script>
+</body>
+</html>
