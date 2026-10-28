@@ -134,6 +134,14 @@
   .foot .msg b{color:var(--dsm-ink);font-weight:600}
   .sign{text-align:center;color:var(--dsm-faint);font-size:12px;padding:14px 0 0}
   .tip{font-size:12px;color:var(--dsm-faint)}
+  .fig{background:var(--dsm-in);border:1px solid var(--dsm-line);border-radius:10px;padding:6px 8px 4px}
+  .fig svg{width:100%;height:auto;max-height:240px;display:block;margin:0 auto;color:var(--dsm-ink)}
+  .fig .fl{font-size:12px;color:var(--dsm-faint);display:flex;justify-content:space-between;gap:8px;margin-top:2px}
+  .fig .fl b{color:var(--dsm-ink);font-weight:600}
+  .figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+  .figs.three{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+  .thumb{display:inline-block;width:72px;vertical-align:middle;border:1px solid var(--dsm-line);border-radius:6px;background:var(--dsm-in);margin-right:6px}
+  .thumb svg{width:100%;height:auto;display:block;color:var(--dsm-ink)}
   .sec{display:none}.sec.on{display:block}
   @media (max-width:640px){
     .who .what{display:none}
@@ -155,7 +163,7 @@
     <span class="what">· 도면 · 틀 · 말을 넣으면 AI 가 규칙 넷으로 바꿔 두고, 어디에 어떻게 기억됐는지 보인다</span>
   </div>
   <div class="sp"></div>
-  <span class="ver" title="판 v0.1 목업 · 고친 날 2026-10-29">v0.1 목업</span>
+  <span class="ver" title="판 v0.2 목업 · 고친 날 2026-10-29">v0.2 목업</span>
   <div class="theme" title="밝기 고르개 · 처음 = 시간">
     <button data-t="">기기</button><button data-t="time" class="on">시간</button><button data-t="light">밝게</button><button data-t="dark">어둡게</button>
   </div>
@@ -188,7 +196,7 @@
     <div class="cb">
       <div class="tbl"><table>
         <tr><th>이름</th><th>종류</th><th>어떻게 읽나</th><th>상태</th></tr>
-        <tr><td>서대전_횡단면도_받은판_01.dwg ↔ 고친판_01.dwg</td><td><span class="pill pill--ai">도면 짝 ①</span></td><td>DWG → DXF → 프로그램이 셈 (ezdxf)</td><td><span class="pill pill--ok">✓ 짝 맞음</span></td></tr>
+        <tr><td><span class="thumb" data-fig="t:350,tiers:2,lead:R"></span>서대전_횡단면도_받은판_01.dwg ↔ 고친판_01.dwg</td><td><span class="pill pill--ai">도면 짝 ①</span></td><td>DWG → DXF → 프로그램이 셈 (ezdxf)</td><td><span class="pill pill--ok">✓ 짝 맞음</span></td></tr>
         <tr><td>… 짝 02 ~ 08 (7벌)</td><td><span class="pill pill--ai">도면 짝</span></td><td>같음</td><td><span class="pill pill--ok">✓ 짝 맞음</span></td></tr>
         <tr><td>회사틀_토목.dwt · 블록_EL기호.dwg</td><td><span class="pill pill--ai">틀</span></td><td>치수 · 글자 스타일 · 블록 이름을 읽어 숫자 표로</td><td><span class="pill pill--ok">✓ 읽음</span></td></tr>
         <tr><td>치수선규칙_녹음_1029.m4a (31분)</td><td><span class="pill pill--ai">말</span></td><td>받아쓰기 → AI 가 규칙 문장으로 (2단계에서 확인)</td><td><span class="pill pill--ok">✓ 받아씀 · 4,120자</span></td></tr>
@@ -197,7 +205,7 @@
         <tr><td>도면작성지침_발주처.pdf (스캔)</td><td><span class="pill pill--ai">기준</span></td><td>그림만 들어 있어 AI 가 직접 봄</td><td><span class="pill pill--mute">아직 아무도 못 읽음 · 이름만 남김</span></td></tr>
         <tr><td>겹침_결과_1028.xlsx · 단면지도.json</td><td><span class="pill pill--mute">도구가 만든 것</span></td><td>—</td><td><span class="pill pill--mute">뺌 2개</span></td></tr>
       </table></div>
-      <div class="hint">넣은 파일 21개 → 보는 것 19개 · 도구가 만든 것 2개는 뺐습니다</div>
+      <div class="hint">넣은 파일 21개 → 보는 것 19개 · 도구가 만든 것 2개는 뺐습니다 · 도면은 넣자마자 프로그램이 그림(SVG)으로 바꿔 작은 그림을 붙입니다. 누르면 크게 · 확대해 봅니다</div>
     </div>
   </div>
 
@@ -237,26 +245,38 @@
     </div>
   </div>
 
-  <div class="card now">
+
+  <div class="card">
     <span class="kno">2-02</span>
-    <div class="ch"><span class="no">2-2</span><h2>말에서 읽은 규칙 — AI 가 문장으로 만들었습니다</h2><span class="st now">▶ 14줄 중 확인 9 · 남은 5</span></div>
+    <div class="ch"><span class="no">2-2</span><h2>규칙이 적용된 자리 — 도면에서 잘라 보입니다</h2><span class="st">규칙 1 「2단까지 · 3단은 지시선으로」 · 받은 판 ↔ 고친 판</span></div>
+    <div class="cb">
+      <div class="figs">
+        <div class="fig" data-fig="t:350,tiers:3,lead:R,title:받은 판 03 · 측점 12"><div class="fl"><b>받은 판 03 · 측점 12</b><span>치수 3단</span></div></div>
+        <div class="fig" data-fig="t:350,tiers:2,lead:R,leadDim:1,title:고친 판 03 · 같은 자리"><div class="fl"><b>전무님이 고친 판 03 · 같은 자리</b><span>2단 + 셋째 치수를 지시선으로</span></div></div>
+      </div>
+      <div class="row" style="margin-top:8px"><span class="chip on">규칙 1</span><span class="chip">규칙 2 간격 8</span><span class="chip">규칙 3 비킴 차례</span><span class="chip">규칙 5 EL 가까움</span><span class="tip">규칙 칩을 누르면 그 규칙이 적용된 자리 38곳 가운데 셋을 골라 보입니다</span></div>
+    </div>
+  </div>
+  <div class="card now">
+    <span class="kno">2-03</span>
+    <div class="ch"><span class="no">2-3</span><h2>말에서 읽은 규칙 — AI 가 문장으로 만들었습니다</h2><span class="st now">▶ 14줄 중 확인 9 · 남은 5</span></div>
     <div class="cb">
       <div class="cap">분홍 글은 AI 가 쓴 것 · 한 줄마다 ○ 또는 × · × 면 왜 아닌지 한 줄 적어 주시면 지적기록에 쌓입니다</div>
       <div class="tbl"><table>
         <tr><th>#</th><th>규칙 문장</th><th>출처</th><th>확인</th></tr>
-        <tr><td>1</td><td><span class="ai">치수선은 부재 바깥으로 2단까지 둔다. 3단이 되면 그 치수는 지시선으로 뺀다</span></td><td>녹음 03:12</td><td><span class="pill pill--ok">○ 맞음</span></td></tr>
+        <tr><td>1</td><td><span class="thumb" data-fig="t:350,tiers:2,lead:R,leadDim:1"></span><span class="ai">치수선은 부재 바깥으로 2단까지 둔다. 3단이 되면 그 치수는 지시선으로 뺀다</span></td><td>녹음 03:12</td><td><span class="pill pill--ok">○ 맞음</span></td></tr>
         <tr><td>2</td><td><span class="ai">단 사이 간격은 8 mm. 첫 단은 부재 선에서 10 mm</span></td><td>녹음 04:40 · 질문지 2 · 3</td><td><span class="pill pill--ok">○ 맞음</span></td></tr>
         <tr><td>3</td><td><span class="ai">치수 글자가 칸보다 길면 먼저 위로 올리고, 그래도 겹치면 옆으로, 마지막에 지시선으로 뺀다</span></td><td>녹음 07:05</td><td><span class="pill pill--ok">○ 맞음</span></td></tr>
-        <tr class="now"><td>4</td><td><span class="ai">지시선끼리 겹치면 나중에 그린 것이 비킨다</span></td><td>녹음 12:30</td><td class="q"><button class="btn">○ 맞음</button><button class="btn">× 아니다</button><button class="btn btn--view">고치기</button></td></tr>
-        <tr><td>5</td><td><span class="ai">EL 둘이 2 mm 안으로 가까우면 위 것을 왼쪽, 아래 것을 오른쪽에 둔다</span></td><td>녹음 15:10</td><td class="q"><button class="btn">○ 맞음</button><button class="btn">× 아니다</button><button class="btn btn--view">고치기</button></td></tr>
+        <tr class="now"><td>4</td><td><span class="thumb" data-fig="t:350,tiers:2,lead:R,lead2:1"></span><span class="ai">지시선끼리 겹치면 나중에 그린 것이 비킨다</span></td><td>녹음 12:30</td><td class="q"><button class="btn">○ 맞음</button><button class="btn">× 아니다</button><button class="btn btn--view">고치기</button></td></tr>
+        <tr><td>5</td><td><span class="thumb" data-fig="t:350,tiers:1,lead:none,el2:1"></span><span class="ai">EL 둘이 2 mm 안으로 가까우면 위 것을 왼쪽, 아래 것을 오른쪽에 둔다</span></td><td>녹음 15:10</td><td class="q"><button class="btn">○ 맞음</button><button class="btn">× 아니다</button><button class="btn btn--view">고치기</button></td></tr>
         <tr><td>…</td><td class="tip">9 ~ 14 (접힘 · 확인 끝)</td><td></td><td><button class="btn btn--view">펴기</button></td></tr>
       </table></div>
     </div>
   </div>
 
   <div class="card">
-    <span class="kno">2-03</span>
-    <div class="ch"><span class="no">2-3</span><h2>도면과 말이 어긋나는 것 — 전무님이 정하십니다</h2><span class="st">물음 2</span></div>
+    <span class="kno">2-04</span>
+    <div class="ch"><span class="no">2-4</span><h2>도면과 말이 어긋나는 것 — 전무님이 정하십니다</h2><span class="st">물음 2</span></div>
     <div class="cb">
       <div class="res" style="margin-top:0">
         <b>물음 1.</b> 말은 「2단까지」(규칙 1) 인데 고친 판 03 · 07 에는 3단이 38곳 있습니다 (2-1). 어느 쪽입니까?
@@ -341,6 +361,20 @@ EL.가까움_mm          2</pre>
       </div>
     </div>
   </div>
+
+  <div class="card">
+    <span class="kno">3-06</span>
+    <div class="ch"><span class="no">3-6</span><h2>이해한 대로 그려 본 샘플 — 전무님이 보고 ○ · ×</h2><span class="st">규칙 넷을 넣어 프로그램이 그림 · 셋</span></div>
+    <div class="cb">
+      <div class="cap">가짜 단면(벽 두께 350 → 300 으로 바꿨다 치고)에 규칙 글 · 숫자 표를 그대로 적용해 그렸습니다. 치수 값은 프로그램이 셈 · AI 는 어디에 무엇을 둘지만 정함</div>
+      <div class="figs three">
+        <div class="fig" data-fig="t:300,tiers:2,lead:R,leadDim:1,cloud:1,title:샘플 1"><div class="fl"><b>샘플 1 · 벽 350 → 300</b><span>2단 · 셋째는 지시선 · 구름</span></div><div class="q"><button class="btn">○ 맞게 이해함</button><button class="btn">× 아니다</button></div></div>
+        <div class="fig" data-fig="t:300,tiers:2,lead:L,leadDim:1,title:샘플 2"><div class="fl"><b>샘플 2 · 오른쪽에 치수가 있을 때</b><span>지시선 글 왼쪽 (지적 2번)</span></div><div class="q"><button class="btn">○ 맞게 이해함</button><button class="btn">× 아니다</button></div></div>
+        <div class="fig" data-fig="t:300,tiers:2,lead:R,el2:1,title:샘플 3"><div class="fl"><b>샘플 3 · EL 둘이 가까울 때</b><span>위 왼쪽 · 아래 오른쪽 (규칙 5)</span></div><div class="q"><button class="btn">○ 맞게 이해함</button><button class="btn">× 아니다</button></div></div>
+      </div>
+      <div class="hint">× 를 누르면 「어디가 아닌지」 를 그림 위에 동그라미로 찍고 한 줄 적습니다 → 지적기록 + 규칙 고침 → 다시 그려 보임. ○ 가 나온 샘플은 <b>본보기 그림</b>으로 저장돼 규칙 글 옆에 붙습니다 (5-1 「본보기 그림」 줄)</div>
+    </div>
+  </div>
 </section>
 
 <!-- ───────── 4단계 정답지로 시험 ───────── -->
@@ -370,6 +404,11 @@ EL.가까움_mm          2</pre>
     <span class="kno">4-02</span>
     <div class="ch"><span class="no">4-2</span><h2>판 03 · 틀린 곳 — 왜 다른지 한 줄만</h2><span class="st">14곳 중 까닭 적음 3</span></div>
     <div class="cb">
+
+      <div class="figs" style="margin-bottom:10px">
+        <div class="fig" data-fig="t:350,tiers:2,lead:R,leadDim:1,bad:1,title:규칙 판"><div class="fl"><b>규칙 판 03 · 틀린 곳 1</b><span style="color:var(--dsm-bad)">지시선 글이 치수와 겹침</span></div></div>
+        <div class="fig" data-fig="t:350,tiers:2,lead:L,leadDim:1,title:전무님 판"><div class="fl"><b>전무님 판 03 · 같은 자리</b><span>글을 왼쪽으로</span></div></div>
+      </div>
       <div class="tbl"><table>
         <tr><th>#</th><th>무엇</th><th>규칙 판</th><th>전무님 판</th><th>까닭 (전무님)</th></tr>
         <tr><td>1</td><td>지시선 「앵커 M24」 글</td><td>오른쪽 위</td><td>왼쪽 위</td><td><span class="pill pill--ok">적음</span> 오른쪽에 치수가 와서 · 규칙 13-3 에 예외 더함</td></tr>
@@ -408,10 +447,11 @@ EL.가까움_mm          2</pre>
         <tr><td>① 규칙 글</td><td>기억 줄 2 (콘솔 함정 · 판 꼴)</td><td>클로드 기억</td><td>—</td><td class="n">2줄</td><td>대화를 열 때 <span class="pill pill--ok">저절로</span></td><td><button class="btn btn--view">열기</button></td></tr>
         <tr><td>② 숫자 표</td><td>주석규칙_횡단면도.json</td><td>과업 6_규칙\</td><td>v0.1</td><td class="n">24칸</td><td>프로그램이 돌 때 <span class="pill pill--info">도구</span></td><td><button class="btn btn--view">열기</button></td></tr>
         <tr><td>③ 프로그램</td><td>겹침 세기 · 짝 찾기 · (자리 후보)</td><td>1_실행기\</td><td>v0.2 · v0.1 · —</td><td class="n">3개</td><td>단추를 누를 때 <span class="pill pill--info">도구</span></td><td><button class="btn btn--view">열기</button></td></tr>
+        <tr><td>④ 정답지</td><td><span class="thumb" data-fig="t:300,tiers:2,lead:R,leadDim:1"></span>본보기 그림 38장 (○ 받은 샘플 · 잘라 낸 자리)</td><td>_본보기\ · 규칙 글이 「그림 13-1.png」 로 가리킴</td><td>—</td><td class="n">38장</td><td>클로드가 그 규칙을 쓸 때 <span class="pill pill--info">열어 봄</span></td><td><button class="btn btn--view">열기</button></td></tr>
         <tr><td>④ 정답지</td><td>횡단면도 짝 8벌 + 지적기록 14줄</td><td>_정답\ · 지적기록.md</td><td>—</td><td class="n">8벌</td><td>시험 때만 <span class="pill pill--mute">사람이 시킴</span></td><td><button class="btn btn--view">열기</button></td></tr>
         <tr><td>원본</td><td>녹음 · 질문지 답 · dwt · 받은 도면</td><td>2_자료\원본\</td><td>—</td><td class="n">21개</td><td><span class="pill pill--mute">안 읽음 · 출처로만</span></td><td><button class="btn btn--view">열기</button></td></tr>
       </table></div>
-      <div class="hint">「저절로」 인 것만 다음 대화의 클로드가 처음부터 압니다. 나머지는 도구가 돌 때 읽거나 사람이 열어야 합니다. 그래서 규칙 글은 30줄 안에 두고, 숫자는 표로 뺍니다</div>
+      <div class="hint">「저절로」 인 것만 다음 대화의 클로드가 처음부터 압니다. 나머지는 도구가 돌 때 읽거나 사람이 열어야 합니다. 그래서 규칙 글은 30줄 안에 두고, 숫자는 표로 뺍니다. <b>그림은 클로드 머릿속에 남지 않습니다.</b> 파일로 두고 규칙 글이 그 그림을 가리키면, 다음 대화의 클로드가 그 규칙을 쓸 때 그림을 열어 봅니다 (한 장에 약 1 ~ 2초 · 글 한 쪽 값)</div>
     </div>
   </div>
 
@@ -445,29 +485,29 @@ EL.가까움_mm          2</pre>
 13-5 같은 선상 치수는 한 단으로 (10-29 새)
 …</pre></div>
         <div class="layer"><h3><span class="pill pill--info">도구를 돌리면 압니다</span></h3>
-          <div class="hint" style="margin-top:0">json 24칸 · 단면 지도 · 겹침 수</div>
+          <div class="hint" style="margin-top:0">json 24칸 · 단면 지도 · 겹침 수 · 본보기 그림 38장 (규칙을 쓸 때 열어 봄)</div>
           <pre>겹침 세기 → 「판 03 겹침 2 · 자리 차이 3.1」
 자리 후보 → 「치수 350 : 1단 (합침) · 2단」 → 사람이 고름</pre></div>
         <div class="layer"><h3><span class="pill pill--mute">모릅니다 (사람이 열어 줘야)</span></h3>
-          <div class="hint" style="margin-top:0">녹음 원본 · 질문지 답 전문 · 정답지 도면 · 지난 대화에서 한 말</div>
+          <div class="hint" style="margin-top:0">녹음 원본 · 질문지 답 전문 · 정답지 도면 · 지난 대화에서 한 말 · <b>지난 대화에서 본 그림</b></div>
           <pre>→ 그래서 「말로만 한 것」 은 2-2 에서 ○ 를 받아야 규칙 글이 됩니다</pre></div>
       </div>
       <div class="row" style="margin-top:10px"><button class="btn btn--main">규칙 묶음 내보내기 (스킬 + json + 지적기록)</button><span class="tip">다른 PC · 부서원 과업 폴더에 같은 규칙을 심을 때</span></div>
     </div>
   </div>
-  <div class="sign">DSM · 도면 규칙 가르치기 · v0.1 목업 · 2026-10-29</div>
+  <div class="sign">DSM · 도면 규칙 가르치기 · v0.2 목업 · 2026-10-29</div>
 </section>
 </main>
 
 <footer class="foot" id="foot"></footer>
 
 <script>
-/* 생김새 : "v0.1 목업 2026-10-29 · 무엇" ← 판 글자는 여기 한 곳 */
-var 화면판 = "v0.1 목업";
+/* 생김새 : "v0.2 목업 2026-10-29 · 무엇" ← 판 글자는 여기 한 곳 */
+var 화면판 = "v0.2 목업";
 var 단계 = [
   {n:1, t:"자료 넣기",          st:"done", situ:"파일 21개 중 보는 것 19개 · 갖춤 4 · 모자람 1 → <b>1-1 에 폴더를 넣거나 [다음 : 2 AI 가 읽은 것 ▸]</b>", foot:"넣은 파일 21개 → 보는 것 19개 · 도구가 만든 것 2개 뺌", next:"2 AI 가 읽은 것 확인"},
-  {n:2, t:"AI 가 읽은 것 확인", st:"now",  situ:"도면 숫자 6 셈 · 말 규칙 14줄 중 확인 9 → <b>2-2 남은 5줄에 ○ × · 2-3 물음 2 에 답</b>", foot:"규칙 문장 14줄 · 확인 9 · 남은 5 · 물음 2", next:"3 규칙 넷 만들기"},
-  {n:3, t:"규칙 넷 만들기",     st:"off",  situ:"확인 ○ 12줄 + 도면 숫자 6 → <b>3-1 [규칙 넷 만들기]</b>", foot:"규칙 글 18줄 · 숫자 표 23칸 · 프로그램 2/3 · 정답지 8벌", next:"4 정답지로 시험"},
+  {n:2, t:"AI 가 읽은 것 확인", st:"now",  situ:"도면 숫자 6 셈 · 말 규칙 14줄 중 확인 9 → <b>2-2 그림으로 보고 · 2-3 남은 5줄에 ○ × · 2-4 물음 2 에 답</b>", foot:"규칙 문장 14줄 · 확인 9 · 남은 5 · 물음 2", next:"3 규칙 넷 만들기"},
+  {n:3, t:"규칙 넷 만들기",     st:"off",  situ:"확인 ○ 12줄 + 도면 숫자 6 → <b>3-1 [규칙 넷 만들기] → 3-6 샘플 셋에 ○ ×</b>", foot:"규칙 글 18줄 · 숫자 표 23칸 · 프로그램 2/3 · 샘플 3 (○ 기다림)", next:"4 정답지로 시험"},
   {n:4, t:"정답지로 시험",      st:"off",  situ:"8판 중 적정 5 · 보완 필요 2 · 자료 미비 1 → <b>4-2 판 03 틀린 곳에 까닭 · 4-3 지적 1 올리기</b>", foot:"8판 · 적정 5 · 보완 필요 2 · 자료 미비 1 · 올릴 지적 1", next:"5 기억 창고"},
   {n:5, t:"기억 창고",          st:"off",  situ:"네 층 · 저절로 읽히는 것 21줄 · 도구가 읽는 것 24칸 → <b>여기까지 보시면 끝</b>", foot:"여기까지 하시면 끝입니다 · 규칙 묶음을 내보내면 다른 과업에 심을 수 있습니다", next:null}
 ];
@@ -509,6 +549,58 @@ document.querySelectorAll(".theme button").forEach(function(b){
   };
 });
 (function(){ var h = new Date().getHours(); document.documentElement.setAttribute("data-theme", (h >= 18 || h < 7) ? "dark" : "light"); })();
+
+/* 가짜 단면 그림 — 목업용. 실제 도구는 DXF 를 ezdxf 로 SVG 로 바꿔 보인다
+   t 벽 두께 · tiers 치수 단 수 · lead 지시선 글 쪽(R·L·none) · leadDim 셋째 치수를 지시선으로 · lead2 지시선 둘 겹침
+   el2 EL 둘 가까움 · cloud 구름 · bad 겹침 표시 */
+function 단면그림(o){
+  var W=320,H=190, sc=0.26, x0=120, wt=o.t*sc, yT=30, yB=120;        // 벽 : x0 ~ x0+wt
+  var ink='currentColor', dim='var(--dsm-dim)', bad='var(--dsm-bad)', brand='var(--dsm-brand)';
+  var g='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard,sans-serif" font-size="9">';
+  // 벽 · 바닥 · 해치
+  g+='<rect x="'+x0+'" y="'+yT+'" width="'+wt+'" height="'+(yB-yT)+'" fill="none" stroke="'+ink+'" stroke-width="1.4"/>';
+  for(var i=0;i<6;i++){var yy=yT+8+i*15; g+='<line x1="'+(x0+2)+'" y1="'+(yy+10)+'" x2="'+(x0+wt-2)+'" y2="'+(yy-wt/6)+'" stroke="'+ink+'" stroke-width=".5" opacity=".55"/>';}
+  g+='<rect x="'+(x0-40)+'" y="'+yB+'" width="'+(wt+80)+'" height="18" fill="none" stroke="'+ink+'" stroke-width="1.4"/>';
+  g+='<line x1="'+(x0-70)+'" y1="'+(yB+18)+'" x2="'+(x0+wt+70)+'" y2="'+(yB+18)+'" stroke="'+ink+'" stroke-width="2"/>';
+  // 치수 단 (아래쪽)
+  function dline(xa,xb,y,txt,col){col=col||dim;return '<line x1="'+xa+'" y1="'+y+'" x2="'+xb+'" y2="'+y+'" stroke="'+col+'" stroke-width=".8"/>'
+    +'<line x1="'+xa+'" y1="'+(y-3)+'" x2="'+xa+'" y2="'+(y+3)+'" stroke="'+col+'"/><line x1="'+xb+'" y1="'+(y-3)+'" x2="'+xb+'" y2="'+(y+3)+'" stroke="'+col+'"/>'
+    +'<text x="'+((xa+xb)/2)+'" y="'+(y-2)+'" text-anchor="middle" fill="'+col+'">'+txt+'</text>';}
+  var y1=yB+18+14, gap=10;
+  g+=dline(x0,x0+wt,y1,o.t);                                    // 1단 벽 두께
+  if(o.tiers>=2) g+=dline(x0-40,x0+wt+40,y1+gap,Math.round(o.t+2*40/sc));   // 2단 기초 폭
+  if(o.tiers>=3) g+=dline(x0-70,x0+wt+70,y1+2*gap,Math.round(o.t+2*70/sc)); // 3단 전체
+  // 연장선
+  [x0,x0+wt].forEach(function(x){g+='<line x1="'+x+'" y1="'+(yB+20)+'" x2="'+x+'" y2="'+(y1+(o.tiers-1)*gap+2)+'" stroke="'+dim+'" stroke-width=".5"/>';});
+  // 셋째 치수를 지시선으로
+  if(o.leadDim){ var lx=x0+wt+70, ly=yB+18; g+='<polyline points="'+lx+','+ly+' '+(lx+14)+','+(ly-14)+' '+(lx+34)+','+(ly-14)+'" fill="none" stroke="'+dim+'" stroke-width=".8"/><text x="'+(lx+16)+'" y="'+(ly-16)+'" fill="'+dim+'">W='+Math.round(o.t+2*70/sc)+'</text>'; }
+  // 지시선 (앵커)
+  if(o.lead!=='none'){
+    var ax=x0+wt, ay=yT+40, R=(o.lead==='R');
+    var px=R?ax+22:x0-22, py=ay-22, tx=R?px+26:px-26;
+    g+='<circle cx="'+ax+'" cy="'+ay+'" r="2" fill="'+ink+'"/>';
+    g+='<polyline points="'+ax+','+ay+' '+px+','+py+' '+tx+','+py+'" fill="none" stroke="'+ink+'" stroke-width=".9"/>';
+    var tcol=o.bad?bad:ink;
+    g+='<text x="'+(R?px+2:tx)+'" y="'+(py-2)+'" fill="'+tcol+'">앵커 M24</text>';
+    if(o.bad){ g+='<circle cx="'+(px+16)+'" cy="'+(py-4)+'" r="14" fill="none" stroke="'+bad+'" stroke-width="1.2" stroke-dasharray="3 2"/>'; g+=dline(x0+wt,x0+wt+70,py+2,'700',bad); }
+    if(o.lead2){ g+='<polyline points="'+ax+','+(ay+10)+' '+(px)+','+(py+12)+' '+tx+','+(py+12)+'" fill="none" stroke="'+bad+'" stroke-width=".9"/><text x="'+(px+2)+'" y="'+(py+10)+'" fill="'+bad+'">방수 2겹</text>'; }
+  }
+  // EL 기호
+  function el(x,y,txt,left){ return '<polygon points="'+x+','+y+' '+(x-5)+','+(y-8)+' '+(x+5)+','+(y-8)+'" fill="none" stroke="'+ink+'"/><line x1="'+(left?x-40:x)+'" y1="'+(y-8)+'" x2="'+(left?x:x+40)+'" y2="'+(y-8)+'" stroke="'+ink+'" stroke-width=".7"/><text x="'+(left?x-38:x+6)+'" y="'+(y-10)+'" fill="'+ink+'">'+txt+'</text>'; }
+  if(o.el2){ g+=el(x0+wt/2, yT, 'EL +12.350', true); g+=el(x0+wt/2, yT+6, 'EL +12.100', false); }
+  else g+=el(x0-40, yB, 'EL +12.350', true);
+  // 구름
+  if(o.cloud){ var cx=x0-6, cy=yT-6, cw=wt+12, chh=yB-yT+12, r=6, d='M'+cx+' '+cy; var n=Math.round(cw/(2*r)), m=Math.round(chh/(2*r));
+    for(i=0;i<n;i++) d+=' a'+r+' '+r+' 0 0 1 '+(cw/n)+' 0'; for(i=0;i<m;i++) d+=' a'+r+' '+r+' 0 0 1 0 '+(chh/m);
+    for(i=0;i<n;i++) d+=' a'+r+' '+r+' 0 0 1 -'+(cw/n)+' 0'; for(i=0;i<m;i++) d+=' a'+r+' '+r+' 0 0 1 0 -'+(chh/m);
+    g+='<path d="'+d+'" fill="none" stroke="'+brand+'" stroke-width="1.1"/>'; }
+  g+='<text x="4" y="'+(H-4)+'" fill="'+dim+'" font-size="8">목업 그림 · 실제는 DXF → SVG</text></svg>';
+  return g;
+}
+document.querySelectorAll("[data-fig]").forEach(function(e){
+  var o={t:350,tiers:2,lead:'R'}; e.dataset.fig.split(",").forEach(function(kv){var p=kv.split(":");o[p[0].trim()]=isNaN(p[1])?p[1].trim():+p[1];});
+  e.insertAdjacentHTML("afterbegin", 단면그림(o));
+});
 그리기();
 </script>
 </body>
