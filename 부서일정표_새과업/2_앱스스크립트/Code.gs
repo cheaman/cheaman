@@ -8,17 +8,19 @@
  *   과업   : D197 이설표지판 …            ← 전무님이 고치는 곳 (비워도 됨)
  *   설정   : 캘린더 번호 · 공유 열쇠 …     ← setup 이 채움
  *   기록   : 누가 언제 무엇을 올리고 고치고 지웠나 (자동)
+ *   가져오기 : 여러 줄을 적고 가져오기 를 ▶ 실행하면 한 번에 캘린더로 (호두 자료 옮길 때)
  *
  * 처음 한 번 : 위 함수 고르는 칸에서 setup 을 골라 ▶ 실행
  */
 
 var 판 = 'v0.1';
-var SH = { 부서원: '부서원', 종류: '종류', 과업: '과업', 설정: '설정', 기록: '기록' };
+var SH = { 부서원: '부서원', 종류: '종류', 과업: '과업', 설정: '설정', 기록: '기록', 가져오기: '가져오기' };
 
 var 부서원_머리 = ['이름', '켜기', '순서', '메모'];
 var 종류_머리 = ['종류', '색', '켜기', '설명'];
 var 과업_머리 = ['번호', '이름', '켜기', '메모'];
 var 기록_머리 = ['때', '무엇', '일정 번호', '제목', '내용', '화면'];
+var 가져오기_머리 = ['누가', '종류', '시작', '끝', '시간대', '어디', '메모', '과업', '결과(자동)'];
 
 var 설정_줄 = [
   ['캘린더 번호', '', '비우면 setup 이 「구조부 일정」 캘린더를 새로 만들어 채웁니다'],
@@ -56,6 +58,9 @@ function setup() {
   if (설정.getLastRow() < 2) 설정.getRange(2, 1, 설정_줄.length, 3).setValues(설정_줄);
   var 기록 = 시트확보_(ss, SH.기록, 기록_머리);
   기록.getRange('A:A').setNumberFormat('yyyy-mm-dd hh:mm');
+  var 가져 = 시트확보_(ss, SH.가져오기, 가져오기_머리);
+  가져.getRange('C:C').setNumberFormat('yyyy-mm-dd');
+  가져.getRange('D:D').setNumberFormat('yyyy-mm-dd');
 
   ss.getSheets().forEach(function (s) {
     var n = s.getName();
@@ -77,6 +82,49 @@ function setup() {
   설정쓰기_('마지막 결과', 결과);
   Logger.log(결과);
   return 결과;
+}
+
+/* ───────────── 가져오기 — 시트 「가져오기」 의 줄을 한 번에 캘린더로 (호두 자료 옮길 때) ─────────────
+ * 열 : 누가 · 종류 · 시작 · 끝(비우면 하루) · 시간대(오전/오후/비움) · 어디 · 메모 · 과업 · 결과(자동)
+ * 결과 칸이 「됨 …」 인 줄은 건너뜀 → 같은 줄을 두 번 올리지 않음. 틀린 줄은 결과 칸에 까닭만 적고 다음 줄로 */
+function 가져오기() {
+  var s = ss_().getSheetByName(SH.가져오기);
+  if (!s) throw new Error('「가져오기」 시트가 없습니다 — setup 을 먼저 실행해 주세요');
+  var rows = 값들_(SH.가져오기, 가져오기_머리.length);
+  var 됨 = 0, 건너뜀 = 0, 안됨 = 0;
+  rows.forEach(function (r, i) {
+    var 결과 = String(r[8] || '');
+    var 비었나 = r.slice(0, 8).every(function (v) { return String(v).trim() === ''; });
+    if (비었나) return;
+    if (/^됨/.test(결과)) { 건너뜀++; return; }
+    try {
+      var v = 입력검사_({ 누가: r[0], 종류: r[1], 시작: 셀날짜_(r[2]), 끝: 셀날짜_(r[3]), 시간대: r[4], 어디: r[5], 메모: r[6], 과업: r[7], 화면: '가져오기' });
+      var ev = 캘린더_().createAllDayEvent(제목_(v), v.시작, 다음날_(v.끝));
+      태그쓰기_(ev, v);
+      var out = 일정꼴_(ev);
+      기록_('올림', out, '가져오기');
+      s.getRange(i + 2, 9).setValue('됨 ' + 글때_(new Date()) + ' · ' + out.제목);
+      됨++;
+    } catch (e) {
+      s.getRange(i + 2, 9).setValue('안 됨 · ' + e.message);
+      안됨++;
+    }
+  });
+  var 글 = '가져오기 끝 — 올림 ' + 됨 + ' · 이미 올린 줄 ' + 건너뜀 + ' · 안 됨 ' + 안됨 + (안됨 ? ' (결과 칸을 보고 고친 뒤 다시 ▶ 실행)' : '');
+  설정쓰기_('마지막 결과', 글);
+  Logger.log(글);
+  return 글;
+}
+// 시트 칸의 날짜 — 날짜 꼴이면 그대로 · 「2026-11-03」 · 「11/3」 · 「2026.11.3」 글도 받음
+function 셀날짜_(v) {
+  if (v === '' || v === null || v === undefined) return '';
+  if (Object.prototype.toString.call(v) === '[object Date]') return 글날짜_(v);
+  var t = String(v).trim();
+  var m = t.match(/^(\d{4})[.\-\/]\s*(\d{1,2})[.\-\/]\s*(\d{1,2})/);
+  if (m) return m[1] + '-' + 두자리_(Number(m[2])) + '-' + 두자리_(Number(m[3]));
+  m = t.match(/^(\d{1,2})[.\/]\s*(\d{1,2})$/);
+  if (m) return new Date().getFullYear() + '-' + 두자리_(Number(m[1])) + '-' + 두자리_(Number(m[2]));
+  return t;
 }
 
 function 시트확보_(ss, name, head) {

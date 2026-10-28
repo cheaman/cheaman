@@ -104,5 +104,29 @@ ok(p[0] === '최○○' && p.indexOf('난○○') < 0 && p.length === 5, '꺼진
 throws(() => E.ctx.일정올리기(k, { 누가: '난○○', 종류: '출장', 시작: '2026-11-20' }), /부서원 시트에 없습니다/, '꺼진 사람으로는 못 올림');
 ok(E.ctx.화면자료(k, '2026-11-04').요약.전체 === 5, '요약 전체 5');
 
+console.log('7. 가져오기 (호두 자료 옮기기)');
+const gs = E.ss.getSheetByName('가져오기');
+ok(!!gs && gs.getRange(1, 1, 1, 9).getValues()[0][0] === '누가', '「가져오기」 시트 · 머리');
+gs.getRange(2, 1, 5, 8).setValues([
+  ['전채만', '출장', '2026-12-01', '2026-12-02', '', '대전', '호두에서 옮김', ''],
+  ['김○○', '휴가', new Date(2026, 11, 3), '', '', '', '', ''],
+  ['이○○', '반차', '12/4', '', '오후', '', '', ''],
+  ['홍길동', '출장', '2026-12-05', '', '', '', '', ''],
+  ['박○○', '외근', '2026.12.08', '', '', '양촌', '', 'D196']
+]);
+const n1 = E.calendars[calId].events.length;
+let g = E.ctx.가져오기();
+ok(/올림 4 · 이미 올린 줄 0 · 안 됨 1/.test(g), '넉 줄 올리고 한 줄 안 됨 — ' + g);
+let res = gs.getRange(2, 9, 5, 1).getValues().map(r => r[0]);
+ok(/^됨 .*\[출장\] 전채만 · 대전/.test(res[0]) && /^됨/.test(res[1]) && /^됨 .*\(오후\)/.test(res[2]) && /^안 됨 · 「홍길동」/.test(res[3]) && /^됨 .*D196/.test(res[4]), '결과 칸 : ' + res.map(x => x.slice(0, 12)).join(' | '));
+ok(E.calendars[calId].events.length === n1 + 4, '캘린더에 4건 더해짐');
+const 날짜꼴 = E.calendars[calId].events.slice(-3).map(e => e.getAllDayStartDate().getDate());
+ok(날짜꼴.join(',') === '3,4,8', '날짜 글 「12/4」 · 「2026.12.08」 · 시트 날짜 모두 읽힘');
+g = E.ctx.가져오기();
+ok(/올림 0 · 이미 올린 줄 4 · 안 됨 1/.test(g) && E.calendars[calId].events.length === n1 + 4, '다시 돌려도 두 번 안 올림 — ' + g);
+gs.getRange(5, 1).setValue('최○○');
+g = E.ctx.가져오기();
+ok(/올림 1 · 이미 올린 줄 4 · 안 됨 0/.test(g), '틀린 줄을 고치면 그 줄만 올라감 — ' + g);
+
 console.log('\n통과 ' + pass + ' · 실패 ' + fail);
 process.exit(fail ? 1 : 0);
