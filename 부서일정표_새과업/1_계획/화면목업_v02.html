@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ko" class="dsm">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>구조부 일정</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+/* ── DSM 부품 값 (dsm.css v1.7 밝은 판 B 를 목업용으로 옮겨 적음 · 실제 화면은 부품 사본을 씀) ── */
+:root{
+  --dsm-bg:#dde1e6; --dsm-panel:#f2f4f6; --dsm-line:#cdd3da; --dsm-line2:#aab3bd;
+  --dsm-ink:#1f2328; --dsm-dim:#545d68; --dsm-th-bg:#e9ecef;
+  --dsm-head:#1f2328; --dsm-head2:#2b3036;
+  --dsm-c:#76b900; --dsm-c-light:#eef7dc; --dsm-c-ink:#3d6400;
+  --dsm-c-btn:#3f7300; --dsm-on-btn:#fff; --dsm-brand:#e8743b;
+  --dsm-in:#f8f9fa; --dsm-in-line:#b9c1ca;
+  /* 일정 종류 색 — DSM 분류 색 일곱에서 (데이터 색 · 연두 아님) */
+  --k-출장:#1f6fb2; --k-휴가:#a23b72; --k-반차:#7b4bb7; --k-외근:#0f766e; --k-교육:#455a64; --k-회의:#6b7280; --k-그밖:#8a929c;
+}
+*{box-sizing:border-box} html,body{margin:0}
+body{background:var(--dsm-bg);color:var(--dsm-ink);font:15px/1.45 "Pretendard Variable",Pretendard,"Malgun Gothic",sans-serif;font-variant-numeric:tabular-nums}
+b{font-weight:700}
+button{font:inherit;cursor:pointer}
+
+/* 머리 띠 */
+.head{background:var(--dsm-head);color:#fff;height:44px;display:flex;align-items:center;gap:12px;padding:0 14px}
+.head .who{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px}
+.head .who .ic{width:26px;height:26px;border-radius:6px;background:#a23b72;display:grid;place-items:center}
+.head .who .ic i{display:block;width:14px;height:12px;border:2px solid #fff;border-top-width:4px;border-radius:2px}
+.head .job{color:#c9d0d8;font-size:13px}
+.head .sp{flex:1}
+.head .ver{font-size:12px;color:#c9d0d8}
+.head .theme{display:flex;border:1px solid #4a515a;border-radius:8px;overflow:hidden;font-size:12px}
+.head .theme span{padding:3px 7px;color:#c9d0d8}.head .theme span.on{background:#3a414a;color:#fff}
+
+/* 상황 줄 */
+.now{background:var(--dsm-head2);color:#dfe4ea;font-size:13px;padding:6px 14px}
+.now b{color:#fff}
+
+.wrap{max-width:1200px;margin:0 auto;padding:14px 14px 96px}
+.panel{background:var(--dsm-panel);border:1px solid var(--dsm-line);border-radius:14px;padding:14px;min-width:0}
+.panel-head{display:flex;align-items:center;gap:10px;margin:-14px -14px 12px;padding:9px 14px;background:var(--dsm-th-bg);border-bottom:1px solid var(--dsm-line);border-radius:14px 14px 0 0;font-weight:700}
+.panel-head .cnt{font-weight:400;color:var(--dsm-dim);font-size:13px}
+.panel-head .sp{flex:1}
+.grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:14px}
+
+/* 칩 */
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
+.lab{font-size:13px;color:var(--dsm-dim);margin-right:2px}
+.chip{height:30px;padding:0 11px;border-radius:15px;border:1px solid var(--dsm-line2);background:#f8f9fa;font-size:13.5px;display:inline-flex;align-items:center;gap:6px;color:var(--dsm-ink)}
+.chip.on{background:var(--dsm-c-light);border:2px solid var(--dsm-ink);font-weight:700}
+.chip i{width:9px;height:9px;border-radius:50%;background:var(--k);display:inline-block}
+.chip small{color:var(--dsm-dim)}
+
+/* 달력 */
+.cal-nav{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.cal-nav h2{font-size:18px;margin:0 6px}
+.btn{height:32px;padding:0 12px;border-radius:9px;border:1px solid var(--dsm-line2);background:#f8f9fa;font-size:13.5px}
+.btn.today{border-color:var(--dsm-ink)}
+.seg{display:inline-flex;border:1px solid var(--dsm-line2);border-radius:9px;overflow:hidden;margin-left:auto}
+.seg span{padding:6px 10px;font-size:13px;background:#f8f9fa}.seg span.on{background:var(--dsm-c-light);font-weight:700;color:var(--dsm-c-ink)}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-top:1px solid var(--dsm-line2);border-left:1px solid var(--dsm-line)}
+.cal .dow{font-size:12.5px;color:var(--dsm-dim);text-align:center;padding:5px 0;background:var(--dsm-th-bg);border-right:1px solid var(--dsm-line);border-bottom:1px solid var(--dsm-line)}
+.cal .dow.sun{color:#b03a3a}.cal .dow.sat{color:#2d5fa6}
+.cal .d{min-height:92px;border-right:1px solid var(--dsm-line);border-bottom:1px solid var(--dsm-line);padding:4px 5px;font-size:12.5px}
+.cal .d .n{color:var(--dsm-dim);font-size:12px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hn{font-size:11px}
+.cal .d.other .n{color:#aab3bd}.cal .d.other{background:#eceff2}
+.cal .d.hol .n{color:#b03a3a}
+.cal .d.today{background:var(--dsm-c-light);box-shadow:inset 3px 0 0 var(--dsm-ink)}
+.cal .d.today .n{color:var(--dsm-ink);font-weight:700}
+.ev{display:block;border-left:4px solid var(--k);background:#fff;border-radius:4px;padding:1px 5px;margin:2px 0;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--dsm-ink)}
+.ev.span{border-left-color:transparent;background:var(--k);color:#fff;border-radius:0}
+.ev.span.first{border-radius:4px 0 0 4px}.ev.span.last{border-radius:0 4px 4px 0}
+.ev.span.first.last{border-radius:4px}
+.more{font-size:11.5px;color:var(--dsm-dim)}
+
+/* 표 */
+.tcap{display:flex;gap:10px;align-items:baseline;margin:0 0 6px}
+.tcap b{font-size:15px}.tcap span{font-size:12.5px;color:var(--dsm-dim)}
+.tsum{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.twrap{overflow-x:auto;min-width:0}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th{background:var(--dsm-th-bg);color:var(--dsm-dim);font-weight:700;font-size:12.5px;text-align:left;padding:7px 8px;border-bottom:1px solid var(--dsm-line2);border-right:1px solid var(--dsm-line)}
+td{padding:7px 8px;border-bottom:1px solid var(--dsm-line);border-right:1px solid var(--dsm-line);vertical-align:top}
+th:last-child,td:last-child{border-right:0}
+tr.is-now td{background:#e3efcf}tr.is-now td:first-child{box-shadow:inset 3px 0 0 var(--dsm-ink)}
+.st{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.st i{width:9px;height:9px;border-radius:50%;background:var(--k)}
+.dim{color:var(--dsm-dim)}
+td.dots{text-align:center;color:var(--dsm-dim)}
+
+/* 올리기 카드 */
+.form .row{margin-bottom:12px}
+.form .row>label{display:block;font-size:13px;color:var(--dsm-dim);margin-bottom:5px}
+.form .row>label b{color:var(--dsm-ink)}
+.in{height:38px;width:100%;border:1px solid var(--dsm-in-line);background:var(--dsm-in);border-radius:9px;padding:0 10px;font:inherit;font-size:14.5px;color:var(--dsm-ink)}
+.in.need{border-left:4px solid #b25000}
+.two{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center}
+.two span{color:var(--dsm-dim)}
+.quick{display:flex;gap:6px;margin-top:6px}
+.quick .chip{height:26px;font-size:12.5px;white-space:nowrap}
+.main{height:44px;width:100%;border:0;border-radius:11px;background:var(--dsm-c-btn);color:var(--dsm-on-btn);font-size:16px;font-weight:700}
+.result{margin-top:10px;background:#fff;border:1px solid var(--dsm-line);border-radius:9px;padding:9px 11px;font-size:13.5px}
+.result b.ok{color:#2b7a3d}
+.preview{font-size:13px;color:var(--dsm-dim);margin-top:4px}
+
+/* 떠 있는 큰 단추 (PC) */
+.fab{position:fixed;right:24px;bottom:40px;height:48px;padding:0 20px;border:0;border-radius:24px;background:var(--dsm-c-btn);color:#fff;font-size:16px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.18);display:flex;align-items:center;gap:8px}
+
+.sign{text-align:center;color:var(--dsm-dim);font-size:13px;padding:18px 0 6px}
+.note{background:#fff7d6;border:1px solid #e6cf7a;border-radius:9px;padding:8px 12px;font-size:13px;color:#5a4a00;margin-bottom:12px}
+.note b{color:#3d3200}
+
+
+/* 폰 첫 화면 — 오늘 */
+.today .days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:10px}
+.today .day{display:flex;flex-direction:column;align-items:center;padding:5px 0 4px;border-radius:9px;border:1px solid var(--dsm-line);background:#f8f9fa;min-height:50px}
+.today .day small{font-size:11px;color:var(--dsm-dim)}.today .day b{font-size:15px}
+.today .day.wk small,.today .day.wk b{color:#b03a3a}
+.today .day.on{background:var(--dsm-c-light);border:2px solid var(--dsm-ink)}
+.today .day i{width:6px;height:6px;border-radius:50%;background:var(--k);display:inline-block;margin:2px 1px 0}
+.today .sub{font-weight:700;margin:14px 0 6px;font-size:14px}
+.today .inside{font-size:13px;color:var(--dsm-dim);margin-top:8px}
+.card .when{margin-left:auto;font-size:12.5px;color:var(--dsm-dim);white-space:nowrap}
+summary.panel-head{list-style:none;cursor:pointer}summary::-webkit-details-marker{display:none}
+.open-hint{font-size:13px;color:var(--dsm-c-ink);font-weight:700}
+.calbox:not([open]) .open-hint::before{content:""}
+
+/* ── 폰 ── */
+@media (max-width:640px){
+  .head{height:48px;padding:0 12px}.head .job,.head .theme{display:none}
+  .wrap{padding:10px 10px 110px}
+  .grid{grid-template-columns:1fr}
+  .cal .d{min-height:54px;padding:3px 3px}
+  .cal .ev{display:none}
+  .cal .dots{display:flex;gap:2px;flex-wrap:wrap}
+  .cal .dots i{width:7px;height:7px;border-radius:50%;background:var(--k)}
+  .pc-only{display:none!important}
+  .hn{display:none}
+  .quick{flex-wrap:wrap}
+  .cards{display:grid;gap:8px}
+  .today .cards{display:grid}
+  .calbox .panel-head{margin-bottom:0;border-radius:14px}
+  .calbox[open] .panel-head{margin-bottom:12px;border-radius:14px 14px 0 0}
+  .calbox:not([open]){padding-bottom:0}
+  .card{background:#fff;border:1px solid var(--dsm-line);border-radius:11px;padding:10px 12px;border-left:5px solid var(--k);min-width:0}
+  .card .l1{display:flex;gap:8px;align-items:baseline}
+  .card .l1 b{font-size:15px}.card .l1 .k{font-size:12.5px;color:var(--k);font-weight:700}
+  .card .l2{font-size:13px;color:var(--dsm-dim);margin-top:2px}
+  .card.now{background:#e3efcf}
+  .fab{left:12px;right:12px;bottom:14px;height:52px;border-radius:14px;justify-content:center;font-size:17px}
+  .seg{display:none}
+}
+@media (min-width:641px){
+  .cal .dots,.cards,.phone-only,.fab{display:none!important}
+  .today{display:none!important}
+}
+</style>
+</head>
+<body>
+
+<!-- ① 머리 띠 — 아이콘 + 이름 한 번 · 판 번호 · 밝기 고르개 -->
+<div class="head">
+  <span class="who"><span class="ic"><i></i></span>구조부 일정</span>
+  <span class="job">출장 · 휴가 · 외근을 올리고 함께 봅니다</span>
+  <span class="sp"></span>
+  <span class="ver" title="판 v0.2 · 목업 10-28">v0.2</span>
+  <span class="theme"><span>기기</span><span class="on">시간</span><span>밝게</span><span>어둡게</span></span>
+</div>
+<!-- 상황 줄 -->
+<div class="now">지금 : <b>10월 28일(수)</b> · 오늘 부서 밖 <b>2명</b> (출장 1 · 휴가 1) → 올릴 것이 있으면 아래 <b>[＋ 일정 올리기]</b></div>
+
+<div class="wrap">
+  <div class="note"><b>목업입니다.</b> 눌러도 동작하지 않습니다. 이름 · 일정은 본보기이고, 실제 부서원 이름 · 종류는 시트에서 바꿉니다.</div>
+
+  <div class="grid">
+
+    <!-- ②-0 폰 첫 화면 — 오늘 누가 어디 (phone-only) -->
+    <div class="panel phone-only today">
+      <div class="panel-head">오늘 <span class="cnt">10/28(수) · 부서 밖 2명</span><span class="sp"></span><span class="cnt">전체 6명</span></div>
+      <div class="days">
+        <span class="day"><small>월</small><b>26</b></span>
+        <span class="day"><small>화</small><b>27</b><i style="--k:var(--k-휴가)"></i></span>
+        <span class="day on"><small>수</small><b>28</b><i style="--k:var(--k-휴가)"></i><i style="--k:var(--k-출장)"></i></span>
+        <span class="day"><small>목</small><b>29</b><i style="--k:var(--k-휴가)"></i></span>
+        <span class="day"><small>금</small><b>30</b><i style="--k:var(--k-외근)"></i></span>
+        <span class="day wk"><small>토</small><b>31</b></span>
+        <span class="day wk"><small>일</small><b>1</b></span>
+      </div>
+      <div class="cards">
+        <div class="card now" style="--k:var(--k-출장)"><div class="l1"><b>난○○</b><span class="k">출장</span><span class="when">하루</span></div><div class="l2">대전 · 발주처 · D197 이설표지판 심의</div></div>
+        <div class="card now" style="--k:var(--k-휴가)"><div class="l1"><b>이○○</b><span class="k">휴가</span><span class="when">10/27 ~ 29 · 둘째 날</span></div><div class="l2">연차 3일</div></div>
+      </div>
+      <div class="inside">자리에 있음 · 전채만 · 김○○ · 박○○ · 최○○</div>
+
+      <div class="sub">내일 10/29(목) <span class="dim">· 1명</span></div>
+      <div class="cards">
+        <div class="card" style="--k:var(--k-휴가)"><div class="l1"><b>이○○</b><span class="k">휴가</span><span class="when">마지막 날</span></div></div>
+      </div>
+      <div class="sub">이번 주 나머지 <span class="dim">· 1건</span></div>
+      <div class="cards">
+        <div class="card" style="--k:var(--k-외근)"><div class="l1"><b>박○○</b><span class="k">외근</span><span class="when">10/30(금)</span></div><div class="l2">양촌 과도교 · 현장 확인 · 오후 복귀</div></div>
+      </div>
+    </div>
+
+    <!-- ② 달력 판 -->
+    <details class="panel calbox" open>
+      <summary class="panel-head">달력 <span class="cnt">10월 · 일정 14건</span><span class="sp"></span>
+        <span class="seg"><span class="on">월</span><span>주</span><span>목록</span></span><span class="phone-only open-hint">▾ 달력 보기</span>
+      </summary>
+
+      <div class="chips"><span class="lab">종류</span>
+        <span class="chip on"><i style="--k:var(--dsm-ink)"></i>전체 <small>14</small></span>
+        <span class="chip" style="--k:var(--k-출장)"><i></i>출장 <small>4</small></span>
+        <span class="chip" style="--k:var(--k-휴가)"><i></i>휴가 <small>3</small></span>
+        <span class="chip" style="--k:var(--k-반차)"><i></i>반차 <small>2</small></span>
+        <span class="chip" style="--k:var(--k-외근)"><i></i>외근 <small>3</small></span>
+        <span class="chip" style="--k:var(--k-교육)"><i></i>교육 <small>1</small></span>
+        <span class="chip" style="--k:var(--k-회의)"><i></i>회의 <small>1</small></span>
+      </div>
+      <div class="chips pc-only"><span class="lab">사람</span>
+        <span class="chip on">전체</span><span class="chip">전채만</span><span class="chip">난○○</span><span class="chip">김○○</span><span class="chip">이○○</span><span class="chip">박○○</span><span class="chip">최○○</span>
+      </div>
+
+      <div class="cal-nav">
+        <button class="btn">◀</button><h2>2026년 10월</h2><button class="btn">▶</button>
+        <button class="btn today">오늘</button>
+      </div>
+
+      <div class="cal">
+        <div class="dow">월</div><div class="dow">화</div><div class="dow">수</div><div class="dow">목</div><div class="dow">금</div><div class="dow sat">토</div><div class="dow sun">일</div>
+
+        <!-- 9/28 ~ 10/4 -->
+        <div class="d other"><div class="n">28</div></div>
+        <div class="d other"><div class="n">29</div></div>
+        <div class="d other"><div class="n">30</div></div>
+        <div class="d"><div class="n">1</div></div>
+        <div class="d"><div class="n">2</div>
+          <span class="ev" style="--k:var(--k-반차)">반차 이○○ · 오후</span><div class="dots"><i style="--k:var(--k-반차)"></i></div></div>
+        <div class="d hol"><div class="n">3 <small class="hn">개천절</small></div></div>
+        <div class="d hol"><div class="n">4</div></div>
+
+        <!-- 10/5 ~ 10/11 : 추석 연휴 -->
+        <div class="d hol"><div class="n">5 <small class="hn">추석</small></div></div>
+        <div class="d hol"><div class="n">6 <small class="hn">추석</small></div></div>
+        <div class="d hol"><div class="n">7 <small class="hn">추석</small></div></div>
+        <div class="d hol"><div class="n">8 <small class="hn">대체</small></div></div>
+        <div class="d hol"><div class="n">9 <small class="hn">한글날</small></div></div>
+        <div class="d hol"><div class="n">10</div></div>
+        <div class="d hol"><div class="n">11</div></div>
+
+        <!-- 10/12 ~ 10/18 -->
+        <div class="d"><div class="n">12</div>
+          <span class="ev span first" style="--k:var(--k-출장)">출장 난○○ · 강릉 제진</span><div class="dots"><i style="--k:var(--k-출장)"></i></div></div>
+        <div class="d"><div class="n">13</div>
+          <span class="ev span last" style="--k:var(--k-출장)">출장 난○○</span>
+          <span class="ev" style="--k:var(--k-회의)">회의 전원 · 부서회의 14:00</span>
+          <div class="dots"><i style="--k:var(--k-출장)"></i><i style="--k:var(--k-회의)"></i></div></div>
+        <div class="d"><div class="n">14</div></div>
+        <div class="d"><div class="n">15</div>
+          <span class="ev" style="--k:var(--k-외근)">외근 김○○ · 발주처 협의</span><div class="dots"><i style="--k:var(--k-외근)"></i></div></div>
+        <div class="d"><div class="n">16</div>
+          <span class="ev" style="--k:var(--k-휴가)">휴가 박○○</span><div class="dots"><i style="--k:var(--k-휴가)"></i></div></div>
+        <div class="d hol"><div class="n">17</div></div>
+        <div class="d hol"><div class="n">18</div></div>
+
+        <!-- 10/19 ~ 10/25 -->
+        <div class="d"><div class="n">19</div></div>
+        <div class="d"><div class="n">20</div>
+          <span class="ev span first" style="--k:var(--k-교육)">교육 최○○ · 내진 설계</span><div class="dots"><i style="--k:var(--k-교육)"></i></div></div>
+        <div class="d"><div class="n">21</div>
+          <span class="ev span" style="--k:var(--k-교육)">교육 최○○</span><div class="dots"><i style="--k:var(--k-교육)"></i></div></div>
+        <div class="d"><div class="n">22</div>
+          <span class="ev span last" style="--k:var(--k-교육)">교육 최○○</span>
+          <span class="ev" style="--k:var(--k-외근)">외근 전채만 · 서대전 현장</span>
+          <div class="dots"><i style="--k:var(--k-교육)"></i><i style="--k:var(--k-외근)"></i></div></div>
+        <div class="d"><div class="n">23</div>
+          <span class="ev" style="--k:var(--k-반차)">반차 김○○ · 오전</span><div class="dots"><i style="--k:var(--k-반차)"></i></div></div>
+        <div class="d hol"><div class="n">24</div></div>
+        <div class="d hol"><div class="n">25</div></div>
+
+        <!-- 10/26 ~ 11/1 : 이번 주 -->
+        <div class="d"><div class="n">26</div></div>
+        <div class="d"><div class="n">27</div>
+          <span class="ev span first" style="--k:var(--k-휴가)">휴가 이○○ · 연차</span><div class="dots"><i style="--k:var(--k-휴가)"></i></div></div>
+        <div class="d today"><div class="n">28 <small class="hn">오늘</small></div>
+          <span class="ev span" style="--k:var(--k-휴가)">휴가 이○○</span>
+          <span class="ev" style="--k:var(--k-출장)">출장 난○○ · 대전 심의</span>
+          <div class="dots"><i style="--k:var(--k-휴가)"></i><i style="--k:var(--k-출장)"></i></div></div>
+        <div class="d"><div class="n">29</div>
+          <span class="ev span last" style="--k:var(--k-휴가)">휴가 이○○</span><div class="dots"><i style="--k:var(--k-휴가)"></i></div></div>
+        <div class="d"><div class="n">30</div>
+          <span class="ev" style="--k:var(--k-외근)">외근 박○○ · 양촌 과도교</span><div class="dots"><i style="--k:var(--k-외근)"></i></div></div>
+        <div class="d hol"><div class="n">31</div></div>
+        <div class="d other hol"><div class="n">1</div></div>
+
+        <!-- 11/2 ~ 11/8 -->
+        <div class="d other"><div class="n">2</div></div>
+        <div class="d other"><div class="n">3</div>
+          <span class="ev span first" style="--k:var(--k-출장)">출장 전채만 · 대전</span><div class="dots"><i style="--k:var(--k-출장)"></i></div></div>
+        <div class="d other"><div class="n">4</div>
+          <span class="ev span last" style="--k:var(--k-출장)">출장 전채만</span><div class="dots"><i style="--k:var(--k-출장)"></i></div></div>
+        <div class="d other"><div class="n">5</div></div>
+        <div class="d other"><div class="n">6</div></div>
+        <div class="d other hol"><div class="n">7</div></div>
+        <div class="d other hol"><div class="n">8</div></div>
+      </div>
+
+      <!-- ③ 이번 주 목록 — PC 는 표 · 폰은 카드 -->
+      <div class="pc-only" style="margin-top:16px">
+        <div class="tcap"><b>이번 주 일정</b><span>10/26(월) ~ 11/1(일) · 갱신 10-28 09:00</span></div>
+        <div class="tsum">
+          <span class="chip">이번 주 <b>4</b></span>
+          <span class="chip" style="--k:var(--k-출장)"><i></i>출장 <b>1</b></span>
+          <span class="chip" style="--k:var(--k-휴가)"><i></i>휴가 <b>1</b></span>
+          <span class="chip" style="--k:var(--k-외근)"><i></i>외근 <b>1</b></span>
+          <span class="chip" style="--k:var(--k-반차)"><i></i>반차 <b>1</b></span>
+        </div>
+
+        <div class="twrap pc-only"><table>
+          <thead><tr><th style="width:120px">날짜</th><th style="width:72px">종류</th><th style="width:80px">누가</th><th style="width:150px">어디</th><th>메모</th><th style="width:90px">올린 사람</th><th style="width:36px"></th></tr></thead>
+          <tbody>
+            <tr><td>10/23(금) 오전</td><td><span class="st" style="--k:var(--k-반차)"><i></i>반차</span></td><td>김○○</td><td class="dim">—</td><td>병원</td><td class="dim">김○○</td><td class="dots">⋯</td></tr>
+            <tr class="is-now"><td>10/27(화) ~ 10/29(목)</td><td><span class="st" style="--k:var(--k-휴가)"><i></i>휴가</span></td><td>이○○</td><td class="dim">—</td><td>연차 3일</td><td class="dim">이○○</td><td class="dots">⋯</td></tr>
+            <tr class="is-now"><td>10/28(수)</td><td><span class="st" style="--k:var(--k-출장)"><i></i>출장</span></td><td>난○○</td><td>대전 · 발주처</td><td>D197 이설표지판 심의</td><td class="dim">난○○</td><td class="dots">⋯</td></tr>
+            <tr><td>10/30(금)</td><td><span class="st" style="--k:var(--k-외근)"><i></i>외근</span></td><td>박○○</td><td>양촌 과도교</td><td>현장 확인 · 오후 복귀</td><td class="dim">전채만</td><td class="dots">⋯</td></tr>
+          </tbody>
+        </table></div>
+
+        <div class="cards">
+          <div class="card now" style="--k:var(--k-휴가)"><div class="l1"><b>10/27(화) ~ 10/29(목)</b><span class="k">휴가</span></div><div class="l2"><b style="color:var(--dsm-ink)">이○○</b> · 연차 3일</div></div>
+          <div class="card now" style="--k:var(--k-출장)"><div class="l1"><b>10/28(수)</b><span class="k">출장</span></div><div class="l2"><b style="color:var(--dsm-ink)">난○○</b> · 대전 · 발주처 · D197 이설표지판 심의</div></div>
+          <div class="card" style="--k:var(--k-외근)"><div class="l1"><b>10/30(금)</b><span class="k">외근</span></div><div class="l2"><b style="color:var(--dsm-ink)">박○○</b> · 양촌 과도교 · 현장 확인 · 오후 복귀</div></div>
+        </div>
+      </div>
+    </details>
+
+    <!-- ④ 올리기 카드 — PC 는 오른쪽에 늘 보임 · 폰은 [＋ 일정 올리기] 누르면 전체 화면 -->
+    <div class="panel form">
+      <div class="panel-head">일정 올리기 <span class="cnt">다섯 칸 · 30초</span></div>
+
+      <div class="row"><label><b>누가</b> <span class="dim">· 처음 한 번 고르면 기억</span></label>
+        <div class="chips" style="margin:0">
+          <span class="chip on">전채만</span><span class="chip">난○○</span><span class="chip">김○○</span><span class="chip">이○○</span><span class="chip">박○○</span><span class="chip">최○○</span>
+        </div></div>
+
+      <div class="row"><label><b>종류</b></label>
+        <div class="chips" style="margin:0">
+          <span class="chip on" style="--k:var(--k-출장)"><i></i>출장</span>
+          <span class="chip" style="--k:var(--k-휴가)"><i></i>휴가</span>
+          <span class="chip" style="--k:var(--k-반차)"><i></i>반차</span>
+          <span class="chip" style="--k:var(--k-외근)"><i></i>외근</span>
+          <span class="chip" style="--k:var(--k-교육)"><i></i>교육</span>
+          <span class="chip" style="--k:var(--k-회의)"><i></i>회의</span>
+          <span class="chip" style="--k:var(--k-그밖)"><i></i>그 밖</span>
+        </div></div>
+
+      <div class="row"><label><b>날짜</b> <span class="dim">· 하루면 왼쪽만</span></label>
+        <div class="two"><input class="in need" value="2026-11-03 (화)"><span>~</span><input class="in" value="2026-11-04 (수)"></div>
+        <div class="quick"><span class="chip">오늘</span><span class="chip">내일</span><span class="chip">이번 주 금</span><span class="chip">오전만</span><span class="chip">오후만</span></div></div>
+
+      <div class="row"><label><b>어디</b> <span class="dim">· 비워도 됨</span></label>
+        <input class="in" value="대전 · 발주처"></div>
+
+      <div class="row"><label><b>한 줄 메모</b> <span class="dim">· 비워도 됨</span></label>
+        <input class="in" value="D197 이설표지판 심의"></div>
+
+      <div class="preview">캘린더에 이렇게 들어갑니다 → <b style="color:var(--dsm-ink)">[출장] 전채만 · 대전 · 발주처</b> (11/3 ~ 11/4)</div>
+      <button class="main" style="margin-top:10px">올리기</button>
+
+      <div class="result"><b class="ok">됨</b> · [출장] 전채만 · 대전 11/3 ~ 11/4 → 1분 안에 부서원 캘린더에 보임 · <u>되돌리기</u></div>
+
+      <div class="pc-only" style="margin-top:16px;font-size:13px;color:var(--dsm-dim);line-height:1.6">
+        <b style="color:var(--dsm-ink)">내 캘린더에서도 보기</b><br>
+        폰 구글 · 삼성 캘린더 = 공유 수락 1번 → 저절로<br>
+        PC 아웃룩 · 아이폰 · 노션 = <u>구독 주소 복사</u> → 그 앱의 「캘린더 구독」 에 붙이기
+      </div>
+    </div>
+  </div>
+
+  <div class="sign">DSM · 부서 일정표 · 목업 v0.2 · 2026-10-28</div>
+</div>
+
+<button class="fab">＋ 일정 올리기</button>
+
+<script>
+if (matchMedia('(max-width:640px)').matches) document.querySelector('.calbox').removeAttribute('open');
+</script>
+</body>
+</html>
