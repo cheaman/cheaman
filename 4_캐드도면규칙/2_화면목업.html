@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="ko" class="dsm">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>도면 규칙 가르치기</title>
+<style>
+  /* DSM 부품 값 (dsm.css v1.9 ~ v1.12 의 값을 목업용으로 손으로 옮김 · 실제 도구는 부품 사본을 씀) */
+  :root{
+    --dsm-bg:#dde1e6; --dsm-panel:#f2f4f6; --dsm-line:#cdd3da; --dsm-panel2:#e9ecef;
+    --dsm-ink:#1f2328; --dsm-dim:#545d68; --dsm-faint:#626a73;
+    --dsm-head:#1f2328; --dsm-head2:#2b3036;
+    --dsm-c:#76b900; --dsm-c-soft:#eef7dc; --dsm-c-ink:#3d6400; --dsm-c-mark:#568800;
+    --dsm-c-btn:#3f7300; --dsm-on-btn:#ffffff; --dsm-brand:#e8743b;
+    --dsm-btn:#f8f9fa; --dsm-in:#f8f9fa; --dsm-in-line:#b9c1ca;
+    --dsm-ok:#1f7a3a; --dsm-warn:#b25000; --dsm-bad:#b42318; --dsm-info:#5b4bb5;
+    --dsm-ai-bg:#fbe4ee; --dsm-ai-ink:#1f2328;
+    --dsm-edit-bg:#fff3b0; --dsm-edit-ink:#1f2328;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --dsm-bg:#0d0f12; --dsm-panel:#1c1f24; --dsm-line:#30353c; --dsm-panel2:#24282e;
+      --dsm-ink:#e6e9ed; --dsm-dim:#a3abb5; --dsm-faint:#8a929c;
+      --dsm-head:#08090b; --dsm-head2:#121417;
+      --dsm-c:#e8743b; --dsm-c-soft:#3a2a20; --dsm-c-ink:#f0955f; --dsm-c-mark:#e8743b;
+      --dsm-c-btn:#e8743b; --dsm-on-btn:#111111;
+      --dsm-btn:#24282e; --dsm-in:#15181c; --dsm-in-line:#6b737d;
+      --dsm-ok:#6cc08a; --dsm-warn:#d9b648; --dsm-bad:#f08078; --dsm-info:#9d9be0;
+      --dsm-ai-bg:#4a2a3a; --dsm-ai-ink:#f3e6ec;
+      --dsm-edit-bg:#4a4320; --dsm-edit-ink:#f3efd6;
+    }
+  }
+  :root[data-theme="dark"]{
+    --dsm-bg:#0d0f12; --dsm-panel:#1c1f24; --dsm-line:#30353c; --dsm-panel2:#24282e;
+    --dsm-ink:#e6e9ed; --dsm-dim:#a3abb5; --dsm-faint:#8a929c;
+    --dsm-head:#08090b; --dsm-head2:#121417;
+    --dsm-c:#e8743b; --dsm-c-soft:#3a2a20; --dsm-c-ink:#f0955f; --dsm-c-mark:#e8743b;
+    --dsm-c-btn:#e8743b; --dsm-on-btn:#111111;
+    --dsm-btn:#24282e; --dsm-in:#15181c; --dsm-in-line:#6b737d;
+    --dsm-ok:#6cc08a; --dsm-warn:#d9b648; --dsm-bad:#f08078; --dsm-info:#9d9be0;
+    --dsm-ai-bg:#4a2a3a; --dsm-ai-ink:#f3e6ec;
+    --dsm-edit-bg:#4a4320; --dsm-edit-ink:#f3efd6;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--dsm-bg);color:var(--dsm-ink);
+    font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:14px;line-height:1.5}
+  button{font:inherit}
+  .mock{background:var(--dsm-edit-bg);color:var(--dsm-edit-ink);font-size:13px;padding:8px 16px}
+  .mock b{font-weight:700}
+
+  /* 머리 띠 */
+  .head{background:var(--dsm-head);color:#e6e9ed;display:flex;align-items:center;gap:12px;padding:0 16px;height:48px}
+  .who{display:flex;align-items:center;gap:8px;min-width:0}
+  .who .ico{width:28px;height:28px;border-radius:6px;background:#1f6fb2;display:grid;place-items:center;flex:none}
+  .who .ico svg{width:18px;height:18px}
+  .who b{font-size:15px;white-space:nowrap}
+  .who .what{color:#aab2bb;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sp{flex:1}
+  .ver{color:#aab2bb;font-size:12px;white-space:nowrap}
+  .theme{display:flex;border:1px solid #3a3f46;border-radius:6px;overflow:hidden}
+  .theme button{background:none;border:none;color:#aab2bb;padding:3px 7px;font-size:12px;cursor:pointer;min-height:28px}
+  .theme button.on{background:#3a3f46;color:#fff}
+
+  /* 단계 띠 */
+  .stepbar{background:var(--dsm-head2);padding:6px 16px;display:flex;gap:4px;flex-wrap:wrap}
+  .step{border:none;background:none;color:#aab2bb;display:flex;align-items:center;gap:7px;padding:6px 10px;border-radius:8px;cursor:pointer;min-height:40px}
+  .step .n{width:22px;height:22px;border-radius:50%;border:1.5px solid #6b737d;display:grid;place-items:center;font-size:12px;flex:none}
+  .step.done{color:#e6e9ed}
+  .step.done .n{background:#6b737d;border-color:#6b737d;color:#fff}
+  .step.now{color:#fff;background:rgba(255,255,255,.07);box-shadow:inset 0 -4px 0 var(--dsm-c)}
+  .step.now .n{background:var(--dsm-c);border-color:var(--dsm-c);color:#111}
+  .step.off{opacity:.45;cursor:not-allowed}
+  .situ{padding:8px 16px;color:var(--dsm-dim);font-size:13px;border-bottom:1px solid var(--dsm-line);background:var(--dsm-panel)}
+  .situ b{color:var(--dsm-ink);font-weight:600}
+
+  main{padding:14px 16px 80px;max-width:1180px;margin:0 auto}
+  .card{position:relative;background:var(--dsm-panel);border:1px solid var(--dsm-line);border-radius:14px;margin-bottom:12px;overflow:hidden}
+  .card.now{box-shadow:inset 4px 0 0 var(--dsm-c)}
+  .card.wait{opacity:.6}
+  .ch{display:flex;align-items:center;gap:10px;padding:9px 46px 9px 14px;background:var(--dsm-panel2);border-bottom:1px solid var(--dsm-line);min-height:40px;flex-wrap:wrap}
+  .ch .no{font-weight:700;color:var(--dsm-c-ink);font-size:13px}
+  .ch h2{margin:0;font-size:15px;font-weight:700}
+  .ch .st{font-size:13px;color:var(--dsm-dim)}
+  .ch .st.ok{color:var(--dsm-ok)}
+  .ch .st.now{color:var(--dsm-c-ink);font-weight:600}
+  .kno{position:absolute;top:7px;right:10px;font-size:11px;color:var(--dsm-faint);font-variant-numeric:tabular-nums}
+  .cb{padding:12px 14px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .hint{color:var(--dsm-dim);font-size:13px;margin-top:6px}
+  .btn{background:var(--dsm-btn);border:1px solid var(--dsm-line);color:var(--dsm-ink);border-radius:8px;padding:6px 12px;min-height:32px;cursor:pointer}
+  .btn:hover{border-color:var(--dsm-dim)}
+  .btn--main{background:var(--dsm-c-btn);color:var(--dsm-on-btn);border-color:var(--dsm-c-btn);font-weight:700;min-height:40px;padding:8px 16px}
+  .btn--view{background:none;border-color:transparent;color:var(--dsm-c-ink);text-decoration:underline;padding:4px 6px;min-height:28px}
+  .btn[disabled]{opacity:.5;cursor:not-allowed}
+  .drop{border:2px dashed var(--dsm-in-line);border-radius:12px;padding:26px 14px;text-align:center;color:var(--dsm-dim);background:var(--dsm-in)}
+  .drop b{display:block;color:var(--dsm-ink);font-size:15px;margin-bottom:4px}
+  .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--dsm-line);background:var(--dsm-panel2);border-radius:999px;padding:4px 11px;min-height:30px;font-size:13px}
+  .chip.on{background:var(--dsm-c-soft);border:2px solid var(--dsm-ink);color:var(--dsm-c-ink);font-weight:600}
+  .pill{display:inline-block;border-radius:6px;padding:1px 7px;font-size:12px;font-weight:600;white-space:nowrap}
+  .pill--ok{background:rgba(31,122,58,.12);color:var(--dsm-ok)}
+  .pill--warn{background:rgba(178,80,0,.12);color:var(--dsm-warn)}
+  .pill--bad{background:rgba(180,35,24,.12);color:var(--dsm-bad)}
+  .pill--mute{background:var(--dsm-panel2);color:var(--dsm-faint)}
+  .pill--ai{background:var(--dsm-ai-bg);color:var(--dsm-ai-ink)}
+  .pill--info{background:rgba(91,75,181,.12);color:var(--dsm-info)}
+  .ai{background:var(--dsm-ai-bg);color:var(--dsm-ai-ink);border-radius:4px;padding:0 4px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;font-weight:600;color:var(--dsm-dim);background:var(--dsm-panel2);padding:6px 8px;border-bottom:1px solid var(--dsm-line);white-space:nowrap}
+  td{padding:6px 8px;border-bottom:1px solid var(--dsm-line);vertical-align:top}
+  td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+  tr.now td{background:var(--dsm-c-soft)}
+  .tbl{overflow-x:auto;margin:0 -14px;padding:0 14px}
+  .cap{font-size:12px;color:var(--dsm-faint);margin-bottom:4px}
+  .res{margin-top:10px;background:var(--dsm-in);border:1px solid var(--dsm-line);border-radius:10px;padding:10px 12px;font-size:13px}
+  .res.hide{display:none}
+  .res b{font-weight:600}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+  .layer{border:1px solid var(--dsm-line);border-radius:10px;padding:10px 12px;background:var(--dsm-in)}
+  .layer h3{margin:0 0 4px;font-size:14px;display:flex;align-items:center;gap:8px}
+  .layer .k{display:grid;grid-template-columns:62px 1fr;gap:2px 8px;font-size:12.5px;margin-top:6px}
+  .layer .k span:nth-child(odd){color:var(--dsm-faint)}
+  pre{margin:6px 0 0;background:var(--dsm-panel);border:1px solid var(--dsm-line);border-radius:8px;padding:8px 10px;font-size:12px;white-space:pre-wrap;line-height:1.45;color:var(--dsm-ink)}
+  .q{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+  .num{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+  .num.bad{color:var(--dsm-bad)}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+  .tile{background:var(--dsm-in);border:1px solid var(--dsm-line);border-radius:10px;padding:8px 10px}
+  .tile .l{font-size:12px;color:var(--dsm-faint)}
+  .chain{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px}
+  .chain .c{border:1px solid var(--dsm-line);background:var(--dsm-in);border-radius:8px;padding:5px 9px}
+  .chain .a{color:var(--dsm-faint)}
+  .foot{position:fixed;left:0;right:0;bottom:0;background:var(--dsm-panel);border-top:1px solid var(--dsm-line);display:flex;align-items:center;gap:10px;padding:8px 16px;z-index:5}
+  .foot .msg{flex:1;font-size:13px;color:var(--dsm-dim);min-width:0}
+  .foot .msg b{color:var(--dsm-ink);font-weight:600}
+  .sign{text-align:center;color:var(--dsm-faint);font-size:12px;padding:14px 0 0}
+  .tip{font-size:12px;color:var(--dsm-faint)}
+  .sec{display:none}.sec.on{display:block}
+  @media (max-width:640px){
+    .who .what{display:none}
+    .theme{display:none}
+    .who b{white-space:normal;line-height:1.2}
+    .step .t{display:none}.step.now .t{display:inline}
+    .foot{flex-wrap:wrap}.foot .msg{width:100%}
+    .ch{padding-right:40px}
+  }
+</style>
+</head>
+<body>
+<div class="mock"><b>목업</b> · 모양을 보기 위한 가짜 화면입니다. 숫자와 파일 이름은 서대전 횡단면도를 본떠 지어 넣었습니다. 단계와 단추는 눌러 볼 수 있고, 실제로 파일을 읽지는 않습니다.</div>
+
+<header class="head">
+  <div class="who">
+    <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M4 18h16M6 18V8M18 18V8M4 8h16"/><path d="M9 12h6"/></svg></span>
+    <b>도면 규칙 가르치기</b>
+    <span class="what">· 도면 · 틀 · 말을 넣으면 AI 가 규칙 넷으로 바꿔 두고, 어디에 어떻게 기억됐는지 보인다</span>
+  </div>
+  <div class="sp"></div>
+  <span class="ver" title="판 v0.1 목업 · 고친 날 2026-10-29">v0.1 목업</span>
+  <div class="theme" title="밝기 고르개 · 처음 = 시간">
+    <button data-t="">기기</button><button data-t="time" class="on">시간</button><button data-t="light">밝게</button><button data-t="dark">어둡게</button>
+  </div>
+</header>
+
+<nav class="stepbar" id="stepbar"></nav>
+<div class="situ" id="situ"></div>
+
+<main>
+<!-- ───────── 1단계 자료 넣기 ───────── -->
+<section class="sec" data-s="1">
+  <div class="card now">
+    <span class="kno">1-01</span>
+    <div class="ch"><span class="no">1-1</span><h2>자료 넣기</h2><span class="st now">▶ 여기부터</span></div>
+    <div class="cb">
+      <div class="drop"><b>폴더나 파일을 여기에 끌어다 놓으십시오</b>도면 짝(받은 판 · 고친 판) · 회사 틀(dwt · 블록) · 녹음 · 지적기록 · 기준 문서 — 무엇이든 됩니다</div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn btn--main" onclick="fake(this,'폴더 「서대전_횡단면도」 를 읽었습니다 · 파일 21개 → 1-2 목록')">폴더 고르기</button>
+        <button class="btn">파일 골라 더하기</button>
+        <button class="btn">녹음 넣기</button>
+        <span class="tip">폴더는 통째로 바뀌고, 파일은 지금 목록에 더해집니다</span>
+      </div>
+      <div class="res hide"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="kno">1-02</span>
+    <div class="ch"><span class="no">1-2</span><h2>넣은 자료 — AI 가 종류를 갈랐습니다</h2><span class="st">파일 21개 · 분홍 칸은 AI 가 정한 것 · 틀리면 누르고 고칩니다</span></div>
+    <div class="cb">
+      <div class="tbl"><table>
+        <tr><th>이름</th><th>종류</th><th>어떻게 읽나</th><th>상태</th></tr>
+        <tr><td>서대전_횡단면도_받은판_01.dwg ↔ 고친판_01.dwg</td><td><span class="pill pill--ai">도면 짝 ①</span></td><td>DWG → DXF → 프로그램이 셈 (ezdxf)</td><td><span class="pill pill--ok">✓ 짝 맞음</span></td></tr>
+        <tr><td>… 짝 02 ~ 08 (7벌)</td><td><span class="pill pill--ai">도면 짝</span></td><td>같음</td><td><span class="pill pill--ok">✓ 짝 맞음</span></td></tr>
+        <tr><td>회사틀_토목.dwt · 블록_EL기호.dwg</td><td><span class="pill pill--ai">틀</span></td><td>치수 · 글자 스타일 · 블록 이름을 읽어 숫자 표로</td><td><span class="pill pill--ok">✓ 읽음</span></td></tr>
+        <tr><td>치수선규칙_녹음_1029.m4a (31분)</td><td><span class="pill pill--ai">말</span></td><td>받아쓰기 → AI 가 규칙 문장으로 (2단계에서 확인)</td><td><span class="pill pill--ok">✓ 받아씀 · 4,120자</span></td></tr>
+        <tr><td>1_질문지_답.md</td><td><span class="pill pill--ai">말</span></td><td>AI 가 규칙 문장으로</td><td><span class="pill pill--ok">✓ 읽음 · 24 물음 중 답 19</span></td></tr>
+        <tr><td>지적기록.md</td><td><span class="pill pill--ai">지적</span></td><td>같은 지적 3번 → 규칙 승격 후보</td><td><span class="pill pill--ok">✓ 지적 11줄</span></td></tr>
+        <tr><td>도면작성지침_발주처.pdf (스캔)</td><td><span class="pill pill--ai">기준</span></td><td>그림만 들어 있어 AI 가 직접 봄</td><td><span class="pill pill--mute">아직 아무도 못 읽음 · 이름만 남김</span></td></tr>
+        <tr><td>겹침_결과_1028.xlsx · 단면지도.json</td><td><span class="pill pill--mute">도구가 만든 것</span></td><td>—</td><td><span class="pill pill--mute">뺌 2개</span></td></tr>
+      </table></div>
+      <div class="hint">넣은 파일 21개 → 보는 것 19개 · 도구가 만든 것 2개는 뺐습니다</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="kno">1-03</span>
+    <div class="ch"><span class="no">1-3</span><h2>갖춤 확인</h2><span class="st">갖춤 4 · 모자람 1 · 확인 못 함 1</span></div>
+    <div class="cb">
+      <div class="tiles">
+        <div class="tile"><div class="l">도면 짝 (횡단면도)</div><div><span class="pill pill--ok">✓ 갖춤</span> 8벌</div></div>
+        <div class="tile"><div class="l">회사 틀</div><div><span class="pill pill--ok">✓ 갖춤</span> dwt 1 · 블록 3</div></div>
+        <div class="tile"><div class="l">말로 된 규칙</div><div><span class="pill pill--ok">✓ 갖춤</span> 녹음 1 · 답 19/24</div></div>
+        <div class="tile"><div class="l">지적기록</div><div><span class="pill pill--ok">✓ 갖춤</span> 11줄</div></div>
+        <div class="tile"><div class="l">구조도 · 종평면도 본보기</div><div><span class="pill pill--bad">✗ 모자람</span> 0벌</div></div>
+        <div class="tile"><div class="l">발주처 기준</div><div><span class="pill pill--mute">? 확인 못 함</span> 스캔</div></div>
+      </div>
+      <div class="row" style="margin-top:10px"><button class="btn">모자란 것 목록 복사</button><span class="tip">횡단면도만으로도 다음 단계로 갑니다 · 구조도는 5단계 뒤에</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────── 2단계 AI 가 읽은 것 확인 ───────── -->
+<section class="sec" data-s="2">
+  <div class="card">
+    <span class="kno">2-01</span>
+    <div class="ch"><span class="no">2-1</span><h2>도면에서 센 숫자 — 프로그램이 셈 (근거 있음)</h2><span class="st ok">✓ 8벌 · 객체 12,480</span></div>
+    <div class="cb">
+      <div class="cap">출력 기준 mm · 받은 판 8벌의 고친 판에서 셈</div>
+      <div class="tbl"><table>
+        <tr><th>무엇</th><th class="n">값</th><th>출처</th><th>어떻게 셌나</th></tr>
+        <tr><td>치수선 단 수 (바깥)</td><td class="n">최대 3 · 보통 2</td><td>고친판 01~08 · 치수 1,214개</td><td>같은 방향 치수선의 띄움 값을 묶음</td></tr>
+        <tr><td>단 사이 간격</td><td class="n">7.8 ~ 8.2</td><td>치수 1,214개 중 2단 이상 388</td><td>인접 단 띄움 차이</td></tr>
+        <tr><td>치수 글자 높이</td><td class="n">2.5</td><td>치수 스타일 DSM-25 (dwt)</td><td>틀에서 읽음</td></tr>
+        <tr><td>지시선 꺾임 각</td><td class="n">45° (138/141)</td><td>지시선 141개</td><td>첫 마디 각도 · 3개는 30°</td></tr>
+        <tr><td>지시선 글 자리</td><td class="n">오른쪽 위 97%</td><td>지시선 141개</td><td>끝점 대비 글 상자 위치</td></tr>
+        <tr><td>EL 기호 블록</td><td class="n">EL-TRI · 글 오른쪽</td><td>블록 삽입 96개</td><td>블록 이름 · 글 상대 위치</td></tr>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="card now">
+    <span class="kno">2-02</span>
+    <div class="ch"><span class="no">2-2</span><h2>말에서 읽은 규칙 — AI 가 문장으로 만들었습니다</h2><span class="st now">▶ 14줄 중 확인 9 · 남은 5</span></div>
+    <div class="cb">
+      <div class="cap">분홍 글은 AI 가 쓴 것 · 한 줄마다 ○ 또는 × · × 면 왜 아닌지 한 줄 적어 주시면 지적기록에 쌓입니다</div>
+      <div class="tbl"><table>
+        <tr><th>#</th><th>규칙 문장</th><th>출처</th><th>확인</th></tr>
+        <tr><td>1</td><td><span class="ai">치수선은 부재 바깥으로 2단까지 둔다. 3단이 되면 그 치수는 지시선으로 뺀다</span></td><td>녹음 03:12</td><td><span class="pill pill--ok">○ 맞음</span></td></tr>
+        <tr><td>2</td><td><span class="ai">단 사이 간격은 8 mm. 첫 단은 부재 선에서 10 mm</span></td><td>녹음 04:40 · 질문지 2 · 3</td><td><span class="pill pill--ok">○ 맞음</span></td></tr>
+        <tr><td>3</td><td><span class="ai">치수 글자가 칸보다 길면 먼저 위로 올리고, 그래도 겹치면 옆으로, 마지막에 지시선으로 뺀다</span></td><td>녹음 07:05</td><td><span class="pill pill--ok">○ 맞음</span></td></tr>
+        <tr class="now"><td>4</td><td><span class="ai">지시선끼리 겹치면 나중에 그린 것이 비킨다</span></td><td>녹음 12:30</td><td class="q"><button class="btn">○ 맞음</button><button class="btn">× 아니다</button><button class="btn btn--view">고치기</button></td></tr>
+        <tr><td>5</td><td><span class="ai">EL 둘이 2 mm 안으로 가까우면 위 것을 왼쪽, 아래 것을 오른쪽에 둔다</span></td><td>녹음 15:10</td><td class="q"><button class="btn">○ 맞음</button><button class="btn">× 아니다</button><button class="btn btn--view">고치기</button></td></tr>
+        <tr><td>…</td><td class="tip">9 ~ 14 (접힘 · 확인 끝)</td><td></td><td><button class="btn btn--view">펴기</button></td></tr>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="kno">2-03</span>
+    <div class="ch"><span class="no">2-3</span><h2>도면과 말이 어긋나는 것 — 전무님이 정하십니다</h2><span class="st">물음 2</span></div>
+    <div class="cb">
+      <div class="res" style="margin-top:0">
+        <b>물음 1.</b> 말은 「2단까지」(규칙 1) 인데 고친 판 03 · 07 에는 3단이 38곳 있습니다 (2-1). 어느 쪽입니까?
+        <div class="q"><button class="btn">말이 맞음 · 3단은 지시선으로</button><button class="btn">도면이 맞음 · 3단도 됨</button><button class="btn">그때그때 · 규칙 안 만듦</button></div>
+      </div>
+      <div class="res">
+        <b>물음 2.</b> 지시선 각은 45° 가 138개, 30° 가 3개(판 05) 입니다. 30° 는 틀린 것입니까, 자리가 없을 때 허용입니까?
+        <div class="q"><button class="btn">틀린 것 · 45° 만</button><button class="btn">자리 없으면 30° 허용</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────── 3단계 규칙 넷 만들기 ───────── -->
+<section class="sec" data-s="3">
+  <div class="card now">
+    <span class="kno">3-01</span>
+    <div class="ch"><span class="no">3-1</span><h2>규칙 넷 만들기</h2><span class="st now">▶ 2단계 확인 ○ 12줄 + 도면 숫자 6 → 넷으로</span></div>
+    <div class="cb">
+      <div class="row">
+        <button class="btn btn--main" onclick="fake(this,'만들었습니다 · 규칙 글 18줄 · 숫자 표 1벌(23칸) · 프로그램 3개 중 2개 새 판 · 정답지 8벌 등록 → 아래 네 칸')">규칙 넷 만들기</button>
+        <span class="tip">AI 는 글과 숫자 표만 씁니다. 프로그램과 정답지는 클로드가 대화에서 만들고 여기에 등록합니다</span>
+      </div>
+      <div class="res hide"></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card"><span class="kno">3-02</span>
+      <div class="ch"><span class="no">3-2</span><h2>① 규칙 글</h2><span class="st ok">✓ 18줄 / 30</span></div>
+      <div class="cb">
+        <div class="layer">
+          <h3>스킬 cad-drawing-work · 13장 치수선 · 지시선 · 기호 자리</h3>
+          <div class="k"><span>어디</span><span>…\skills\cad-drawing-work\SKILL.md 13장</span><span>언제 읽나</span><span>클로드가 대화를 열 때 저절로</span><span>판</span><span>v0 · 2026-10-29</span></div>
+          <pre>13-1 치수선은 바깥 2단까지 · 3단은 지시선으로 (전무님 10-29 · 규칙 1)
+13-2 글자 겹침은 위 → 옆 → 지시선 차례로 비킴 (규칙 3)
+13-3 지시선 45° · 글은 오른쪽 위 · 자리 없을 때만 30° (물음 2)
+13-4 EL 2 mm 안 둘 → 위 왼쪽 · 아래 오른쪽 (규칙 5)
+…</pre>
+          <div class="row" style="margin-top:8px"><button class="btn btn--view">규칙 글 전부 보기</button><button class="btn btn--view">어디서 왔나</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="card"><span class="kno">3-03</span>
+      <div class="ch"><span class="no">3-3</span><h2>② 숫자 표</h2><span class="st ok">✓ 23칸</span></div>
+      <div class="cb">
+        <div class="layer">
+          <h3>주석규칙_횡단면도.json</h3>
+          <div class="k"><span>어디</span><span>과업 폴더 6_규칙\</span><span>언제 읽나</span><span>프로그램이 돌 때 (겹침 세기 · 자리 후보)</span><span>판</span><span>v0 · 2026-10-29</span></div>
+          <pre>치수선.단수_최대      2        ← 규칙 1
+치수선.단_간격_mm     8        ← 도면 7.8~8.2 · 녹음 04:40
+치수선.첫단_띄움_mm   10
+글자.높이_mm          2.5      ← dwt DSM-25
+지시선.각             [45, 30] ← 30 은 자리 없을 때
+비킴_차례             [위, 옆, 지시선]
+EL.가까움_mm          2</pre>
+          <div class="row" style="margin-top:8px"><button class="btn btn--view">표로 보기</button><button class="btn btn--view">값 고치기</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="card"><span class="kno">3-04</span>
+      <div class="ch"><span class="no">3-4</span><h2>③ 프로그램</h2><span class="st">2 됨 · 1 아직</span></div>
+      <div class="cb">
+        <div class="layer">
+          <div class="k"><span>어디</span><span>1_실행기\ (파이썬 · ezdxf)</span><span>언제 읽나</span><span>단추를 누를 때 · 숫자 표를 읽어 돌아감</span></div>
+          <div class="tbl" style="margin-top:8px"><table>
+            <tr><th>무엇</th><th>판</th><th>하는 일</th></tr>
+            <tr><td>겹침 세기</td><td><span class="pill pill--ok">v0.2</span></td><td>글 · 치수 · 지시선 · 구름 상자가 겹친 수</td></tr>
+            <tr><td>짝 찾기</td><td><span class="pill pill--ok">v0.1</span></td><td>부재 ↔ 치수 ↔ 글 ↔ EL 을 자리로 묶음 (단면 지도)</td></tr>
+            <tr><td>자리 후보 세기</td><td><span class="pill pill--mute">아직</span></td><td>규칙대로 치수선 단 · 글 자리 후보 → 사람이 고름</td></tr>
+          </table></div>
+        </div>
+      </div>
+    </div>
+    <div class="card"><span class="kno">3-05</span>
+      <div class="ch"><span class="no">3-5</span><h2>④ 정답지</h2><span class="st ok">✓ 8벌</span></div>
+      <div class="cb">
+        <div class="layer">
+          <div class="k"><span>어디</span><span>과업 폴더 _정답\ (받은 판 · 전무님 고친 판 짝)</span><span>언제 읽나</span><span>4단계 시험 때만 · 평소엔 안 읽음</span></div>
+          <div class="hint">짝 8벌 · 판마다 「바뀐 객체 목록」 을 미리 뽑아 둠 (대조 열쇠 = 종류 · 층 · 좌표 · 글)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────── 4단계 정답지로 시험 ───────── -->
+<section class="sec" data-s="4">
+  <div class="card now">
+    <span class="kno">4-01</span>
+    <div class="ch"><span class="no">4-1</span><h2>받은 판에 규칙을 돌려 전무님 판과 견주기</h2><span class="st now">▶ 8판 · 적정 5 · 보완 필요 2 · 자료 미비 1</span></div>
+    <div class="cb">
+      <div class="row"><button class="btn btn--main" onclick="fake(this,'8판을 돌렸습니다 · 4분 10초 · 아래 표')">8판 시험 돌리기</button><span class="tip">예상 3 ~ 5분 · 끝 예정 시각을 여기에 적습니다</span></div>
+      <div class="res hide"></div>
+      <div class="tbl" style="margin-top:10px"><table>
+        <tr><th>판</th><th class="n">겹침 · 규칙 판</th><th class="n">겹침 · 전무님 판</th><th class="n">자리 차이 평균 mm</th><th class="n">다른 객체</th><th>판정</th></tr>
+        <tr><td>01</td><td class="n">0</td><td class="n">0</td><td class="n">0.4</td><td class="n">2</td><td><span class="pill pill--ok">적정</span></td></tr>
+        <tr><td>02</td><td class="n">0</td><td class="n">0</td><td class="n">0.6</td><td class="n">3</td><td><span class="pill pill--ok">적정</span></td></tr>
+        <tr class="now"><td>03</td><td class="n">2</td><td class="n">0</td><td class="n">3.1</td><td class="n">14</td><td><span class="pill pill--bad">보완 필요</span></td></tr>
+        <tr><td>04</td><td class="n">0</td><td class="n">0</td><td class="n">0.5</td><td class="n">1</td><td><span class="pill pill--ok">적정</span></td></tr>
+        <tr><td>05</td><td class="n">0</td><td class="n">1</td><td class="n">0.9</td><td class="n">4</td><td><span class="pill pill--ok">적정</span></td></tr>
+        <tr><td>06</td><td class="n">0</td><td class="n">0</td><td class="n">0.3</td><td class="n">0</td><td><span class="pill pill--ok">적정</span></td></tr>
+        <tr><td>07</td><td class="n">5</td><td class="n">0</td><td class="n">4.8</td><td class="n">27</td><td><span class="pill pill--bad">보완 필요</span></td></tr>
+        <tr><td>08</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td><span class="pill pill--mute">자료 미비 · 고친 판 없음</span></td></tr>
+      </table></div>
+      <div class="hint">「적정」 = 겹침 0 · 자리 차이 1 mm 안 · 「다른 객체」 = 규칙 판과 전무님 판이 다른 글 · 치수 · 지시선 수</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="kno">4-02</span>
+    <div class="ch"><span class="no">4-2</span><h2>판 03 · 틀린 곳 — 왜 다른지 한 줄만</h2><span class="st">14곳 중 까닭 적음 3</span></div>
+    <div class="cb">
+      <div class="tbl"><table>
+        <tr><th>#</th><th>무엇</th><th>규칙 판</th><th>전무님 판</th><th>까닭 (전무님)</th></tr>
+        <tr><td>1</td><td>지시선 「앵커 M24」 글</td><td>오른쪽 위</td><td>왼쪽 위</td><td><span class="pill pill--ok">적음</span> 오른쪽에 치수가 와서 · 규칙 13-3 에 예외 더함</td></tr>
+        <tr><td>2</td><td>벽 두께 치수 350</td><td>2단</td><td>1단 (옆 치수와 합침)</td><td><span class="pill pill--ok">적음</span> 같은 선상 치수는 한 단으로 합침 · 새 규칙 후보</td></tr>
+        <tr><td>3</td><td>EL 기호 +12.350</td><td>왼쪽</td><td>왼쪽 (글만 작게 2.0)</td><td><span class="pill pill--ok">적음</span> 틀을 깬 것 · 규칙 안 만듦</td></tr>
+        <tr class="now"><td>4</td><td>구름 (앵커 변경)</td><td>글만 감쌈</td><td>치수까지 감쌈</td><td class="q"><input style="font:inherit;padding:5px 8px;border:1px solid var(--dsm-in-line);border-radius:6px;background:var(--dsm-in);color:var(--dsm-ink);min-width:180px" placeholder="왜 다른지 한 줄"><button class="btn">적기</button></td></tr>
+        <tr><td>…</td><td class="tip">5 ~ 14</td><td></td><td></td><td><button class="btn btn--view">펴기</button></td></tr>
+      </table></div>
+      <div class="hint">까닭 한 줄이 지적기록에 쌓이고, 같은 까닭이 3번이면 규칙 글 · 숫자 표에 올라갑니다 (아래 4-3)</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="kno">4-03</span>
+    <div class="ch"><span class="no">4-3</span><h2>지적 → 규칙으로 올리기</h2><span class="st">올릴 것 1 · 기다림 2</span></div>
+    <div class="cb">
+      <div class="tbl"><table>
+        <tr><th>지적 (같은 뜻으로 묶음)</th><th class="n">몇 번</th><th>어디서</th><th>어떻게 하나</th></tr>
+        <tr class="now"><td>같은 선상 치수는 한 단으로 합친다</td><td class="n">3</td><td>판 03 · 05 · 07</td><td class="q"><button class="btn btn--main" style="min-height:32px;padding:5px 12px">규칙 글 13-5 로 올리기</button><button class="btn">안 올림</button></td></tr>
+        <tr><td>오른쪽에 치수가 있으면 지시선 글을 왼쪽에</td><td class="n">2</td><td>판 03 · 07</td><td><span class="pill pill--mute">한 번 더 나오면 올림</span></td></tr>
+        <tr><td>구름은 치수까지 감싼다</td><td class="n">1</td><td>판 03</td><td><span class="pill pill--mute">기다림</span></td></tr>
+      </table></div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────── 5단계 기억 창고 ───────── -->
+<section class="sec" data-s="5">
+  <div class="card now">
+    <span class="kno">5-01</span>
+    <div class="ch"><span class="no">5-1</span><h2>지금 무엇이 어디에 기억돼 있나</h2><span class="st now">▶ 네 층 · 마지막 고침 2026-10-29</span></div>
+    <div class="cb">
+      <div class="tbl"><table>
+        <tr><th>층</th><th>무엇</th><th>어디</th><th>판</th><th class="n">크기</th><th>언제 읽히나</th><th></th></tr>
+        <tr><td>① 규칙 글</td><td>13장 치수선 · 지시선 · 기호 자리</td><td>스킬 cad-drawing-work</td><td>v0.1</td><td class="n">19줄</td><td>클로드가 대화를 열 때 <span class="pill pill--ok">저절로</span></td><td><button class="btn btn--view">열기</button></td></tr>
+        <tr><td>① 규칙 글</td><td>기억 줄 2 (콘솔 함정 · 판 꼴)</td><td>클로드 기억</td><td>—</td><td class="n">2줄</td><td>대화를 열 때 <span class="pill pill--ok">저절로</span></td><td><button class="btn btn--view">열기</button></td></tr>
+        <tr><td>② 숫자 표</td><td>주석규칙_횡단면도.json</td><td>과업 6_규칙\</td><td>v0.1</td><td class="n">24칸</td><td>프로그램이 돌 때 <span class="pill pill--info">도구</span></td><td><button class="btn btn--view">열기</button></td></tr>
+        <tr><td>③ 프로그램</td><td>겹침 세기 · 짝 찾기 · (자리 후보)</td><td>1_실행기\</td><td>v0.2 · v0.1 · —</td><td class="n">3개</td><td>단추를 누를 때 <span class="pill pill--info">도구</span></td><td><button class="btn btn--view">열기</button></td></tr>
+        <tr><td>④ 정답지</td><td>횡단면도 짝 8벌 + 지적기록 14줄</td><td>_정답\ · 지적기록.md</td><td>—</td><td class="n">8벌</td><td>시험 때만 <span class="pill pill--mute">사람이 시킴</span></td><td><button class="btn btn--view">열기</button></td></tr>
+        <tr><td>원본</td><td>녹음 · 질문지 답 · dwt · 받은 도면</td><td>2_자료\원본\</td><td>—</td><td class="n">21개</td><td><span class="pill pill--mute">안 읽음 · 출처로만</span></td><td><button class="btn btn--view">열기</button></td></tr>
+      </table></div>
+      <div class="hint">「저절로」 인 것만 다음 대화의 클로드가 처음부터 압니다. 나머지는 도구가 돌 때 읽거나 사람이 열어야 합니다. 그래서 규칙 글은 30줄 안에 두고, 숫자는 표로 뺍니다</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="kno">5-02</span>
+    <div class="ch"><span class="no">5-2</span><h2>이 규칙이 어디서 왔나 — 한 줄을 누르면 거슬러 올라갑니다</h2><span class="st">규칙 13-3</span></div>
+    <div class="cb">
+      <div class="row" style="margin-bottom:8px"><span class="chip on">13-3 지시선 45° · 자리 없을 때만 30°</span><span class="chip">13-1</span><span class="chip">13-5 (새)</span><span class="chip">json 지시선.각</span></div>
+      <div class="chain">
+        <span class="c">녹음 1029 · 09:48 「지시선은 45도로」</span><span class="a">→</span>
+        <span class="c">2-2 규칙 문장 #6 · AI 가 씀</span><span class="a">→</span>
+        <span class="c">전무님 ○ 10-29</span><span class="a">→</span>
+        <span class="c">도면 숫자 2-1 「45° 138 · 30° 3」 어긋남</span><span class="a">→</span>
+        <span class="c">물음 2 → 「자리 없으면 30° 허용」 10-29</span><span class="a">→</span>
+        <span class="c">규칙 글 13-3 v0 + json 지시선.각 [45, 30]</span><span class="a">→</span>
+        <span class="c">시험 판 05 적정 · 판 07 보완 필요 (30° 가 아닌 자리)</span>
+      </div>
+      <div class="hint">규칙 한 줄마다 이 사슬이 있어서, 나중에 「왜 이렇게 됐지」 를 물으면 녹음 몇 분까지 돌아갑니다</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="kno">5-03</span>
+    <div class="ch"><span class="no">5-3</span><h2>다음 대화의 클로드가 보게 되는 것 — 미리 보기</h2><span class="st">새 대화를 열었다고 치면</span></div>
+    <div class="cb">
+      <div class="grid2">
+        <div class="layer"><h3><span class="pill pill--ok">저절로 압니다</span></h3>
+          <div class="hint" style="margin-top:0">규칙 글 19줄 (스킬 13장) · 기억 줄 2 · 이 계획서 위치</div>
+          <pre>13-1 치수선 2단까지 · 3단은 지시선으로
+13-3 지시선 45° · 자리 없을 때만 30°
+13-5 같은 선상 치수는 한 단으로 (10-29 새)
+…</pre></div>
+        <div class="layer"><h3><span class="pill pill--info">도구를 돌리면 압니다</span></h3>
+          <div class="hint" style="margin-top:0">json 24칸 · 단면 지도 · 겹침 수</div>
+          <pre>겹침 세기 → 「판 03 겹침 2 · 자리 차이 3.1」
+자리 후보 → 「치수 350 : 1단 (합침) · 2단」 → 사람이 고름</pre></div>
+        <div class="layer"><h3><span class="pill pill--mute">모릅니다 (사람이 열어 줘야)</span></h3>
+          <div class="hint" style="margin-top:0">녹음 원본 · 질문지 답 전문 · 정답지 도면 · 지난 대화에서 한 말</div>
+          <pre>→ 그래서 「말로만 한 것」 은 2-2 에서 ○ 를 받아야 규칙 글이 됩니다</pre></div>
+      </div>
+      <div class="row" style="margin-top:10px"><button class="btn btn--main">규칙 묶음 내보내기 (스킬 + json + 지적기록)</button><span class="tip">다른 PC · 부서원 과업 폴더에 같은 규칙을 심을 때</span></div>
+    </div>
+  </div>
+  <div class="sign">DSM · 도면 규칙 가르치기 · v0.1 목업 · 2026-10-29</div>
+</section>
+</main>
+
+<footer class="foot" id="foot"></footer>
+
+<script>
+/* 생김새 : "v0.1 목업 2026-10-29 · 무엇" ← 판 글자는 여기 한 곳 */
+var 화면판 = "v0.1 목업";
+var 단계 = [
+  {n:1, t:"자료 넣기",          st:"done", situ:"파일 21개 중 보는 것 19개 · 갖춤 4 · 모자람 1 → <b>1-1 에 폴더를 넣거나 [다음 : 2 AI 가 읽은 것 ▸]</b>", foot:"넣은 파일 21개 → 보는 것 19개 · 도구가 만든 것 2개 뺌", next:"2 AI 가 읽은 것 확인"},
+  {n:2, t:"AI 가 읽은 것 확인", st:"now",  situ:"도면 숫자 6 셈 · 말 규칙 14줄 중 확인 9 → <b>2-2 남은 5줄에 ○ × · 2-3 물음 2 에 답</b>", foot:"규칙 문장 14줄 · 확인 9 · 남은 5 · 물음 2", next:"3 규칙 넷 만들기"},
+  {n:3, t:"규칙 넷 만들기",     st:"off",  situ:"확인 ○ 12줄 + 도면 숫자 6 → <b>3-1 [규칙 넷 만들기]</b>", foot:"규칙 글 18줄 · 숫자 표 23칸 · 프로그램 2/3 · 정답지 8벌", next:"4 정답지로 시험"},
+  {n:4, t:"정답지로 시험",      st:"off",  situ:"8판 중 적정 5 · 보완 필요 2 · 자료 미비 1 → <b>4-2 판 03 틀린 곳에 까닭 · 4-3 지적 1 올리기</b>", foot:"8판 · 적정 5 · 보완 필요 2 · 자료 미비 1 · 올릴 지적 1", next:"5 기억 창고"},
+  {n:5, t:"기억 창고",          st:"off",  situ:"네 층 · 저절로 읽히는 것 21줄 · 도구가 읽는 것 24칸 → <b>여기까지 보시면 끝</b>", foot:"여기까지 하시면 끝입니다 · 규칙 묶음을 내보내면 다른 과업에 심을 수 있습니다", next:null}
+];
+var 지금 = 2;
+function 그리기(){
+  var sb = document.getElementById("stepbar"); sb.innerHTML = "";
+  단계.forEach(function(s){
+    var b = document.createElement("button");
+    b.className = "step " + (s.n < 지금 ? "done" : s.n === 지금 ? "now" : "done");
+    b.innerHTML = '<span class="n">' + s.n + '</span><span class="t">' + s.t + '</span>';
+    b.title = s.t; b.onclick = function(){ 지금 = s.n; 그리기(); window.scrollTo(0,0); };
+    sb.appendChild(b);
+  });
+  var s = 단계[지금-1];
+  document.getElementById("situ").innerHTML = "지금 : " + s.situ;
+  document.querySelectorAll(".sec").forEach(function(e){ e.classList.toggle("on", +e.dataset.s === 지금); });
+  var f = document.getElementById("foot"), h = "";
+  if (지금 > 1) h += '<button class="btn" onclick="가(' + (지금-1) + ')">◂ 이전</button>';
+  h += '<div class="msg"><b>' + s.foot + '</b></div>';
+  if (s.next) h += '<button class="btn btn--main" onclick="가(' + (지금+1) + ')">다음 : ' + s.next + ' ▸</button>';
+  f.innerHTML = h;
+}
+function 가(n){ 지금 = n; 그리기(); window.scrollTo(0,0); }
+/* 목업용 가짜 결과 — 누른 칸 안에 결과를 적는다 (step-flow 규칙 3) */
+function fake(btn, 글){
+  var box = btn.closest(".cb").querySelector(".res");
+  box.classList.remove("hide"); box.innerHTML = "… 돌리는 중 (가짜) 1초";
+  btn.disabled = true;
+  setTimeout(function(){ box.innerHTML = "<b>됨</b> · " + 글; btn.disabled = false; }, 900);
+}
+/* 밝기 고르개 */
+document.querySelectorAll(".theme button").forEach(function(b){
+  b.onclick = function(){
+    document.querySelectorAll(".theme button").forEach(function(x){ x.classList.remove("on"); });
+    b.classList.add("on");
+    var t = b.dataset.t, h = new Date().getHours();
+    if (t === "time") t = (h >= 18 || h < 7) ? "dark" : "light";
+    if (t) document.documentElement.setAttribute("data-theme", t); else document.documentElement.removeAttribute("data-theme");
+  };
+});
+(function(){ var h = new Date().getHours(); document.documentElement.setAttribute("data-theme", (h >= 18 || h < 7) ? "dark" : "light"); })();
+그리기();
+</script>
+</body>
+</html>
