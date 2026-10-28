@@ -69,7 +69,8 @@ class CalendarEvent {
   getStartTime() { return new Date(this.start); } getEndTime() { return new Date(this.end); }
   setAllDayDates(s, e) { this.start = new Date(s); this.end = new Date(e); this.allDay = true; return this; }
   getTag(k) { return this.tags[k] === undefined ? null : this.tags[k]; }
-  setTag(k, v) { this.tags[k] = String(v); return this; }
+  setTag(k, v) { if (String(v) === '') throw new Error('Invalid argument: value'); this.tags[k] = String(v); return this; }
+  deleteTag(k) { delete this.tags[k]; return this; }
   setDescription(d) { this.desc = d; return this; } getDescription() { return this.desc; }
   deleteEvent() { this.deleted = true; this.cal.events = this.cal.events.filter(e => e !== this); }
 }

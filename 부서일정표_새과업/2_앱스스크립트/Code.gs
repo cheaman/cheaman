@@ -268,7 +268,11 @@ function 제목_(v) {
 }
 
 function 태그쓰기_(ev, v) {
-  ev.setTag('종류', v.종류).setTag('누가', v.누가).setTag('시간대', v.시간대).setTag('어디', v.어디).setTag('메모', v.메모).setTag('과업', v.과업);
+  // 빈 값은 태그를 지움 — 구글이 빈 글 태그를 거절할 수 있어서
+  [['종류', v.종류], ['누가', v.누가], ['시간대', v.시간대], ['어디', v.어디], ['메모', v.메모], ['과업', v.과업]].forEach(function (kv) {
+    if (kv[1]) ev.setTag(kv[0], kv[1]);
+    else if (ev.getTag(kv[0]) !== null) { try { ev.deleteTag(kv[0]); } catch (e) { ev.setTag(kv[0], ''); } }
+  });
   if (!ev.getTag('올린')) ev.setTag('올린', (v.화면 || '화면') + ' ' + 글때_(new Date()));
   ev.setDescription(['종류: ' + v.종류, '누가: ' + v.누가, v.어디 ? '어디: ' + v.어디 : '', v.메모 ? '메모: ' + v.메모 : '', v.과업 ? '과업: ' + v.과업 : '', v.시간대 ? '시간대: ' + v.시간대 : '', '— 구조부 일정 화면에서 올림'].filter(Boolean).join('\n'));
 }
