@@ -238,6 +238,7 @@
 
   .numtbl td.n,.numtbl th.n{text-align:right}
   .head{position:sticky;top:0;z-index:20}   /* 시험 · 기억 창고 · 설정 단추는 늘 같은 자리 (사람처럼 누르기 16번) */
+  #페이지띠{position:sticky;top:48px;z-index:19}   /* ① ② ③ 도 늘 보임 (세 페이지 걷기 25번) */
   .svgbox{border:1px solid var(--dsm-line);border-radius:10px;background:#fff;padding:4px;cursor:zoom-in}
   .svgbox img{width:100%;max-height:260px;object-fit:contain;display:block}
   .cap img{cursor:zoom-in}
@@ -565,7 +566,7 @@ async function 계획초안(고침){
   var st = document.getElementById("초안상태"); st.classList.remove("hide"); st.innerHTML = '<span class="busy"></span>AI 가 계획을 짜는 중 · 약 1분 · 끝 예정 ' + 끝예정분(1.5); document.getElementById("초안단추").disabled = true;
   var j = await api("/api/계획/초안", {주제: 주제, 바라는것: document.getElementById("바라는것").value, 고칠말: 고침 ? document.getElementById("고칠말").value : ""});
   document.getElementById("초안단추").disabled = false;
-  if (j.됨) { st.innerHTML = "<b>됨</b> · 단원 " + j.초안.단원.length + "개 → 아래 표에서 고치고 확정"; 교육 = await api("/api/교육"); 계획그리기(); document.getElementById("고칠말").value = ""; }
+  if (j.됨) { st.innerHTML = '<b>됨</b> · 단원 ' + j.초안.단원.length + '개 → 아래 표에서 고치고 확정 <button class="btn btn--main" style="min-height:32px;margin-left:8px" onclick="계획확정()">이 계획으로 확정 → ② 가르치기</button>'; 교육 = await api("/api/교육"); 계획그리기(); document.getElementById("고칠말").value = ""; }
   else st.innerHTML = '<span class="err">안 됨 · ' + esc(j.오류 || "") + '</span> → 「기본 계획으로 시작」 뒤 손으로 고치십시오';
 }
 function 끝예정분(분){ var d = new Date(Date.now() + 분 * 60000); return (d.getHours() < 10 ? "0" : "") + d.getHours() + ":" + (d.getMinutes() < 10 ? "0" : "") + d.getMinutes(); }

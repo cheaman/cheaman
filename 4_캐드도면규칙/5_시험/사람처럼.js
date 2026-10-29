@@ -34,7 +34,7 @@ const 걸음 = [], 막힘 = [];
   } else {
     await 걷기('AI 없음 → 「기본 계획으로 시작」', p.getByRole('button', { name: /기본 계획/ }), async () => { await p.getByRole('button', { name: /기본 계획/ }).click(); await p.waitForTimeout(200); }, null, async () => (await p.locator('#초안표 tr').count()) >= 4);
   }
-  await 걷기('「이 계획으로 확정 → ② 가르치기」', p.getByRole('button', { name: /이 계획으로 확정/ }), async () => { await p.getByRole('button', { name: /이 계획으로 확정/ }).click(); await p.waitForFunction(() => document.getElementById('페이지_가르치기').style.display !== 'none', null, { timeout: 10000 }); await p.waitForTimeout(3300); }, /넣으십시오/, async () => /단원 0/.test(await p.locator('#교육띠').innerText()));
+  await 걷기('「이 계획으로 확정 → ② 가르치기」 (3초 되묻기)', p.getByRole('button', { name: /이 계획으로 확정/ }).first(), async () => { await p.getByRole('button', { name: /이 계획으로 확정/ }).first().click(); await p.waitForFunction(() => document.getElementById('페이지_가르치기').style.display !== 'none', null, { timeout: 10000 }); await p.waitForTimeout(3300); }, /넣으십시오/, async () => /단원 0/.test(await p.locator('#교육띠').innerText()));
   // ── ② 자료 없음 ──
   await 걷기('② 가르치기 (자료 없음)', null, async () => { await p.waitForTimeout(100); }, /넣으십시오/, async () => 보이나(p.getByRole('button', { name: '파일 더하기' })));
   await 걷기('교육 띠 — 지금 단원 · 넣을 자료가 보이나', null, async () => {}, null, async () => /단원 0.*넣을 자료/.test((await p.locator('#교육띠').innerText()).replace(/\s+/g, ' ')));
@@ -68,7 +68,8 @@ const 걸음 = [], 막힘 = [];
     await 걷기('「AI 답 원문」 → 한 화면 작은 창', p.getByRole('button', { name: 'AI 답 원문' }).first(), async () => { await p.getByRole('button', { name: 'AI 답 원문' }).first().click(); await p.waitForFunction(() => document.getElementById('ov').classList.contains('on') && /이해/.test(document.getElementById('창몸').textContent), null, { timeout: 5000 }); }, null, async () => /"한줄"/.test(await p.locator('#창몸').innerText()));
     await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.getElementById('ov').classList.contains('on'));
     const ok = (await p.getByRole('button', { name: '○ 맞게 이해함' }).count()) ? p.getByRole('button', { name: '○ 맞게 이해함' }).first() : p.locator('#이해칸 .res .q .btn').first();   // ○ 또는 물음의 첫 답
-    await 걷기((await p.getByRole('button', { name: '○ 맞게 이해함' }).count()) ? '「○ 맞게 이해함」' : '물음에 답 (첫 보기)', ok, async () => { await ok.click(); await p.waitForFunction(() => /○ 받음/.test(document.querySelector('#규칙목록').textContent), null, { timeout: 5000 }); }, /올리십시오|○ ×/, async () => !(await p.locator('#올리기').isDisabled()));
+    { const 보이는정할 = await 보이나(p.locator('#이해칸 .uc:not(.done) .q .btn').first()); if (!(await 보이나(ok)) && 보이는정할) await ok.scrollIntoViewIfNeeded(); var okName = ((await p.getByRole('button', { name: '○ 맞게 이해함' }).count()) ? '「○ 맞게 이해함」' : '물음에 답 (첫 보기)') + (보이는정할 ? '' : ' (정할 단추가 하나도 안 보임)'); }
+    await 걷기(okName, (await 보이나(p.locator('#이해칸 .uc:not(.done) .q .btn').first())) ? null : ok, async () => { await ok.click(); await p.waitForFunction(() => /○ 받음/.test(document.querySelector('#규칙목록').textContent), null, { timeout: 5000 }); }, /올리십시오|○ ×/, async () => !(await p.locator('#올리기').isDisabled()));
     const no = p.getByRole('button', { name: '× 아니다' }).first();
     if (await no.count()) await 걷기('「× 아니다」 → 까닭 한 줄', no, async () => { await no.click(); await p.waitForTimeout(600); }, null, async () => /× 받았습니다/.test(await 알림글()) || /× 아니다/.test(await p.locator('#이해칸').innerText()));
     // 사람은 「보이는 정할 단추」 부터 누른다 — 고쳐서 ○ 가 화면 밑이어도 다른 정할 단추가 보이면 막힘이 아님 (그때는 스크롤해 누름)
