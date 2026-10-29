@@ -237,6 +237,7 @@
   }
 
   .numtbl td.n,.numtbl th.n{text-align:right}
+  .head{position:sticky;top:0;z-index:20}   /* 시험 · 기억 창고 · 설정 단추는 늘 같은 자리 (사람처럼 누르기 16번) */
   .svgbox{border:1px solid var(--dsm-line);border-radius:10px;background:#fff;padding:4px;cursor:zoom-in}
   .svgbox img{width:100%;max-height:260px;object-fit:contain;display:block}
   .cap img{cursor:zoom-in}
@@ -295,7 +296,7 @@
   </div>
 
   <div class="col m band band--ai">
-    <div class="colh"><b>② AI 가 이해한 것</b> 되짚음 · ○ 면 아래 목록으로 <span class="who ai">AI</span></div>
+    <div class="colh"><b>② AI 가 이해한 것</b> 되짚음 · ○ 면 아래 목록으로 <span id="자료이동" style="display:flex;gap:6px;align-items:center;margin-left:8px"></span><span class="who ai">AI</span></div>
     <div id="이해칸"><div class="tip">자료를 고르면 여기에</div></div>
   </div>
 
@@ -326,7 +327,9 @@
 
 <script>
 /* 생김새 : "v0.1 2026-10-29 · 무엇" ← 판 글자는 서버 /api/살아있나 가 준다 */
-var 자료 = {목록: []}, 규칙 = {목록: [], 판: "v0"}, 고른 = null, 살아 = {};
+var 자료 = {목록: []}, 규칙 = {목록: [], 판: "v0"}, 고른 = null, 살아 = {}, 옮길것 = false, 이전이해수 = {};
+function 띠로(){ var h = document.querySelector(".col.m .colh"); if (!h) return; var r = h.getBoundingClientRect(); if (r.top < 56 || r.top > window.innerHeight - 220) window.scrollTo({ top: window.scrollY + r.top - 52, behavior: "auto" }); }
+function 자료옮기기(d){ var i = 자료.목록.findIndex(function(x){ return x.번호 === 고른; }); var j = Math.max(0, Math.min(자료.목록.length - 1, i + d)); 고른 = 자료.목록[j].번호; 옮길것 = true; 그리기(); }   /* 머리가 이미 보이면 안 움직임 (step-flow 8) */
 function esc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 function 알림(t){ var e=document.getElementById("toast"); e.textContent=t; e.classList.add("on"); clearTimeout(e._t); e._t=setTimeout(function(){e.classList.remove("on")},3000); }
 async function api(주소, 몸){ var r = await fetch(주소, 몸 ? {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(몸)} : undefined); var j = await r.json(); if (j && j.오류) 알림("안 됨 · " + j.오류); return j; }
@@ -364,11 +367,12 @@ function 그리기(){
   자료.목록.forEach(function(a){
     var d = document.createElement("div"); d.className = "tl" + (a.번호 === 고른 ? " on" : "");
     var th = a.그림.length ? '<span class="thumbs">' + a.그림.slice(0, 2).map(function(u){ return '<img class="thumb" src="' + u + '" alt="">'; }).join("") + (a.그림.length > 2 ? '<span class="more">+' + (a.그림.length - 2) + '</span>' : '') + '</span>' : '';
-    var 보는중 = /보는 중/.test(a.상태) && !a.이해수;
+    var 보는중 = /보는 중|차례 기다림/.test(a.상태) && !a.이해수;
     d.innerHTML = th + '<div class="nm">' + esc(a.이름) + '<small>' + (보는중 ? '<span class="busy"></span>' : '') + esc(a.상태) + ' · 이해 ' + a.이해수 + (a.남은 ? ' · 남은 ' + a.남은 : '') + '</small></div><span class="pill pill--ai">' + esc(a.종류) + '</span>' + (a.그림.length ? '<span class="see" onclick="event.stopPropagation();그림보기(' + a.번호 + ')">' + (a.종류 === "도면" ? "도면 그림 보기" : "그림 " + a.그림.length + "장 보기") + '</span>' : '');
-    d.onclick = function(){ 고른 = a.번호; 그리기(); }; ul.appendChild(d);
+    d.onclick = function(){ 고른 = a.번호; 옮길것 = true; 그리기(); }; ul.appendChild(d);
   });
-  var 전체 = 0, 남 = 0; 자료.목록.forEach(function(a){ 전체 += a.이해수; 남 += a.남은; });
+  var 전체 = 0, 남 = 0, 보는중 = [], 끝예정 = ""; 자료.목록.forEach(function(a){ 전체 += a.이해수; 남 += a.남은; if (/보는 중|차례 기다림/.test(a.상태) && !a.이해수) 보는중.push(a); });
+  if (보는중.length) { var t = 보는중[0].AI시작 ? 보는중[0].AI시작.split(":") : null; if (t) { var d = new Date(); d.setHours(+t[0], +t[1], +t[2]); d = new Date(d.getTime() + 90000 * 보는중.length); 끝예정 = (d.getHours() < 10 ? "0" : "") + d.getHours() + ":" + (d.getMinutes() < 10 ? "0" : "") + d.getMinutes(); } }
   document.getElementById("자료수").textContent = 자료.목록.length + "개 · 이해 " + 전체 + " · 남은 " + 남;
   var a = 자료.목록.filter(function(x){ return x.번호 === 고른; })[0], box = document.getElementById("이해칸"); box.innerHTML = "";
   if (!a) { box.innerHTML = '<div class="tip">자료를 고르면 여기에</div>'; }
@@ -382,7 +386,7 @@ function 그리기(){
       box.insertAdjacentHTML("beforeend", t);
     }
     if (!a.이해수) {
-      var w = /보는 중/.test(a.상태) ? '<span class="busy"></span>AI 가 보는 중 · 보통 30 ~ 90초 · 끝나면 여기 카드가 생깁니다' : a.AI길 === "파일" ? '봐주세요 파일을 썼습니다 → 클로드 대화창에 「봐주세요 봐 줘」 라고 하시면 파악한것 파일이 오고 여기 카드가 생깁니다' : esc(a.상태);
+      var w = /차례 기다림/.test(a.상태) ? '<span class="busy"></span>' + esc(a.상태.split(" · ").pop()) + ' · 한 건에 30 ~ 90초 · 차례가 오면 봅니다' : /보는 중/.test(a.상태) ? '<span class="busy"></span>AI 가 보는 중 · 보통 30 ~ 90초 · 끝나면 여기 카드가 생깁니다' : a.AI길 === "파일" ? '봐주세요 파일을 썼습니다 → 클로드 대화창에 「봐주세요 봐 줘」 라고 하시면 파악한것 파일이 오고 여기 카드가 생깁니다' : esc(a.상태);
       box.insertAdjacentHTML("beforeend", '<div class="uc"><div class="uh"><b>되짚기</b><span class="tip">' + w + '</span><span class="sp"></span>' + (a.AI오류 ? '<button class="btn" onclick="AI다시(' + a.번호 + ')">AI 에게 다시</button>' : '') + '</div>' + (a.AI오류 ? '<div class="ub"><div class="err">' + esc(a.AI오류) + '</div></div>' : '') + '</div>');
     }
     (a.이해 || []).forEach(function(u){
@@ -399,13 +403,16 @@ function 그리기(){
       box.insertAdjacentHTML("beforeend", '<div class="uc' + (끝 ? ' done' : '') + '">' + h + '<div class="ub">' + left + right + '</div></div>');
     });
   }
+  if (a) { var 새로 = (이전이해수[a.번호] === 0 || 이전이해수[a.번호] == null) && a.이해수 > 0; if (옮길것 || 새로) { 옮길것 = false; 띠로(); } 이전이해수[a.번호] = a.이해수; }
+  var 이동 = document.getElementById("자료이동"), 차례 = 자료.목록.findIndex(function(x){ return a && x.번호 === a.번호; });
+  이동.innerHTML = a ? '<button class="btn" style="min-height:28px;padding:2px 8px" onclick="자료옮기기(-1)" ' + (차례 <= 0 ? 'disabled title="첫 자료"' : 'title="이전 자료 (위 띠 타일과 같음)"') + '>◂ 이전 자료</button><span class="tip">' + (차례 + 1) + ' / ' + 자료.목록.length + ' · ' + esc(a.이름.slice(0, 22)) + '</span><button class="btn" style="min-height:28px;padding:2px 8px" onclick="자료옮기기(1)" ' + (차례 >= 자료.목록.length - 1 ? 'disabled title="마지막 자료"' : 'title="다음 자료"') + '>다음 자료 ▸</button>' : '';
   var rl = document.getElementById("규칙목록"); rl.innerHTML = "";
   if (!규칙.목록.length) rl.innerHTML = '<li><div class="nm tip">아직 없음 — ② 띠에서 ○ 를 누르면 여기 쌓입니다</div></li>';
   규칙.목록.slice().reverse().forEach(function(r){ var li = document.createElement("li"); li.innerHTML = '<div class="nm">' + esc(r.글) + '<small>' + esc(r.판) + ' · ' + esc(r.출처) + '</small></div>' + ({올림:'<span class="pill pill--ok">올림</span>', '○ 받음':'<span class="pill pill--info">○ 받음 · 올릴 것</span>'}[r.상태] || esc(r.상태)); rl.appendChild(li); });
   var 올릴 = 규칙.목록.filter(function(r){ return r.상태 === "○ 받음"; }).length;
   document.getElementById("규칙수").textContent = 규칙.목록.length + "줄 · 올릴 것 " + 올릴;
   document.getElementById("규칙판").textContent = 규칙.판 || "v0";
-  document.getElementById("situ").innerHTML = "지금 : 자료 " + 자료.목록.length + " → AI 이해 " + 전체 + " 중 ○ " + (전체 - 남) + " · 남은 " + 남 + " → <b>" + (자료.목록.length ? (남 ? "② 띠에서 ○ × 를 누르면 ③ 띠에 쌓입니다" : 올릴 ? "바닥 단추로 규칙을 올리십시오" : "자료를 더 넣거나 말로 적으십시오") : "① 띠에 자료를 넣으십시오") + "</b>";
+  document.getElementById("situ").innerHTML = "지금 : 자료 " + 자료.목록.length + " → AI 이해 " + 전체 + " 중 정함 " + (전체 - 남) + " · 남은 " + 남 + " → <b>" + (자료.목록.length ? (남 ? "② 띠에서 ○ × 를 누르면 ③ 띠에 쌓입니다" : 보는중.length ? "AI 가 " + 보는중.length + "건을 보는 중 · 끝 예정 " + (끝예정 || "약 1분 뒤") + " → 기다리거나 자료를 더 넣으십시오" : 올릴 ? "바닥 단추로 규칙을 올리십시오" : "자료를 더 넣거나 말로 적으십시오") : "① 띠에 자료를 넣으십시오") + "</b>";
   document.getElementById("footmsg").innerHTML = "<b>○ 받음 " + 올릴 + "줄</b> · 올리면 규칙 " + (규칙.판 || "v0") + " → 다음 판 · 정답지 시험이 먼저 돕니다";
   document.getElementById("올리기").disabled = !올릴; document.getElementById("올리기").title = 올릴 ? "" : "지금은 못 누름 — ○ 받은 규칙이 없음";
 }

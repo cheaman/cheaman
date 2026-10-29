@@ -3,7 +3,7 @@
 v0.1 · 2026-10-29 · 4_캐드도면규칙 / 2_실행기 / 엔진
 약속 : 스킬 tool-ai-bridge 3 · 4 · 5-5 장. 파일로 주고받는 길은 늘 남긴다 (클로드 대화창에서 「봐주세요 봐 줘」).
 되받아 검사 : AI 가 적은 숫자가 프로그램이 센 숫자에 없으면 「확인 필요」."""
-import os, io, re, json, shutil, subprocess, tempfile, datetime, threading
+import os, io, re, json, shutil, subprocess, tempfile, datetime, threading, queue
 
 답하는모양 = {
   "이해": [{"한줄": "우리 업 말로 · 숫자를 박아 · 한 줄에 규칙 하나", "어디": "도면 어디 · 어느 객체", "무엇이": "무엇이 보이나 · 수", "어떻게": "규칙으로 어떻게 쓰나",
@@ -20,6 +20,7 @@ import os, io, re, json, shutil, subprocess, tempfile, datetime, threading
 4. 도면과 말이 어긋나면 상태 ask 로 두고 물음 한 문장과 보기 2 ~ 4 를 적는다.
 5. 코드 이름 · 영어 용어를 쓰지 않는다. 「치수선 · 지시선 · 단 · 간격 · 글자 높이 · EL 기호 · 구름」 같은 우리 말로.
 6. 답은 JSON 만. 앞뒤에 설명 · 인사 · 코드블록 표시를 넣지 않는다. 빈 칸은 "" (null 금지).
+7. 파일을 쓰거나 저장하지 않는다. 그림은 Read 로 보기만 한다. 답은 그대로 출력하면 도구가 받는다. 허가를 묻지 않는다.
 답하는 모양 :
 """ + json.dumps(답하는모양, ensure_ascii=False, indent=1)
 
@@ -39,7 +40,7 @@ def 클로드있나():
 
 class 다리:
     def __init__(self, 창고):
-        self.창고 = 창고; self.도는중 = {}       # 자료번호 → 스레드
+        self.창고 = 창고; self.줄 = queue.Queue(); self.줄에 = []; self.일꾼 = None   # AI 는 한 번에 하나 (넷을 같이 보내니 셋이 150초를 넘김 · 10-29)
     def 경로(self, 번호, 어느):
         return os.path.join(self.창고.주고받기, "%s_%03d.%s" % (어느, 번호, "md" if 어느 == "봐주세요" else "json"))
 
@@ -56,7 +57,9 @@ class 다리:
             줄 += ["## 말 · 글 (전무님이 적거나 녹음을 받아쓴 것)", "", 자료["글"], ""]
         if 자료.get("그림들"):
             줄 += ["## 그림 (캡처 · 직접 보십시오 — Read 로 열기 · 벡터가 없어 숫자는 눈으로)", ""] + ["- %s" % p for p in 자료["그림들"]] + [""]
-        줄 += ["## 답하는 모양 — `%s` 에 JSON 만" % os.path.basename(self.경로(자료["번호"], "파악한것")), "", "```json", json.dumps(답하는모양, ensure_ascii=False, indent=1), "```", ""]
+        if 클로드있나(): 줄 += ["## 답하는 모양 — 아래 JSON 을 그대로 출력 (파일로 쓰지 않음 · 앞뒤 말 없음)", ""]
+        else: 줄 += ["## 답하는 모양 — `%s` 에 JSON 만" % os.path.basename(self.경로(자료["번호"], "파악한것")), ""]
+        줄 += ["```json", json.dumps(답하는모양, ensure_ascii=False, indent=1), "```", ""]
         with io.open(self.경로(자료["번호"], "봐주세요"), "w", encoding="utf-8") as f: f.write("\n".join(줄))
         return self.경로(자료["번호"], "봐주세요")
 
@@ -77,12 +80,24 @@ class 다리:
             if 없음: u["확인필요"] = "센 숫자에 없는 수 : " + " · ".join(없음)
         return 이해
 
-    def 부르기(self, 자료, 끝나면):
-        """이 PC 에 claude 가 있으면 뒤에서 부른다. 없으면 봐주세요 파일만 남긴다."""
+    def 부르기(self, 자료, 끝나면, 상태갱신=None):
+        """이 PC 에 claude 가 있으면 줄에 세워 하나씩 부른다. 없으면 봐주세요 파일만 남긴다."""
         p = self.봐주세요쓰기(자료)
         if not 클로드있나(): return "파일"
-        t = threading.Thread(target=self._돌기, args=(자료, p, 끝나면), daemon=True); t.start(); self.도는중[자료["번호"]] = t
+        self.줄에.append(자료["번호"]); self.줄.put((자료, p, 끝나면, 상태갱신))
+        if self.일꾼 is None or not self.일꾼.is_alive():
+            self.일꾼 = threading.Thread(target=self._일꾼, daemon=True); self.일꾼.start()
         return "클로드"
+    def 앞에몇건(self, 번호):
+        return self.줄에.index(번호) if 번호 in self.줄에 else 0
+    def _일꾼(self):
+        while True:
+            try: 자료, p, 끝나면, 상태갱신 = self.줄.get(timeout=2)
+            except queue.Empty: return
+            if 상태갱신: 상태갱신(자료["번호"], "AI 가 보는 중")
+            self._돌기(자료, p, 끝나면)
+            try: self.줄에.remove(자료["번호"])
+            except ValueError: pass
 
     def _돌기(self, 자료, 물음경로, 끝나면):
         임시 = tempfile.mkdtemp(prefix="dsm_rule_ai_"); 규칙경로 = os.path.join(임시, "rules.txt")
@@ -97,10 +112,10 @@ class 다리:
         if 모델: 명령 += ["--model", 모델]
         t0 = datetime.datetime.now(); 답 = None; 오류 = ""
         try:
-            r = subprocess.run(명령, input=글, capture_output=True, text=True, encoding="utf-8", cwd=임시, timeout=150, shell=(os.name == "nt"))
+            r = subprocess.run(명령, input=글, capture_output=True, text=True, encoding="utf-8", cwd=임시, timeout=180, shell=(os.name == "nt"))
             본문 = r.stdout.strip(); 답 = JSON뽑기(본문)
             if 답 is None: 오류 = "답에서 JSON 을 못 찾음 : " + 본문[:200] + " " + r.stderr[:200]
-        except subprocess.TimeoutExpired: 오류 = "150초 안에 답이 없음 — 「봐주세요 봐 줘」 로 대화창에 부탁하십시오"
+        except subprocess.TimeoutExpired: 오류 = "180초 안에 답이 없음 — [AI 에게 다시] 를 누르거나 「봐주세요 봐 줘」 로 대화창에 부탁하십시오"
         except Exception as e: 오류 = "claude 부르기 실패 : %s" % e
         초 = (datetime.datetime.now() - t0).seconds
         if 답 is not None:
