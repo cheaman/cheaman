@@ -262,10 +262,52 @@
     <button data-t="">기기</button><button data-t="time" class="on">시간</button><button data-t="light">밝게</button><button data-t="dark">어둡게</button>
   </div>
 </header>
+<div class="stepbar" id="페이지띠"></div>
 <div class="situ" id="situ">지금 : 서버에 묻는 중 …</div>
 <div class="situ" id="교육띠" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--dsm-line)"></div>
 
-<div class="wrap">
+<main id="페이지_계획" class="sec" style="padding:14px 16px 80px;max-width:1180px;margin:0 auto">
+  <div class="card now"><span class="kno">P-01</span>
+    <div class="ch"><span class="no">1-1</span><h2>주제와 바라는 것</h2><span class="st">AI 가 교육 계획 초안을 짭니다 · 고치고 다시 부탁 · 확정하면 ② 가르치기로</span></div>
+    <div class="cb">
+      <div class="set" style="grid-template-columns:120px 1fr"><span>주제 한 줄</span><input id="주제" placeholder="예 : 횡단면도 치수선 · 지시선 · 기호 자리 규칙 / 옹벽 표준도 그리기 / 검토의견서 쓰는 법"><span>바라는 것</span><textarea class="say" id="바라는것" placeholder="이것이 되면 끝 · 누가 쓰나 · 자료가 무엇이 있나 · 걱정되는 것"></textarea></div>
+      <div class="row" style="margin-top:8px"><button class="btn btn--main" id="초안단추" onclick="계획초안()">AI 에게 계획 초안 부탁</button><span class="tip">약 1분 · 빈 상태의 AI 가 주제만 보고 짭니다</span></div>
+      <div class="res hide" id="초안상태"></div>
+    </div>
+  </div>
+  <div class="card"><span class="kno">P-02</span>
+    <div class="ch"><span class="no">1-2</span><h2>계획 초안 — 고쳐서 쓰십시오</h2><span class="st" id="초안머리">아직 없음</span></div>
+    <div class="cb" id="초안칸"><div class="tip">초안이 오면 여기 표로 · 칸을 바로 고칠 수 있습니다</div></div>
+  </div>
+  <div class="card"><span class="kno">P-03</span>
+    <div class="ch"><span class="no">1-3</span><h2>고칠 말 → 다시 부탁 · 또는 확정</h2></div>
+    <div class="cb">
+      <textarea class="say" id="고칠말" placeholder="예 : 단원 2 와 3 을 합쳐 · 자료는 서대전 짝 8판뿐 · 끝 조건을 더 느슨하게"></textarea>
+      <div class="row" style="margin-top:8px"><button class="btn" onclick="계획초안(true)">고친 말로 다시 부탁</button><span class="sp"></span><button class="btn btn--main" onclick="계획확정()">이 계획으로 확정 → ② 가르치기</button></div>
+    </div>
+  </div>
+</main>
+<main id="페이지_검증" class="sec" style="padding:14px 16px 80px;max-width:1180px;margin:0 auto">
+  <div class="card now"><span class="kno">V-01</span>
+    <div class="ch"><span class="no">3-1</span><h2>ⓐ 배운 것 정리 — 규칙 글 30줄 안</h2><span class="st" id="정리머리"></span></div>
+    <div class="cb">
+      <div class="row"><button class="btn btn--main" onclick="정리부탁()">AI 에게 정리 부탁</button><span class="tip">○ 받은 규칙을 한 줄에 하나로 · 같은 뜻은 합치고 · 어긋나면 (물음) · 약 1분</span></div>
+      <div id="정리칸" style="margin-top:10px"><div class="tip">정리가 오면 여기 줄마다 · 고치고 「이 정리로 규칙 글 확정」</div></div>
+    </div>
+  </div>
+  <div class="card"><span class="kno">V-02</span>
+    <div class="ch"><span class="no">3-2</span><h2>ⓑ 처음 보는 자료로 확인 — 규칙 글만 받은 AI</h2><span class="st">지난 대화 없이 · 규칙 글 + 숫자 표만 주고 자료 하나를 되짚게 함</span></div>
+    <div class="cb">
+      <div class="row"><select id="확인자료" style="font:inherit;padding:6px 9px;border:1px solid var(--dsm-in-line);border-radius:8px;background:var(--dsm-in);color:var(--dsm-ink);min-width:260px"></select><button class="btn btn--main" onclick="확인시험()">규칙 글만 받은 AI 에게 확인</button><span class="tip">「같음」 = 규칙 글의 줄과 같음 · 「새로움」 = 규칙에 없음 · 「어긋남」 = 규칙과 다름 → 일치 %</span></div>
+      <div id="확인칸" style="margin-top:10px"></div>
+    </div>
+  </div>
+  <div class="card"><span class="kno">V-03</span>
+    <div class="ch"><span class="no">3-3</span><h2>ⓒ 졸업 판정</h2><span class="st" id="졸업머리"></span></div>
+    <div class="cb" id="졸업칸"></div>
+  </div>
+</main>
+<div class="wrap" id="페이지_가르치기">
   <div class="col l band">
     <div class="colh"><b>① 넣기</b> 자료 · 말 <span class="who">사람</span></div>
     <div class="in3">
@@ -317,6 +359,7 @@
   </div>
 </div>
 
+</div>
 <div class="toast" id="toast"></div>
 <footer class="foot" id="foot"><div class="msg" id="footmsg"></div><button class="btn btn--main" id="올리기" onclick="올리기()">○ 받은 규칙 → 규칙 글 · 숫자 표에 올리기</button></footer>
 <div class="ov" id="ov" onclick="if(event.target===this)창닫기()">
@@ -493,10 +536,61 @@ document.addEventListener("keydown", function(e){ if (e.key === "Escape") 창닫
 document.querySelectorAll(".theme button").forEach(function(b){ b.onclick = function(){ document.querySelectorAll(".theme button").forEach(function(x){ x.classList.remove("on"); }); b.classList.add("on"); var t = b.dataset.t, h = new Date().getHours(); if (t === "time") t = (h >= 18 || h < 7) ? "dark" : "light"; if (t) document.documentElement.setAttribute("data-theme", t); else document.documentElement.removeAttribute("data-theme"); try { localStorage.setItem("dsm-theme", b.dataset.t); } catch (e) {} }; });
 (function(){ var t = ""; try { t = localStorage.getItem("dsm-theme") || "time"; } catch (e) { t = "time"; } var h = new Date().getHours(); var v = t === "time" ? ((h >= 18 || h < 7) ? "dark" : "light") : t; if (v) document.documentElement.setAttribute("data-theme", v); document.querySelectorAll(".theme button").forEach(function(b){ b.classList.toggle("on", b.dataset.t === t); }); })();
 
+/* ── 페이지 셋 ── */
+var 페이지 = "가르치기", 페이지잡음 = false;
+function 페이지그리기(){
+  var 순 = [["계획", "① 계획 짜기"], ["가르치기", "② 가르치기"], ["검증", "③ 마무리 검증"]], b = document.getElementById("페이지띠"); b.innerHTML = "";
+  순.forEach(function(x, i){ var e = document.createElement("button"); e.className = "step " + (x[0] === 페이지 ? "now" : "done"); e.innerHTML = '<span class="n">' + (i + 1) + '</span><span class="t">' + x[1].slice(2) + '</span>' + (x[0] === "계획" && 교육 && 교육.확정 ? ' <span class="tip">확정 ' + esc((교육.확정때 || "").slice(5, 10)) + '</span>' : '') + (x[0] === "검증" && 교육 && 교육.졸업때 ? ' <span class="tip">졸업 ' + esc(교육.졸업때.slice(5, 10)) + '</span>' : ''); e.onclick = function(){ 페이지가기(x[0]); }; b.appendChild(e); });
+  document.getElementById("페이지_계획").classList.toggle("on", 페이지 === "계획"); document.getElementById("페이지_검증").classList.toggle("on", 페이지 === "검증");
+  document.getElementById("페이지_가르치기").style.display = 페이지 === "가르치기" ? "" : "none"; document.getElementById("교육띠").style.display = 페이지 === "가르치기" ? "" : "none"; document.getElementById("foot").style.display = 페이지 === "가르치기" ? "" : "none";
+  if (페이지 === "계획") 계획그리기(); if (페이지 === "검증") 검증그리기();
+}
+async function 페이지가기(k){ 페이지 = k; await api("/api/페이지", {페이지: k}); 페이지그리기(); window.scrollTo(0, 0); }
+function 계획그리기(){
+  if (!교육) return; var j = document.getElementById("주제"); if (!j.value) j.value = 교육.주제 || ""; var b = document.getElementById("바라는것"); if (!b.value) b.value = 교육.바라는것 || "";
+  var 초 = 교육.초안 || (교육.확정 ? {목표: 교육.목표, 기: 교육.기, 단원: 교육.단원} : null); var 칸 = document.getElementById("초안칸");
+  document.getElementById("초안머리").textContent = 초 ? (교육.초안때 ? "초안 " + 교육.초안때 : "") + (교육.확정 ? " · 확정 " + 교육.확정때 : " · 아직 확정 전") : "아직 없음";
+  if (!초) { 칸.innerHTML = '<div class="tip">초안이 오면 여기 표로 · AI 가 없으면 <button class="btn btn--view" onclick="기본초안()">기본 계획(횡단면도) 으로 시작</button></div>'; return; }
+  var h = '<div class="set" style="grid-template-columns:80px 1fr;margin-bottom:8px"><span>목표</span><input id="p_목표" value="' + esc(초.목표 || "") + '"><span>기 이름</span><input id="p_기" value="' + esc(초.기 || "") + '"></div><div class="tbl"><table id="초안표"><tr><th>#</th><th>이름</th><th>무엇을 가르치나</th><th>넣을 자료</th><th>AI 초점</th><th>끝 조건</th><th class="n">○ 규칙 수</th><th>짐작</th><th></th></tr>';
+  (초.단원 || []).forEach(function(d, i){ h += '<tr><td>' + i + '</td>' + ["이름", "가르침", "자료", "초점", "끝"].map(function(k){ return '<td><input class="p_' + k + '" value="' + esc(d[k] || "") + '" style="font:inherit;font-size:13px;width:100%;padding:4px 6px;border:1px solid var(--dsm-in-line);border-radius:6px;background:var(--dsm-in);color:var(--dsm-ink)"></td>'; }).join("") + '<td><input class="p_규칙수" value="' + esc(d.규칙수 || 0) + '" style="font:inherit;width:56px;text-align:right;padding:4px;border:1px solid var(--dsm-in-line);border-radius:6px;background:var(--dsm-in);color:var(--dsm-ink)"></td><td><input class="p_짐작" value="' + esc(d.짐작 || "") + '" style="font:inherit;width:70px;padding:4px;border:1px solid var(--dsm-in-line);border-radius:6px;background:var(--dsm-in);color:var(--dsm-ink)"></td><td><button class="btn btn--view" onclick="단원지우기(this)">빼기</button></td></tr>'; });
+  h += '</table></div><div class="row" style="margin-top:6px"><button class="btn" onclick="단원더하기()">+ 단원 더하기</button><span class="tip">칸을 고치면 그대로 확정됩니다 · 바탕 → 판단 차례 · 한 단원은 한 회</span></div>';
+  칸.innerHTML = h;
+}
+function 초안읽기(){ var 단원 = []; document.querySelectorAll("#초안표 tr").forEach(function(tr){ var g = function(k){ var e = tr.querySelector(".p_" + k); return e ? e.value.trim() : null; }; if (g("이름") === null) return; 단원.push({이름: g("이름"), 가르침: g("가르침"), 자료: g("자료"), 초점: g("초점"), 끝: g("끝"), 규칙수: +g("규칙수") || 0, 짐작: g("짐작")}); }); return {목표: (document.getElementById("p_목표") || {}).value || "", 기: (document.getElementById("p_기") || {}).value || "", 단원: 단원}; }
+function 단원더하기(){ var t = document.getElementById("초안표"); if (!t) { 기본초안(); return; } var 초 = 초안읽기(); 초.단원.push({이름: "새 단원", 가르침: "", 자료: "", 초점: "", 끝: "", 규칙수: 3, 짐작: ""}); 교육.초안 = 초; 계획그리기(); }
+function 단원지우기(b){ var tr = b.closest("tr"); tr.remove(); 교육.초안 = 초안읽기(); 계획그리기(); }
+function 기본초안(){ 교육.초안 = {목표: 교육.목표, 기: 교육.기, 단원: 교육.단원}; 계획그리기(); }
+async function 계획초안(고침){
+  var 주제 = document.getElementById("주제").value.trim(); if (!주제) { 알림("주제 한 줄을 먼저 적어 주십시오"); document.getElementById("주제").focus(); return; }
+  var st = document.getElementById("초안상태"); st.classList.remove("hide"); st.innerHTML = '<span class="busy"></span>AI 가 계획을 짜는 중 · 약 1분 · 끝 예정 ' + 끝예정분(1.5); document.getElementById("초안단추").disabled = true;
+  var j = await api("/api/계획/초안", {주제: 주제, 바라는것: document.getElementById("바라는것").value, 고칠말: 고침 ? document.getElementById("고칠말").value : ""});
+  document.getElementById("초안단추").disabled = false;
+  if (j.됨) { st.innerHTML = "<b>됨</b> · 단원 " + j.초안.단원.length + "개 → 아래 표에서 고치고 확정"; 교육 = await api("/api/교육"); 계획그리기(); document.getElementById("고칠말").value = ""; }
+  else st.innerHTML = '<span class="err">안 됨 · ' + esc(j.오류 || "") + '</span> → 「기본 계획으로 시작」 뒤 손으로 고치십시오';
+}
+function 끝예정분(분){ var d = new Date(Date.now() + 분 * 60000); return (d.getHours() < 10 ? "0" : "") + d.getHours() + ":" + (d.getMinutes() < 10 ? "0" : "") + d.getMinutes(); }
+async function 계획확정(){ if (!document.getElementById("초안표")) { 알림("확정할 초안이 없습니다 — 초안을 받거나 기본 계획으로 시작"); return; } var j = await api("/api/계획/확정", {초안: 초안읽기()}); if (j.단원) { 교육 = j; 알림("계획을 확정했습니다 · 단원 " + j.단원.length + "개 → ② 가르치기"); 페이지가기("가르치기"); 새로고침(); } }
+async function 검증그리기(){
+  var g = await api("/api/졸업"); var 정 = 교육 && 교육.정리;
+  document.getElementById("정리머리").textContent = 정 ? (정.확정 ? "확정 " + 정.확정때 + " · " + 정.줄.length + "줄" : "초안 " + 정.때 + " · " + 정.줄.length + "줄 · 확정 전") : "아직";
+  var c = document.getElementById("정리칸");
+  if (정) { c.innerHTML = '<div class="tip" style="margin-bottom:4px">줄마다 고칠 수 있습니다 · 빈 줄은 빠집니다</div><textarea class="say" id="정리줄" style="min-height:220px;font-size:13px">' + esc(정.줄.join("\n")) + '</textarea>' + (정.합친것 && 정.합친것.length ? '<div class="hint">합친 것 : ' + esc(정.합친것.join(" · ")) + '</div>' : '') + (정.물음 && 정.물음.length ? '<div class="res"><b>AI 가 남긴 물음</b> · ' + esc(정.물음.join(" / ")) + '</div>' : '') + '<div class="row" style="margin-top:8px"><button class="btn btn--main" onclick="정리확정()">이 정리로 규칙 글 확정 (규칙글_13장.md)</button></div>'; }
+  var sel = document.getElementById("확인자료"); sel.innerHTML = 자료.목록.map(function(a){ return '<option value="' + a.번호 + '">' + a.번호 + ' · ' + esc(a.이름) + ' (' + esc(a.종류) + ')</option>'; }).join("") || '<option value="">넣은 자료가 없음</option>';
+  var 확 = (교육 && 교육.확인) || [], k = document.getElementById("확인칸");
+  k.innerHTML = 확.length ? 확.slice().reverse().slice(0, 3).map(function(x){ return '<div class="uc"><div class="uh"><b>' + esc(x.이름) + '</b><span class="pill ' + (x.점수 >= 80 ? 'pill--ok' : 'pill--warn') + '">일치 ' + x.점수 + ' % · 같음 ' + x.같음 + ' / ' + x.전체 + ' · 어긋남 ' + x.어긋남 + '</span><span class="tip">' + x.때 + '</span></div><div class="ub" style="grid-template-columns:1fr"><div class="tbl"><table><tr><th>판정</th><th>규칙</th><th>한 줄</th><th>까닭</th></tr>' + x.줄.map(function(u){ return '<tr><td>' + {같음: '<span class="pill pill--ok">같음</span>', 새로움: '<span class="pill pill--info">새로움</span>', 어긋남: '<span class="pill pill--bad">어긋남</span>'}[u.판정] + '</td><td>' + esc(u.규칙 || "") + '</td><td>' + esc(u.한줄) + '</td><td class="tip">' + esc(u.까닭 || "") + '</td></tr>'; }).join("") + '</table></div></div></div>'; }).join("") : '<div class="tip">아직 · 위에서 자료를 고르고 확인을 누르십시오 (가르칠 때 안 쓴 자료가 좋습니다)</div>';
+  document.getElementById("졸업머리").innerHTML = g.졸업 ? '<span class="pill pill--ok">졸업 조건 다 됨</span>' : '<span class="pill pill--warn">못 미침 ' + g.못 + '가지</span>';
+  document.getElementById("졸업칸").innerHTML = '<div class="tbl"><table><tr><th>조건</th><th>지금</th><th>됨</th></tr>' + g.조건.map(function(c){ return '<tr><td>' + esc(c.무엇) + '</td><td>' + esc(c.지금) + '</td><td>' + (c.됨 ? '<span class="pill pill--ok">○</span>' : '<span class="pill pill--bad">✗</span>') + '</td></tr>'; }).join("") + '</table></div><div class="row" style="margin-top:10px">' + (g.졸업 ? '<button class="btn btn--main" onclick="졸업하기()">졸업 → 규칙 글을 스킬에 붙이기</button>' : (g.돌아갈단원 ? '<span class="hint">× 와 물음이 가장 많은 단원 ' + g.돌아갈단원.번호 + ' 「' + esc(g.돌아갈단원.이름) + '」 로 돌아가 푸는 것이 맞습니다</span> <button class="btn" onclick="단원고르기(' + g.돌아갈단원.번호 + ');페이지가기(\'가르치기\')">그 단원으로</button>' : '<span class="hint">못 미친 조건을 ② 가르치기 · 시험 창에서 채우십시오</span>')) + (g.졸업때 ? '<span class="pill pill--ok">졸업 ' + esc(g.졸업때) + '</span>' : '') + '</div>';
+}
+async function 정리부탁(){ var c = document.getElementById("정리칸"); c.innerHTML = '<div class="hint"><span class="busy"></span>AI 가 정리하는 중 · 약 1분 · 끝 예정 ' + 끝예정분(1.5) + '</div>'; var j = await api("/api/검증/정리", {}); if (j.됨) { 교육 = await api("/api/교육"); 알림("정리가 왔습니다 · " + j.정리.줄.length + "줄 → 고치고 확정"); } else c.innerHTML = '<span class="err">안 됨 · ' + esc(j.오류 || "") + '</span>'; 검증그리기(); }
+async function 정리확정(){ var 줄 = document.getElementById("정리줄").value.split("\n"); var j = await api("/api/검증/정리확정", {줄: 줄}); if (j.됨) { 알림("규칙 글을 확정했습니다 · " + j.줄수 + "줄 → 규칙글_13장.md"); 교육 = await api("/api/교육"); 검증그리기(); } }
+async function 확인시험(){ var n = document.getElementById("확인자료").value; if (!n) { 알림("넣은 자료가 없습니다"); return; } var k = document.getElementById("확인칸"); k.insertAdjacentHTML("afterbegin", '<div class="hint"><span class="busy"></span>규칙 글만 받은 AI 가 보는 중 · 약 1분 · 끝 예정 ' + 끝예정분(1.5) + '</div>'); var j = await api("/api/검증/확인", {번호: n}); if (j.됨) { 교육 = await api("/api/교육"); 알림("확인 · 일치 " + j.확인.점수 + " % (같음 " + j.확인.같음 + " / " + j.확인.전체 + ")"); } 검증그리기(); }
+async function 졸업하기(){ var j = await api("/api/졸업", {}); if (j.됨) { 교육 = await api("/api/교육"); 알림("졸업했습니다 · " + (j.스킬 && j.스킬.됨 ? "스킬에 " + j.스킬.줄수 + "줄 붙임" : "스킬 붙이기 : " + ((j.스킬 || {}).오류 || ""))); 검증그리기(); 페이지그리기(); } }
+
 /* ── 서버와 맞추기 ── */
 async function 새로고침(){
   try {
     var r = await fetch("/api/자료"); 자료 = await r.json(); var q = await fetch("/api/규칙"); 규칙 = await q.json(); 교육 = await (await fetch("/api/교육")).json();
+    if (!페이지잡음) { 페이지 = 교육.확정 ? (교육.페이지 || "가르치기") : "계획"; 페이지잡음 = true; 페이지그리기(); } else if (페이지 !== "가르치기") 페이지그리기();
     var z = await fetch("/api/지적"); document.getElementById("지적수").textContent = (await z.json()).수;
     var k = await fetch("/api/시험기록"); var kk = await k.json(); var last = kk[kk.length - 1]; document.getElementById("시험요약").textContent = last ? (last.적정 + " / " + last.벌수) : "—";
     그리기();

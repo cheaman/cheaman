@@ -23,9 +23,21 @@ const 걸음 = [], 막힘 = [];
     if (기대상황 && 맞나 === false) 막힘.push([n, 이름, '헷갈림', '상황 줄이 다음 할 일을 안 말함 : ' + s.slice(0, 60)]);
     if (ms > 1000 && !/기다림|되묻기|열기|F5/.test(이름)) 막힘.push([n, 이름, '사소함', '반응 ' + ms + 'ms (1초 넘음)']);
   }
-  // ── 자료 없음 ──
-  await 걷기('열기 (자료 없음)', null, async () => { await p.goto(URL, { waitUntil: 'networkidle' }); await p.waitForTimeout(400); }, /넣으십시오/, async () => 보이나(p.getByRole('button', { name: '파일 더하기' })));
-  await 걷기('교육 띠 — 지금 단원 · 넣을 자료가 보이나', null, async () => {}, null, async () => /단원 0.*바탕.*넣을 자료/.test((await p.locator('#교육띠').innerText()).replace(/\s+/g, ' ')));
+  // ── ① 계획 짜기 ──
+  await 걷기('열기 → ① 계획 짜기 페이지가 먼저', null, async () => { await p.goto(URL, { waitUntil: 'networkidle' }); await p.waitForTimeout(500); }, null, async () => (await p.locator('#페이지_계획').isVisible()) && 보이나(p.getByRole('button', { name: 'AI 에게 계획 초안 부탁' })));
+  await p.locator('#주제').fill('');   // 기본 주제가 미리 채워져 있으므로 비우고 누른다
+  await 걷기('주제 없이 「초안 부탁」 — 말없이 멈추지 않나', p.getByRole('button', { name: 'AI 에게 계획 초안 부탁' }), async () => { await p.getByRole('button', { name: 'AI 에게 계획 초안 부탁' }).click(); await p.waitForTimeout(300); }, null, async () => /주제 한 줄을 먼저/.test(await 알림글()));
+  await p.locator('#주제').fill('횡단면도 치수선 · 지시선 · 기호 자리 규칙'); await p.locator('#바라는것').fill('서대전 지하차도 횡단면도 받은 판 8벌과 고친 판 8벌이 있음. 치수선 단 수와 지시선 글 자리가 판마다 흔들리지 않게. 발주처로 나가는 도면이라 틀린 자리는 0 이어야 함.');
+  const 살아0 = await (await p.request.get(URL + '/api/살아있나')).json();
+  if (살아0.클로드) {
+    await 걷기('「AI 에게 계획 초안 부탁」 (기다림 · 약 1분)', p.getByRole('button', { name: 'AI 에게 계획 초안 부탁' }), async () => { await p.getByRole('button', { name: 'AI 에게 계획 초안 부탁' }).click(); await p.waitForFunction(() => document.getElementById('초안표') || /안 됨/.test(document.getElementById('초안상태').textContent), null, { timeout: 200000 }); }, null, async () => (await p.locator('#초안표 tr').count()) >= 4);
+  } else {
+    await 걷기('AI 없음 → 「기본 계획으로 시작」', p.getByRole('button', { name: /기본 계획/ }), async () => { await p.getByRole('button', { name: /기본 계획/ }).click(); await p.waitForTimeout(200); }, null, async () => (await p.locator('#초안표 tr').count()) >= 4);
+  }
+  await 걷기('「이 계획으로 확정 → ② 가르치기」', p.getByRole('button', { name: /이 계획으로 확정/ }), async () => { await p.getByRole('button', { name: /이 계획으로 확정/ }).click(); await p.waitForFunction(() => document.getElementById('페이지_가르치기').style.display !== 'none', null, { timeout: 10000 }); await p.waitForTimeout(3300); }, /넣으십시오/, async () => /단원 0/.test(await p.locator('#교육띠').innerText()));
+  // ── ② 자료 없음 ──
+  await 걷기('② 가르치기 (자료 없음)', null, async () => { await p.waitForTimeout(100); }, /넣으십시오/, async () => 보이나(p.getByRole('button', { name: '파일 더하기' })));
+  await 걷기('교육 띠 — 지금 단원 · 넣을 자료가 보이나', null, async () => {}, null, async () => /단원 0.*넣을 자료/.test((await p.locator('#교육띠').innerText()).replace(/\s+/g, ' ')));
   await 걷기('「교육 계획 보기」 → 단원 표', p.getByRole('button', { name: '교육 계획 보기' }), async () => { await p.getByRole('button', { name: '교육 계획 보기' }).click(); await p.waitForFunction(() => document.getElementById('ov').classList.contains('on') && /단원/.test(document.getElementById('창몸').textContent)); }, null, async () => /치수선.*지시선.*종합/s.test(await p.locator('#창몸').innerText()));
   await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.getElementById('ov').classList.contains('on'));
   await 걷기('올리기 단추 — 잠김 + 까닭', p.locator('#올리기'), async () => { await p.locator('#올리기').hover(); }, null, async () => (await p.locator('#올리기').isDisabled()) && /못 누름/.test(await p.locator('#올리기').getAttribute('title')));
@@ -65,6 +77,15 @@ const 걸음 = [], 막힘 = [];
     await 걷기('바닥 「올리기」 → 시험 창', p.locator('#올리기'), async () => { await p.locator('#올리기').click(); await p.waitForFunction(() => document.getElementById('ov').classList.contains('on') && /적정/.test(document.getElementById('창몸').textContent), null, { timeout: 40000 }); }, null, async () => /통과|못 미침/.test(await p.locator('#창몸').innerText()));
     await 걷기('시험 창 닫기 → 상황 줄 (3초 되묻기)', null, async () => { await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.getElementById('ov').classList.contains('on')); await p.waitForTimeout(3200); }, /.+/, null);
   }
+  // ── ③ 마무리 검증 ──
+  await 걷기('③ 마무리 검증 페이지로', p.getByRole('button', { name: /마무리 검증/ }), async () => { await p.getByRole('button', { name: /마무리 검증/ }).click(); await p.waitForTimeout(800); }, null, async () => (await p.locator('#졸업칸 table').count()) === 1);
+  if ((await (await p.request.get(URL + '/api/살아있나')).json()).클로드 && 번호 != null) {
+    await 걷기('ⓐ 「AI 에게 정리 부탁」 (기다림 · 약 1분)', p.getByRole('button', { name: 'AI 에게 정리 부탁' }), async () => { await p.getByRole('button', { name: 'AI 에게 정리 부탁' }).click(); await p.waitForFunction(() => document.getElementById('정리줄') || /안 됨/.test(document.getElementById('정리칸').textContent), null, { timeout: 200000 }); }, null, async () => (await p.locator('#정리줄').count()) === 1);
+    if (await p.locator('#정리줄').count()) await 걷기('ⓐ 「이 정리로 규칙 글 확정」', p.getByRole('button', { name: /이 정리로 규칙 글 확정/ }), async () => { await p.getByRole('button', { name: /이 정리로 규칙 글 확정/ }).click(); await p.waitForTimeout(800); }, null, async () => /규칙 글을 확정/.test(await 알림글()) || /확정 /.test(await p.locator('#정리머리').innerText()));
+    await 걷기('ⓑ 「규칙 글만 받은 AI 에게 확인」 (기다림 · 약 1분)', p.getByRole('button', { name: /규칙 글만 받은 AI 에게 확인/ }), async () => { await p.getByRole('button', { name: /규칙 글만 받은 AI 에게 확인/ }).click(); await p.waitForFunction(() => /일치 \d+ %/.test(document.getElementById('확인칸').textContent) || /안 됨/.test(document.getElementById('확인칸').textContent), null, { timeout: 200000 }); }, null, async () => /일치 \d+ %/.test(await p.locator('#확인칸').innerText()));
+  }
+  await 걷기('ⓒ 졸업 판정 표 · 못 미친 조건과 돌아갈 단원', null, async () => { await p.waitForTimeout(300); }, null, async () => /조건/.test(await p.locator('#졸업칸').innerText()) && (await p.locator('#졸업칸 tr').count()) >= 7);
+  await 걷기('② 로 돌아가기', p.locator('#페이지띠 .step', { hasText: '가르치기' }), async () => { await p.locator('#페이지띠 .step', { hasText: '가르치기' }).click(); await p.waitForTimeout(400); }, /.+/, async () => 보이나(p.getByRole('button', { name: '기억 창고' })));
   await 걷기('「기억 창고」', p.getByRole('button', { name: '기억 창고' }), async () => { await p.getByRole('button', { name: '기억 창고' }).click(); await p.waitForFunction(() => document.getElementById('ov').classList.contains('on') && document.getElementById('창몸').textContent.length > 20); }, null, async () => /규칙 글/.test(await p.locator('#창몸').innerText()));
   await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.getElementById('ov').classList.contains('on'));
   await 걷기('「설정」 → 저장', p.getByRole('button', { name: '설정' }), async () => { await p.getByRole('button', { name: '설정' }).click(); await p.waitForFunction(() => document.getElementById('ov').classList.contains('on') && document.getElementById('s_출력배율')); await p.locator('#s_출력배율').fill('100'); await p.getByRole('button', { name: '저장' }).click(); await p.waitForTimeout(400); }, null, async () => /저장했습니다/.test(await 알림글()));

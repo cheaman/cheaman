@@ -35,6 +35,17 @@ def JSON뽑기(본문):
         i = 본문.find("{", i + 1)
     return None
 
+계획모양 = {"목표": "이것이 되면 끝 — 확인할 수 있게 한두 줄", "기": "1기 <주제>", "단원": [{"번호": 0, "이름": "짧은 이름", "가르침": "무엇을 가르치나", "자료": "넣을 자료 (적게 · 좋은 것 · 몇 개)", "초점": "AI 가 볼 초점 · 초점 밖은 안 적음", "끝": "끝 조건 (셀 수 있게)", "규칙수": 3, "짐작": "40분"}]}
+
+계획규칙글 = """당신은 실무자(토목 · 구조 기술사 · 코드를 읽지 않음)가 AI 에게 어떤 주제를 가르치는 교육 계획을 짜는 조력자입니다.
+원칙 : 판단이 없는 바탕(숫자 · 이름)부터 → 판단이 드는 것은 뒤로 · 한 단원은 한 회(자료 2 ~ 3개 · 40분 ~ 1시간 30분)에 끝나게 · 단원 4 ~ 6개 · 마지막은 「종합」 · 끝 조건은 셀 수 있는 것(○ 규칙 n · 물음 0 · 시험 통과) · 자료는 적게 · 좋은 것 · 실무자가 ○ 할 수 있는 것만.
+답은 JSON 만 (앞뒤 말 · 코드블록 없음 · 빈 칸 \"\"). 모양 :
+""" + json.dumps(계획모양, ensure_ascii=False, indent=1)
+
+정리규칙글 = """당신은 가르침을 받아 ○ 받은 규칙 목록을 다음 과업에서 바로 쓸 규칙 글로 다듬는 조력자입니다.
+원칙 : 한 줄에 규칙 하나 · 우리 업 말 · 숫자를 박아서 · 같은 뜻은 합치고 · 어긋나는 둘은 둘 다 두되 「(물음)」 표시 · 30줄 안 · 출처(규칙 번호)를 괄호에 · 지어내지 않음.
+답은 JSON 만 : {\"줄\": [\"13-1 …\", …], \"합친것\": [\"규칙 3 + 7\"], \"물음\": [\"…\"]}"""
+
 def 클로드있나():
     return shutil.which("claude") is not None
 
@@ -111,6 +122,26 @@ class 다리:
             self._돌기(자료, p, 끝나면)
             try: self.줄에.remove(자료["번호"])
             except ValueError: pass
+
+    def 바로묻기(self, 규칙글, 글, 그림들=None, 초=180):
+        """빈 상태의 클로드에게 규칙 글 + 글을 주고 JSON 답을 받는다 (계획 초안 · 정리 · 확인 시험). claude 가 없으면 (None, 까닭)."""
+        if not 클로드있나(): return None, "이 PC 에 claude 명령이 없습니다 — 봐주세요 파일 길로"
+        임시 = tempfile.mkdtemp(prefix="dsm_rule_ai_"); 규칙경로 = os.path.join(임시, "rules.txt"); io.open(규칙경로, "w", encoding="utf-8").write(규칙글)
+        for g in (그림들 or []):
+            try: shutil.copy2(g, 임시)
+            except Exception: pass
+        명령 = ["claude", "-p", "--output-format", "text", "--no-session-persistence", "--system-prompt-file", 규칙경로] + (["--allowedTools", "Read"] if 그림들 else ["--tools", ""])
+        모델 = self.창고.설정().get("AI모델")
+        if 모델: 명령 += ["--model", 모델]
+        try:
+            r = subprocess.run(명령, input=글, capture_output=True, text=True, encoding="utf-8", cwd=임시, timeout=초, shell=(os.name == "nt"))
+            i = r.stdout.find("{")
+            while i >= 0:
+                try: v, _ = json.JSONDecoder().raw_decode(r.stdout[i:]); return v, ""
+                except Exception: i = r.stdout.find("{", i + 1)
+            return None, "답에서 JSON 을 못 찾음 : " + r.stdout[:200] + r.stderr[:200]
+        except subprocess.TimeoutExpired: return None, "%d초 안에 답이 없음" % 초
+        except Exception as e: return None, "claude 부르기 실패 : %s" % e
 
     def _돌기(self, 자료, 물음경로, 끝나면):
         임시 = tempfile.mkdtemp(prefix="dsm_rule_ai_"); 규칙경로 = os.path.join(임시, "rules.txt")

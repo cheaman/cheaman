@@ -19,7 +19,7 @@ from urllib.parse import urlparse, unquote
 sys.path.insert(0, 여기)
 from 엔진 import 도면읽기, 규칙 as 규칙모듈, AI다리, 자리잡기
 
-판 = "v0.4"; 고친날 = "2026-10-29"
+판 = "v0.5"; 고친날 = "2026-10-29"
 창고 = 규칙모듈.창고(뿌리); 다리 = AI다리.다리(창고)
 잠금 = threading.Lock(); 그림잠금 = threading.Lock()   # SVG 그리기는 한 번에 하나 (글꼴 부품이 동시 실행에 깨짐 · 10-29 겪음)
 
@@ -238,6 +238,99 @@ def 스킬에붙이기():
     창고.설정쓰기({"스킬붙인때": 규칙모듈.지금(), "스킬붙인줄": 줄수})
     return {"됨": True, "줄수": 줄수, "경로": 경로, "예비": 예비}
 
+# ───────────────────────── 6-2. 계획 짜기 · 마무리 검증 ─────────────────────────
+def 계획초안(주제, 바라는것, 고칠말=""):
+    v = 창고.교육(); v["주제"] = 주제; v["바라는것"] = 바라는것
+    글 = "주제 : %s\n바라는 것 : %s\n" % (주제, 바라는것)
+    if v.get("초안") and 고칠말: 글 += "\n지금 초안 :\n" + json.dumps(v["초안"], ensure_ascii=False, indent=1) + "\n\n실무자가 고치라는 말 : " + 고칠말 + "\n이 말을 반영해 초안을 다시 내 주십시오.\n"
+    글 += "\n위 주제로 교육 계획을 JSON 으로 짜 주십시오."
+    답, 오류 = 다리.바로묻기(AI다리.계획규칙글, 글)
+    if 답 and "단원" in 답:
+        for i, d in enumerate(답["단원"]): d["번호"] = i; d.setdefault("규칙수", 3); d.setdefault("짐작", "")
+        v["초안"] = 답; v["초안때"] = 규칙모듈.지금(); 창고.교육쓰기(v); return {"됨": True, "초안": 답}
+    창고.교육쓰기(v); return {"오류": 오류 or "답 모양이 다름", "길": "파일"}
+
+def 계획확정(몸):
+    v = 창고.교육(); 초 = 몸.get("초안") or v.get("초안")
+    if not 초 or not 초.get("단원"): return {"오류": "확정할 초안이 없습니다 — 먼저 초안을 받거나 적으십시오"}
+    for i, d in enumerate(초["단원"]): d["번호"] = i; d["규칙수"] = int(d.get("규칙수") or 0); d.pop("끝낸때", None)
+    v.update({"단원": 초["단원"], "목표": 초.get("목표", v.get("목표", "")), "기": 초.get("기") or ("1기 " + v.get("주제", "")), "지금": 0, "확정": True, "확정때": 규칙모듈.지금(), "페이지": "가르치기", "초안": 초})
+    창고.교육쓰기(v); return dict(v, 현황=창고.단원현황())
+
+def 정리부탁():
+    규 = [r for r in 창고.규칙()["목록"] if r["상태"] in ("○ 받음", "올림")]
+    if not 규: return {"오류": "○ 받은 규칙이 없습니다 — ② 가르치기에서 먼저"}
+    글 = "○ 받은 규칙 목록 :\n" + "\n".join("%d. %s (%s · %s)" % (r["번호"], r["글"], r["출처"], r["판"]) for r in 규) + "\n\n줄 한도 %d. 다듬어 JSON 으로." % int(창고.설정().get("규칙글_줄한도") or 30)
+    답, 오류 = 다리.바로묻기(AI다리.정리규칙글, 글)
+    if 답 and "줄" in 답:
+        v = 창고.교육(); v["정리"] = {"줄": 답["줄"], "합친것": 답.get("합친것", []), "물음": 답.get("물음", []), "때": 규칙모듈.지금(), "확정": False}; 창고.교육쓰기(v)
+        io.open(os.path.join(창고.결과, "규칙글_정리초안.md"), "w", encoding="utf-8").write("\n".join(답["줄"]) + "\n"); return {"됨": True, "정리": v["정리"]}
+    return {"오류": 오류 or "답 모양이 다름"}
+
+def 정리확정(줄들):
+    v = 창고.교육(); 줄들 = [l for l in 줄들 if l.strip()]
+    if not 줄들: return {"오류": "줄이 없습니다"}
+    v["정리"] = dict(v.get("정리", {}), 줄=줄들, 확정=True, 확정때=규칙모듈.지금()); 창고.교육쓰기(v)
+    글 = "## 13. 치수선 · 지시선 · 기호 자리 규칙 (규칙 판 %s · %s · 도면 규칙 가르치기 · 전무님 ○ 정리)\n\n" % (창고.규칙()["판"], 규칙모듈.지금()[:10]) + "\n".join(줄들) + "\n"
+    io.open(os.path.join(창고.결과, "규칙글_13장.md"), "w", encoding="utf-8").write(글); return {"됨": True, "줄수": len(줄들)}
+
+def 확인시험(번호):
+    """대화 기억 없이 규칙 글만 받은 AI 가 자료 하나를 되짚는다 → ○ 규칙과 「같음」 줄 비율."""
+    a = 창고.자료찾기(int(번호))
+    if not a: return {"오류": "자료 %s 없음" % 번호}
+    글경로 = os.path.join(창고.결과, "규칙글_13장.md")
+    if not os.path.exists(글경로): return {"오류": "규칙 글이 없습니다 — ⓐ 정리를 먼저 확정하거나 규칙을 올리십시오"}
+    규칙글 = io.open(글경로, encoding="utf-8").read()
+    표경로 = os.path.join(창고.결과, "주석규칙_%s.json" % 창고.설정()["도면종류"]); 표 = io.open(표경로, encoding="utf-8").read() if os.path.exists(표경로) else ""
+    본 = ["# 확인 시험 · 자료 %d · %s (종류 %s)" % (a["번호"], a["이름"], a["종류"]), ""]
+    if a.get("숫자"): 본 += ["## 프로그램이 센 숫자", ""] + ["- %s : %s (%s)" % (k, v["값"], v["출처"]) for k, v in a["숫자"].items()] + [""]
+    if a.get("글"): 본 += ["## 글", "", a["글"][:6000], ""]
+    if a.get("그림들"): 본 += ["## 그림 (Read 로 보기)", ""] + ["- " + os.path.basename(g) for g in a["그림들"]] + [""]
+    시스템 = ("당신은 다음 규칙 글과 숫자 표만 알고 있는 보조자입니다 (지난 대화는 없습니다).\n\n" + 규칙글 + ("\n\n숫자 표 :\n" + 표 if 표 else "") +
+              "\n\n할 일 : 자료를 읽고 치수선 · 지시선 · 기호 자리에 대해 알아낸 것을 한 줄씩. 줄마다 규칙 글의 어느 줄과 같은지(「13-N」) · 규칙 글에 없는 새 것인지 · 규칙 글과 어긋나는지를 적습니다. 지어내지 않습니다. 답은 JSON 만 : "
+              + json.dumps({"이해": [{"한줄": "…", "판정": "같음 | 새로움 | 어긋남", "규칙": "13-N 또는 빈칸", "까닭": "…"}]}, ensure_ascii=False))
+    답, 오류 = 다리.바로묻기(시스템, "\n".join(본), a.get("그림들"))
+    if not (답 and "이해" in 답): return {"오류": 오류 or "답 모양이 다름"}
+    줄 = 답["이해"]; 같음 = sum(1 for u in 줄 if u.get("판정") == "같음"); 어긋 = sum(1 for u in 줄 if u.get("판정") == "어긋남")
+    점수 = round(100 * 같음 / len(줄)) if 줄 else 0
+    v = 창고.교육(); v.setdefault("확인", []).append({"번호": a["번호"], "이름": a["이름"], "때": 규칙모듈.지금(), "줄": 줄, "같음": 같음, "어긋남": 어긋, "전체": len(줄), "점수": 점수}); v["확인"] = v["확인"][-20:]; 창고.교육쓰기(v)
+    return {"됨": True, "확인": v["확인"][-1]}
+
+def 졸업판정():
+    설 = 창고.설정(); v = 창고.교육(); 기록 = 창고._읽기(os.path.join(창고.결과, "시험기록.json"), [])
+    def 마지막(종류): 
+        xs = [r for r in 기록 if (r.get("종류") or "정답지") == 종류]; return xs[-1] if xs else None
+    글경로 = os.path.join(창고.결과, "규칙글_13장.md"); 줄수 = len([l for l in io.open(글경로, encoding="utf-8").read().splitlines() if l.strip() and not l.startswith("#")]) if os.path.exists(글경로) else 0
+    표있음 = os.path.exists(os.path.join(창고.결과, "주석규칙_%s.json" % 설["도면종류"]))
+    확인 = v.get("확인", []); 최근 = 확인[-3:]; 일치 = round(sum(x["점수"] for x in 최근) / len(최근)) if 최근 else None
+    물음 = sum(1 for a in 창고.자료()["목록"] for u in a.get("이해", []) if u["상태"] == "ask")
+    s1, s4, s5 = 마지막("정답지"), 마지막("검사도구"), 마지막("되풀이")
+    조건 = [
+        {"무엇": "규칙 글 %d줄 안" % int(설.get("규칙글_줄한도") or 30), "지금": "%d줄" % 줄수, "됨": 0 < 줄수 <= int(설.get("규칙글_줄한도") or 30)},
+        {"무엇": "숫자 표 있음", "지금": "있음" if 표있음 else "없음 (올리기를 한 번)", "됨": 표있음},
+        {"무엇": "시험 1 정답지 통과", "지금": ("적정 %s / %s" % (s1["적정"], s1["벌수"])) if s1 else "아직", "됨": bool(s1 and s1["통과"])},
+        {"무엇": "시험 4 일부러 틀린 도면 통과", "지금": ("%s / %s" % (s4["잡음"], s4["심음"])) if s4 else "아직", "됨": bool(s4 and s4["통과"])},
+        {"무엇": "시험 5 되풀이 통과", "지금": ("%s / 3" % s5["같음"]) if s5 else "아직", "됨": bool(s5 and s5["통과"])},
+        {"무엇": "확인 시험 일치 80 % 이상 (최근 3)", "지금": ("%d %%" % 일치) if 일치 is not None else "아직", "됨": 일치 is not None and 일치 >= 80},
+        {"무엇": "남은 물음 0", "지금": "%d" % 물음, "됨": 물음 == 0},
+    ]
+    못 = [c for c in 조건 if not c["됨"]]
+    # 돌아갈 단원 : × 와 물음이 가장 많은 단원
+    셈 = {}
+    for a in 창고.자료()["목록"]:
+        for u in a.get("이해", []):
+            if u["상태"] in ("no", "ask"): 셈[a.get("단원", 0)] = 셈.get(a.get("단원", 0), 0) + 1
+    돌아갈 = max(셈, key=셈.get) if 셈 else None
+    이름 = {d["번호"]: d["이름"] for d in v["단원"]}
+    return {"조건": 조건, "졸업": not 못, "못": len(못), "돌아갈단원": ({"번호": 돌아갈, "이름": 이름.get(돌아갈, "")} if 돌아갈 is not None and 못 else None), "졸업때": v.get("졸업때")}
+
+def 졸업():
+    j = 졸업판정()
+    if not j["졸업"]: return {"오류": "아직 %d가지가 못 미칩니다" % j["못"], "판정": j}
+    v = 창고.교육(); v["졸업때"] = 규칙모듈.지금(); 창고.교육쓰기(v)
+    붙 = 스킬에붙이기() if 창고.설정().get("스킬경로") else {"오류": "스킬 경로 없음 — 설정에서"}
+    return {"됨": True, "졸업때": v["졸업때"], "스킬": 붙}
+
 # ───────────────────────── 7. 요청 가르기 ─────────────────────────
 class 손(BaseHTTPRequestHandler):
     def log_message(self, *a): pass
@@ -258,6 +351,7 @@ class 손(BaseHTTPRequestHandler):
             if p == "/api/규칙": return self._json(창고.규칙())
             if p == "/api/설정": return self._json(창고.설정())
             if p == "/api/교육": return self._json(dict(창고.교육(), 현황=창고.단원현황()))
+            if p == "/api/졸업": return self._json(졸업판정())
             if p == "/api/지적": return self._json({"수": 창고.지적수(), "글": io.open(창고.지적경로, encoding="utf-8").read() if os.path.exists(창고.지적경로) else ""})
             if p == "/api/시험기록": return self._json(창고._읽기(os.path.join(창고.결과, "시험기록.json"), []))
             m = re.match(r"^/api/주고받기/(\d+)/(봐주세요|파악한것|사용량)$", p)
@@ -291,6 +385,13 @@ class 손(BaseHTTPRequestHandler):
                 n, 새 = 창고.규칙올리기(); 표경로 = 숫자표쓰기() if n else ""; 시험 = 시험_정답지() if n else None
                 return self._json({"올림": n, "판": 새, "시험": 시험, "숫자표": 표경로})
             if p == "/api/설정": return self._json(창고.설정쓰기(몸))
+            if p == "/api/페이지": v = 창고.교육(); v["페이지"] = 몸.get("페이지", "가르치기"); 창고.교육쓰기(v); return self._json({"됨": True})
+            if p == "/api/계획/초안": return self._json(계획초안(몸.get("주제", "").strip(),몸.get("바라는것", "").strip(), 몸.get("고칠말", "").strip()))
+            if p == "/api/계획/확정": return self._json(계획확정(몸))
+            if p == "/api/검증/정리": return self._json(정리부탁())
+            if p == "/api/검증/정리확정": return self._json(정리확정(몸.get("줄", [])))
+            if p == "/api/검증/확인": return self._json(확인시험(몸["번호"]))
+            if p == "/api/졸업": return self._json(졸업())
             if p == "/api/교육/다음단원": return self._json(dict(창고.다음단원(), 현황=창고.단원현황()))
             if p == "/api/교육/단원고르기": v = 창고.교육(); v["지금"] = max(0, min(int(몸["지금"]), len(v["단원"]) - 1)); 창고.교육쓰기(v); return self._json(dict(v, 현황=창고.단원현황()))
             if p == "/api/시험/정답지": return self._json(시험_정답지())
