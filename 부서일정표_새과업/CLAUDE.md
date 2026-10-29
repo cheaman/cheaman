@@ -9,7 +9,7 @@
 - 폰 껍데기 : `4_폰앱/올릴것/` (깃허브 Pages · 공개 저장소는 허락 뒤)
 - 사전조사 : `2_사전조사/호두_파악_20261028.md`
 - 뼈대 : 29번 유튜브 창(`2_앱스스크립트/Code.gs · Index.html` · 가짜 구글 시험 틀) · 스킬 google-apps-script-bridge · phone-app-shell · dsm-design · dsm-table
-- 시험 : `node 3_시험/test-server.js` · `NODE_PATH=$(npm root -g) node 3_시험/test-screen.js` · `NODE_PATH=$(npm root -g) node 3_시험/test-shell.js` — 가짜 구글(`fake-google.js` · CalendarApp 가짜)로 돌린다. 코드를 고치면 셋 다 돌리고 통과를 확인한다. 진짜 캘린더에 시험 일정을 만들지 않는다
+- 시험 : `node 3_시험/test-server.js` · `NODE_PATH=$(npm root -g) node 3_시험/test-screen.js` · `NODE_PATH=$(npm root -g) node 3_시험/test-shell.js` · 20명 흉내 `… test-20명.js`(결과 `3_시험/20명_시험_결과_20261029.md`) — 가짜 구글(`fake-google.js` · CalendarApp 가짜)로 돌린다. 코드를 고치면 셋 다 돌리고 통과를 확인한다. 진짜 캘린더에 시험 일정을 만들지 않는다
 - 화면 글자 규칙 : 종류 색은 데이터 색(분류 색 일곱) · 연두는 고른 것 · 누를 것에만 · 폰 첫 화면은 「오늘」 목록 (달력 아님)
 - 함정 : 화면에서 `.today` 같은 짧은 이름을 두 곳에 쓰면 PC 숨김 규칙이 달력 오늘 칸까지 숨김 (10-29 두 번 밟음) → 판 이름은 `todaybox` 처럼 길게
 - 코드를 고치면 사용자에게 「붙여 넣고 → 배포 관리 → 새 버전」 을 알려 준다

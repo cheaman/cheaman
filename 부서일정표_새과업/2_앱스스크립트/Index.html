@@ -164,7 +164,7 @@ tr.is-now td{background:#e3efcf}tr.is-now td:first-child{box-shadow:inset 3px 0 
           <div class="tcap"><b id="weekTitle">이번 주 일정</b><span id="weekRange"></span></div>
           <div class="tsum" id="weekSum"></div>
           <div class="twrap"><table>
-            <thead><tr><th style="width:150px">날짜</th><th style="width:76px">종류</th><th style="width:84px">누가</th><th style="width:160px">어디</th><th>메모</th><th style="width:90px">과업</th><th style="width:120px">올린</th></tr></thead>
+            <thead><tr><th style="width:150px">날짜</th><th style="width:76px">종류</th><th style="width:84px">누가</th><th style="width:140px">어디</th><th style="min-width:140px">메모</th><th style="width:72px">과업</th><th style="width:96px">올린</th></tr></thead>
             <tbody id="weekRows"></tbody>
           </table></div>
         </div>
@@ -221,7 +221,8 @@ const 월요일 = s => { const d = P(s); const k = (d.getDay() + 6) % 7; d.setDa
 const 기간 = (e, s) => e.시작 <= s && s <= e.끝;
 
 const S = { 오늘: F(new Date()), 고른날: F(new Date()), 보는달: null, 부서원: [], 종류: [], 과업: [], 일정: [], 과업일정: [], 공휴일: {}, 거름종류: '전체', 거름사람: '전체',
-  고치는: null, 입력: { 누가: '', 종류: '', 시간대: '', 과업: '' }, 떴음: false };
+  고치는: null, 입력: { 누가: '', 종류: '', 시간대: '', 과업: '' }, 떴음: false, 주모두: false, 나머지모두: false };
+const 주처음 = 12, 나머지처음 = 8;
 const 색 = k => k === '과업' ? '#6b7280' : ((S.종류.find(x => x.종류 === k) || {}).색 || '#8a929c');
 const 과업그날 = s => S.과업일정.filter(e => 기간(e, s));
 const 과업보임 = () => S.거름종류 === '전체' || S.거름종류 === '과업';
@@ -306,9 +307,12 @@ function renderToday() {
   const 주끝 = addD(m, 6);
   const 나머지 = S.일정.filter(e => e.끝 >= addD(s, 2) && e.시작 <= 주끝 && !기간(e, s) && !기간(e, 내일));
   out += '<div class="sub">이번 주 나머지 <span class="dim">· ' + 나머지.length + '건</span></div>';
-  out += 나머지.length ? '<div class="cards">' + 나머지.map(e => 카드(e, false)).join('') + '</div>' : '<div class="empty">없음</div>';
+  const 나머지보일 = S.나머지모두 ? 나머지 : 나머지.slice(0, 나머지처음);
+  out += 나머지.length ? '<div class="cards">' + 나머지보일.map(e => 카드(e, false)).join('') + '</div>' : '<div class="empty">없음</div>';
+  if (나머지.length > 나머지보일.length) out += '<button class="btn" id="restMore" style="width:100%;margin-top:8px;height:38px">더 보기 · ' + (나머지.length - 나머지보일.length) + '건 남음</button>';
   $('todayCards').innerHTML = out;
   $('todayCards').querySelectorAll('.card').forEach(b => b.onclick = () => openEdit(b.dataset.id));
+  const rm = $('restMore'); if (rm) rm.onclick = () => { S.나머지모두 = true; renderToday(); };
 }
 
 function renderChips() {
@@ -359,11 +363,14 @@ function renderWeek() {
   $('weekRange').textContent = 짧게(m) + ' ~ ' + 짧게(e7);
   const n = {}; list.forEach(e => { n[e.종류] = (n[e.종류] || 0) + 1; });
   $('weekSum').innerHTML = '<span class="chip">이 주 <b>' + list.length + '</b></span>' + Object.keys(n).map(k => '<span class="chip" style="--k:' + 색(k) + '"><i></i>' + esc(k) + ' <b>' + n[k] + '</b></span>').join('') + (tlist.length ? '<span class="chip" style="--k:#6b7280"><i></i>과업 <b>' + tlist.length + '</b></span>' : '');
-  $('weekRows').innerHTML = list.length ? list.map(e => '<tr class="row' + (기간(e, S.오늘) ? ' is-now' : '') + '" data-id="' + esc(e.id) + '"><td>' + 짧게(e.시작) + (e.끝 !== e.시작 ? ' ~ ' + 짧게(e.끝) : '') + (e.시간대 ? ' ' + e.시간대 : '') + '</td><td><span class="st" style="--k:' + 색(e.종류) + '"><i></i>' + esc(e.종류) + '</span></td><td>' + esc(e.누가) + '</td><td>' + (e.어디 ? esc(e.어디) : '<span class="dim">—</span>') + '</td><td>' + (e.메모 ? esc(e.메모) : '<span class="dim">—</span>') + '</td><td>' + (e.과업 ? esc(e.과업) : '<span class="dim">—</span>') + '</td><td class="dim">' + esc(e.올린 ? e.올린.split(' ')[0] : (e.화면밖 ? '캘린더 앱' : '')) + '</td></tr>').join('')
+  const 보일 = S.주모두 ? list : list.slice(0, 주처음);
+  $('weekRows').innerHTML = 보일.length ? 보일.map(e => '<tr class="row' + (기간(e, S.오늘) ? ' is-now' : '') + '" data-id="' + esc(e.id) + '"><td>' + 짧게(e.시작) + (e.끝 !== e.시작 ? ' ~ ' + 짧게(e.끝) : '') + (e.시간대 ? ' ' + e.시간대 : '') + '</td><td><span class="st" style="--k:' + 색(e.종류) + '"><i></i>' + esc(e.종류) + '</span></td><td>' + esc(e.누가) + '</td><td>' + (e.어디 ? esc(e.어디) : '<span class="dim">—</span>') + '</td><td>' + (e.메모 ? esc(e.메모) : '<span class="dim">—</span>') + '</td><td>' + (e.과업 ? esc(e.과업) : '<span class="dim">—</span>') + '</td><td class="dim">' + esc(e.올린 ? e.올린.split(' ')[0] : (e.화면밖 ? '캘린더 앱' : '')) + '</td></tr>').join('')
     : '';
+  if (list.length > 보일.length) $('weekRows').innerHTML += '<tr><td colspan="7" style="text-align:center"><button class="btn" id="weekMore">모두 보기 · ' + list.length + '줄 (지금 ' + 보일.length + ')</button></td></tr>';
   $('weekRows').innerHTML += tlist.map(t => '<tr class="taskrow"><td>' + 짧게(t.시작) + (t.끝 !== t.시작 ? ' ~ ' + 짧게(t.끝) : '') + '</td><td><span class="st" style="--k:#6b7280"><i></i>' + esc(t.갈래) + '</span></td><td class="dim">—</td><td>' + esc(t.이름) + '</td><td class="dim">과업 날짜</td><td>' + (t.과업 ? esc(t.과업) : '<span class="dim">—</span>') + '</td><td class="dim">시트</td></tr>').join('');
   if (!list.length && !tlist.length) $('weekRows').innerHTML = '<tr><td colspan="7" class="empty">이 주에는 올린 일정이 없습니다</td></tr>';
   $('weekRows').querySelectorAll('tr.row').forEach(r => r.onclick = () => openEdit(r.dataset.id));
+  const wm = $('weekMore'); if (wm) wm.onclick = () => { S.주모두 = true; renderWeek(); };
 }
 
 /* ── 올리기 · 고치기 ── */

@@ -383,7 +383,13 @@ function 기록_(무엇, e, 화면, 더) {
   var s = ss_().getSheetByName(SH.기록);
   if (!s) return;
   var 내용 = e.시작 + (e.끝 !== e.시작 ? '~' + e.끝 : '') + (e.시간대 ? ' ' + e.시간대 : '') + (e.메모 ? ' · ' + e.메모 : '') + (더 ? ' · ' + 더 : '');
-  s.getRange(s.getLastRow() + 1, 1, 1, 기록_머리.length).setValues([[new Date(), 무엇, e.id, e.제목, 내용, 화면 || '']]);
+  // 여러 사람이 같은 순간에 올려도 줄이 겹치지 않게 — 잠금 + appendRow (기록이 안 남아도 일정은 이미 올라감)
+  var lock = LockService.getScriptLock();
+  var 잠김 = false;
+  try { 잠김 = lock.tryLock(5000); } catch (x) {}
+  try { s.appendRow([new Date(), 무엇, e.id, e.제목, 내용, 화면 || '']); }
+  catch (x) { try { s.getRange(s.getLastRow() + 1, 1, 1, 기록_머리.length).setValues([[new Date(), 무엇, e.id, e.제목, 내용, 화면 || '']]); } catch (y) {} }
+  finally { if (잠김) { try { lock.releaseLock(); } catch (x) {} } }
 }
 
 /* ─── 시트 읽기 ─── */

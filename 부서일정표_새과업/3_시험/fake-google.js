@@ -43,6 +43,7 @@ class Sheet {
     return new Range(this, a, b, c || 1, d || 1);
   }
   setFrozenRows() {}
+  appendRow(vals) { const r = this.getLastRow() + 1; vals.forEach((v, j) => this.put(r, j + 1, v)); return this; }
 }
 
 class Spreadsheet {
