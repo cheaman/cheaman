@@ -163,7 +163,7 @@
     <span class="what">· 도면 · 틀 · 말을 넣으면 AI 가 규칙 넷으로 바꿔 두고, 어디에 어떻게 기억됐는지 보인다</span>
   </div>
   <div class="sp"></div>
-  <span class="ver" title="판 v0.3 목업 · 고친 날 2026-10-29">v0.3 목업</span>
+  <span class="ver" title="판 v0.4 목업 · 고친 날 2026-10-29">v0.4 목업</span>
   <div class="theme" title="밝기 고르개 · 처음 = 시간">
     <button data-t="">기기</button><button data-t="time" class="on">시간</button><button data-t="light">밝게</button><button data-t="dark">어둡게</button>
   </div>
@@ -404,9 +404,27 @@ EL.가까움_mm          2</pre>
 
 <!-- ───────── 4단계 정답지로 시험 ───────── -->
 <section class="sec" data-s="4">
+
+  <div class="card">
+    <span class="kno">4-00</span>
+    <div class="ch"><span class="no">4-0</span><h2>시험 여섯 — 규칙 판을 올리려면 모두 통과해야 합니다</h2><span class="st">규칙 v0.3 · 통과 4 · 못 미침 1 · 아직 1</span></div>
+    <div class="cb">
+      <div class="tbl"><table>
+        <tr><th>#</th><th>시험</th><th>무엇을 재나</th><th>누가 채점</th><th class="n">이번 결과</th><th>통과 잣대</th><th>판정</th></tr>
+        <tr class="now"><td>1</td><td>정답지 시험</td><td>받은 판 8벌 → 전무님 판과 대조</td><td>프로그램</td><td class="n">적정 5 / 8 · 겹침 7</td><td>적정 7 이상 · 겹침 0</td><td><span class="pill pill--bad">못 미침</span></td></tr>
+        <tr><td>2</td><td>가린 시험</td><td>6벌로 만들고 숨긴 2벌로 · 네 바퀴</td><td>프로그램</td><td class="n">숨긴 8벌 중 적정 6</td><td>숨긴 벌도 적정</td><td><span class="pill pill--ok">통과</span></td></tr>
+        <tr><td>3</td><td>새 시킴 시험</td><td>전무님이 적은 새 고칠 것 → 정답 없음</td><td>프로그램 + 전무님 눈</td><td class="n">× 판마다 1 · 2 · 0</td><td>× 2곳 이하</td><td><span class="pill pill--ok">통과</span></td></tr>
+        <tr><td>4</td><td>일부러 틀린 도면</td><td>겹침 · 3단 · 틀 깸 12곳 심음 → 몇 곳 잡나</td><td>프로그램</td><td class="n">12 / 12 · 헛잡음 0</td><td>전부 · 헛잡음 0</td><td><span class="pill pill--ok">통과</span></td></tr>
+        <tr><td>5</td><td>되풀이 시험</td><td>같은 판 · 같은 시킴 세 번</td><td>프로그램</td><td class="n">3 / 3 같음</td><td>세 번 같음</td><td><span class="pill pill--ok">통과</span></td></tr>
+        <tr><td>6</td><td>낯선 꼴 · 시간</td><td>일반도 1벌 · 판 하나 걸린 분</td><td>프로그램 · 시계</td><td class="n">—</td><td>잣대 없음 · 기록만</td><td><span class="pill pill--mute">아직 · 일반도 본보기 없음</span></td></tr>
+      </table></div>
+      <div class="row" style="margin-top:10px"><button class="btn btn--main" onclick="fake(this,'여섯 시험을 돌렸습니다 · 11분 40초 · 위 표와 4-1 ~ 4-6 에 결과')">시험 여섯 모두 돌리기</button><span class="tip">예상 10 ~ 15분 · AI 가 맡는 부분(새 시킴 읽기)은 클로드 대화창이 파일로 받아 답합니다</span></div>
+      <div class="res hide"></div>
+    </div>
+  </div>
   <div class="card now">
     <span class="kno">4-01</span>
-    <div class="ch"><span class="no">4-1</span><h2>받은 판에 규칙을 돌려 전무님 판과 견주기</h2><span class="st now">▶ 8판 · 적정 5 · 보완 필요 2 · 자료 미비 1</span></div>
+    <div class="ch"><span class="no">4-1</span><h2>시험 1 정답지 — 받은 판에 규칙을 돌려 전무님 판과 견주기</h2><span class="st now">▶ 8판 · 적정 5 · 보완 필요 2 · 자료 미비 1 → 못 미침</span></div>
     <div class="cb">
       <div class="row"><button class="btn btn--main" onclick="fake(this,'8판을 돌렸습니다 · 4분 10초 · 아래 표')">8판 시험 돌리기</button><span class="tip">예상 3 ~ 5분 · 끝 예정 시각을 여기에 적습니다</span></div>
       <div class="res hide"></div>
@@ -458,6 +476,56 @@ EL.가까움_mm          2</pre>
       </table></div>
     </div>
   </div>
+
+  <div class="card">
+    <span class="kno">4-04</span>
+    <div class="ch"><span class="no">4-4</span><h2>시험 3 새 시킴 — 전무님이 고칠 것을 적으면 정답 없이 해 봅니다</h2><span class="st">이번 시킴 3 · × 합 3</span></div>
+    <div class="cb">
+      <div class="row"><input style="font:inherit;padding:7px 10px;border:1px solid var(--dsm-in-line);border-radius:8px;background:var(--dsm-in);color:var(--dsm-ink);flex:1;min-width:220px" placeholder="예 : 받은 판 05 · 벽 350 → 400 · 앵커 한 줄 더 (EL +11.800)"><button class="btn btn--main" style="min-height:34px" onclick="fake(this,'시킴을 읽었습니다 · 바꿀 객체 14 (벽 선 2 · 해치 1 · 치수 5 · 지시선 2 · 앵커 블록 4) → 고친 그림을 아래에')">해 보기</button></div>
+      <div class="res hide"></div>
+      <div class="figs" style="margin-top:10px">
+        <div class="fig" data-fig="t:400,tiers:2,lead:R,leadDim:1,cloud:1,title:새 시킴"><div class="fl"><b>시킴 1 · 판 05 · 벽 350 → 400 · 앵커 한 줄 더</b><span>겹침 0 · 틀 유지</span></div><div class="q"><button class="btn">○ 됐음</button><button class="btn">× 틀린 곳 찍기</button></div></div>
+        <div class="layer"><h3>시킴 기록</h3>
+          <div class="tbl"><table><tr><th>시킴</th><th class="n">바꾼 객체</th><th class="n">겹침</th><th class="n">전무님 ×</th><th>판정</th></tr>
+          <tr><td>판 05 · 벽 400 · 앵커 +1</td><td class="n">14</td><td class="n">0</td><td class="n">1</td><td><span class="pill pill--ok">적정</span></td></tr>
+          <tr><td>판 02 · 기초 폭 +200</td><td class="n">9</td><td class="n">0</td><td class="n">2</td><td><span class="pill pill--ok">적정</span></td></tr>
+          <tr><td>판 07 · EL 전체 −150</td><td class="n">31</td><td class="n">0</td><td class="n">0</td><td><span class="pill pill--ok">적정</span></td></tr></table></div>
+          <div class="hint">× 를 찍으면 까닭 한 줄 → 지적기록 → 세 번이면 규칙으로 (4-3)</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="kno">4-05</span>
+    <div class="ch"><span class="no">4-5</span><h2>시험 4 · 5 — 검사 도구 자체와 되풀이</h2><span class="st">통과 2</span></div>
+    <div class="cb">
+      <div class="tiles">
+        <div class="tile"><div class="l">일부러 심은 틀림 12곳</div><div class="num">12 / 12</div><div class="tip">겹침 5 · 3단 4 · 틀 깸 3 모두 잡음 · 헛잡음 0</div></div>
+        <div class="tile"><div class="l">되풀이 세 번</div><div class="num">3 / 3 같음</div><div class="tip">객체 수 · 좌표 소수 둘째 자리까지</div></div>
+        <div class="tile"><div class="l">AI 판단이 섞인 자리</div><div class="num">0</div><div class="tip">v0.1 때 2곳(지시선 쪽) → 숫자 표로 옮겨 0</div></div>
+        <div class="tile"><div class="l">판 하나 걸린 시간</div><div class="num">6분</div><div class="tip">12-1 잣대 : 지도 · 부품 있음 15 ~ 20분 짐작 → 실측으로 고침</div></div>
+      </div>
+      <div class="hint">되풀이가 다르면 그 자리는 AI 가 판단한 것입니다. 그 판단을 숫자 표 규칙으로 옮겨 프로그램이 하게 바꿉니다. 시험의 목적은 AI 판단을 줄여 가는 것입니다</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="kno">4-06</span>
+    <div class="ch"><span class="no">4-6</span><h2>시험 기록 — 규칙 판이 올라갈수록 나아지나</h2><span class="st">v0 → v0.3 · 넉 줄</span></div>
+    <div class="cb">
+      <div class="grid2">
+        <div class="fig" id="chart"><div class="fl"><b>적정 수 (8벌 중) · 겹침 합</b><span>막대 = 적정 · 선 = 겹침</span></div></div>
+        <div class="tbl"><table>
+          <tr><th>규칙 판</th><th>날</th><th class="n">적정</th><th class="n">겹침 합</th><th class="n">되풀이</th><th class="n">분</th><th>올렸나</th></tr>
+          <tr><td>v0</td><td>10-29</td><td class="n">3 / 8</td><td class="n">14</td><td class="n">2 / 3</td><td class="n">—</td><td><span class="pill pill--mute">첫 판</span></td></tr>
+          <tr><td>v0.1</td><td>10-30</td><td class="n">5 / 8</td><td class="n">7</td><td class="n">3 / 3</td><td class="n">9</td><td><span class="pill pill--ok">올림</span> 13-3 예외</td></tr>
+          <tr><td>v0.2</td><td>10-31</td><td class="n">6 / 8</td><td class="n">3</td><td class="n">3 / 3</td><td class="n">7</td><td><span class="pill pill--ok">올림</span> 13-5 새</td></tr>
+          <tr class="now"><td>v0.3</td><td>11-01</td><td class="n">5 / 8</td><td class="n">7</td><td class="n">3 / 3</td><td class="n">6</td><td><span class="pill pill--bad">안 올림</span> 적정이 줄었음 → 13-6 되돌림</td></tr>
+        </table>
+        <div class="hint">판이 올라갔는데 적정이 줄면 규칙을 더한 것이 아니라 어긋난 것입니다. 그 판은 올리지 않고 되돌립니다</div></div>
+      </div>
+    </div>
+  </div>
 </section>
 
 <!-- ───────── 5단계 기억 창고 ───────── -->
@@ -474,6 +542,7 @@ EL.가까움_mm          2</pre>
         <tr><td>③ 프로그램</td><td>겹침 세기 · 짝 찾기 · (자리 후보)</td><td>1_실행기\</td><td>v0.2 · v0.1 · —</td><td class="n">3개</td><td>단추를 누를 때 <span class="pill pill--info">도구</span></td><td><button class="btn btn--view">열기</button></td></tr>
         <tr><td>④ 정답지</td><td><span class="thumb" data-fig="t:300,tiers:2,lead:R,leadDim:1"></span>본보기 그림 38장 (○ 받은 샘플 · 잘라 낸 자리)</td><td>_본보기\ · 규칙 글이 「그림 13-1.png」 로 가리킴</td><td>—</td><td class="n">38장</td><td>클로드가 그 규칙을 쓸 때 <span class="pill pill--info">열어 봄</span></td><td><button class="btn btn--view">열기</button></td></tr>
         <tr><td>④ 정답지</td><td>횡단면도 짝 8벌 + 지적기록 14줄</td><td>_정답\ · 지적기록.md</td><td>—</td><td class="n">8벌</td><td>시험 때만 <span class="pill pill--mute">사람이 시킴</span></td><td><button class="btn btn--view">열기</button></td></tr>
+        <tr><td>④ 정답지</td><td>시험 기록 (규칙 판마다 여섯 시험 결과)</td><td>_정답\시험기록.csv</td><td>—</td><td class="n">4줄</td><td>판을 올릴 때 <span class="pill pill--info">도구</span></td><td><button class="btn btn--view">열기</button></td></tr>
         <tr><td>원본</td><td>녹음 · 질문지 답 · dwt · 받은 도면</td><td>2_자료\원본\</td><td>—</td><td class="n">21개</td><td><span class="pill pill--mute">안 읽음 · 출처로만</span></td><td><button class="btn btn--view">열기</button></td></tr>
       </table></div>
       <div class="hint">「저절로」 인 것만 다음 대화의 클로드가 처음부터 압니다. 나머지는 도구가 돌 때 읽거나 사람이 열어야 합니다. 그래서 규칙 글은 30줄 안에 두고, 숫자는 표로 뺍니다. <b>그림은 클로드 머릿속에 남지 않습니다.</b> 파일로 두고 규칙 글이 그 그림을 가리키면, 다음 대화의 클로드가 그 규칙을 쓸 때 그림을 열어 봅니다 (한 장에 약 1 ~ 2초 · 글 한 쪽 값)</div>
@@ -520,20 +589,20 @@ EL.가까움_mm          2</pre>
       <div class="row" style="margin-top:10px"><button class="btn btn--main">규칙 묶음 내보내기 (스킬 + json + 지적기록)</button><span class="tip">다른 PC · 부서원 과업 폴더에 같은 규칙을 심을 때</span></div>
     </div>
   </div>
-  <div class="sign">DSM · 도면 규칙 가르치기 · v0.3 목업 · 2026-10-29</div>
+  <div class="sign">DSM · 도면 규칙 가르치기 · v0.4 목업 · 2026-10-29</div>
 </section>
 </main>
 
 <footer class="foot" id="foot"></footer>
 
 <script>
-/* 생김새 : "v0.3 목업 2026-10-29 · 무엇" ← 판 글자는 여기 한 곳 */
-var 화면판 = "v0.3 목업";
+/* 생김새 : "v0.4 목업 2026-10-29 · 무엇" ← 판 글자는 여기 한 곳 */
+var 화면판 = "v0.4 목업";
 var 단계 = [
   {n:1, t:"자료 넣기",          st:"done", situ:"파일 21개 중 보는 것 19개 · 갖춤 4 · 모자람 1 → <b>1-1 에 폴더를 넣거나 [다음 : 2 AI 가 읽은 것 ▸]</b>", foot:"넣은 파일 21개 → 보는 것 19개 · 도구가 만든 것 2개 뺌", next:"2 AI 가 읽은 것 확인"},
   {n:2, t:"AI 가 읽은 것 확인", st:"now",  situ:"도면 숫자 6 셈 · 말 규칙 14줄 중 확인 9 → <b>2-3 남은 5줄에 ○ × · 2-4 물음 2 · 2-5 되짚기 한 장에 ○</b>", foot:"규칙 문장 14줄 · 확인 9 · 남은 5 · 물음 2", next:"3 규칙 넷 만들기"},
-  {n:3, t:"규칙 넷 만들기",     st:"off",  situ:"확인 ○ 12줄 + 도면 숫자 6 → <b>3-1 [규칙 넷 만들기] → 3-6 샘플 셋에 ○ ×</b>", foot:"규칙 글 18줄 · 숫자 표 23칸 · 프로그램 2/3 · 샘플 3 (○ 기다림)", next:"4 정답지로 시험"},
-  {n:4, t:"정답지로 시험",      st:"off",  situ:"8판 중 적정 5 · 보완 필요 2 · 자료 미비 1 → <b>4-2 판 03 틀린 곳에 까닭 · 4-3 지적 1 올리기</b>", foot:"8판 · 적정 5 · 보완 필요 2 · 자료 미비 1 · 올릴 지적 1", next:"5 기억 창고"},
+  {n:3, t:"규칙 넷 만들기",     st:"off",  situ:"확인 ○ 12줄 + 도면 숫자 6 → <b>3-1 [규칙 넷 만들기] → 3-6 샘플 셋에 ○ ×</b>", foot:"규칙 글 18줄 · 숫자 표 23칸 · 프로그램 2/3 · 샘플 3 (○ 기다림)", next:"4 시험"},
+  {n:4, t:"시험",      st:"off",  situ:"규칙 v0.3 · 시험 여섯 중 통과 4 · 못 미침 1 · 아직 1 → <b>4-1 못 미친 정답지 시험 · 4-3 판 03 까닭 · 4-5 새 시킴 적기</b>", foot:"시험 여섯 · 통과 4 · 못 미침 1 · 아직 1 → 규칙 v0.4 는 통과 뒤에", next:"5 기억 창고"},
   {n:5, t:"기억 창고",          st:"off",  situ:"네 층 · 저절로 읽히는 것 21줄 · 도구가 읽는 것 24칸 → <b>여기까지 보시면 끝</b>", foot:"여기까지 하시면 끝입니다 · 규칙 묶음을 내보내면 다른 과업에 심을 수 있습니다", next:null}
 ];
 var 지금 = 2;
@@ -645,6 +714,23 @@ function 움직이기(){
   requestAnimationFrame(프레임);
 }
 document.getElementById("anim").insertAdjacentHTML("afterbegin", 단면그림({t:350,tiers:3,lead:'R'}));
+
+(function(){
+  var d=[["v0",3,14],["v0.1",5,7],["v0.2",6,3],["v0.3",5,7]], W=320,H=150, x0=34, bw=40, gap=28, dim='var(--dsm-dim)';
+  var g='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" font-family="Pretendard,sans-serif" font-size="10">';
+  g+='<line x1="'+x0+'" y1="120" x2="'+(W-10)+'" y2="120" stroke="'+dim+'" stroke-width=".8"/>';
+  for(var i=0;i<=8;i+=2){var y=120-i*12;g+='<line x1="'+(x0-3)+'" y1="'+y+'" x2="'+x0+'" y2="'+y+'" stroke="'+dim+'"/><text x="'+(x0-6)+'" y="'+(y+3)+'" text-anchor="end" fill="'+dim+'">'+i+'</text>';}
+  var pts=[];
+  d.forEach(function(r,i){var x=x0+12+i*(bw+gap), h=r[1]*12;
+    g+='<rect x="'+x+'" y="'+(120-h)+'" width="'+bw+'" height="'+h+'" fill="currentColor" opacity="'+(i==3?'.45':'.85')+'"/>';
+    g+='<text x="'+(x+bw/2)+'" y="'+(116-h)+'" text-anchor="middle" fill="currentColor">'+r[1]+'</text>';
+    g+='<text x="'+(x+bw/2)+'" y="134" text-anchor="middle" fill="'+dim+'">'+r[0]+'</text>';
+    pts.push([x+bw/2, 120-r[2]*6]);});
+  g+='<polyline points="'+pts.map(function(p){return p.join(",")}).join(" ")+'" fill="none" stroke="var(--dsm-brand)" stroke-width="1.6"/>';
+  pts.forEach(function(p,i){g+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="3" fill="var(--dsm-brand)"/><text x="'+(p[0]+6)+'" y="'+(p[1]-4)+'" fill="var(--dsm-brand)">'+d[i][2]+'</text>';});
+  g+='<text x="'+(W-10)+'" y="12" text-anchor="end" fill="'+dim+'">겹침 합 (선)</text></svg>';
+  document.getElementById("chart").insertAdjacentHTML("afterbegin", g);
+})();
 그리기();
 </script>
 </body>
