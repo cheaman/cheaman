@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>그림 · 동작 목업</title>
+<style>
+:root{--bg:#1d2126;--card:#262b31;--line:#3a4048;--ink:#e8eaed;--dim:#9aa3ad;--key:#f0a04a;--bad:#f08078;--ok:#6cc08a;--in:#1a1d21}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.45 "Pretendard","Malgun Gothic",sans-serif;padding:14px 18px;width:1366px}
+h1{font-size:17px;margin:0 0 2px}.sub{color:var(--dim);margin-bottom:10px}
+.row{display:grid;grid-template-columns:110px 1fr 1fr;gap:8px;margin-bottom:8px}
+.lab,.pane{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-width:0}
+.lab b{display:block;font-size:15px;color:var(--key)}.lab i{font-style:normal;color:var(--dim);font-size:12px}
+.pane h3{margin:0 0 6px;font-size:12px;color:var(--dim);font-weight:600}
+.pane.new{border-color:var(--key)}.pane.new h3{color:var(--key)}
+img{display:block;border:1px solid var(--line);border-radius:6px}
+.shot{position:relative;display:inline-block}
+.ring{position:absolute;border:2px solid var(--key);border-radius:50%;box-shadow:0 0 0 3px rgba(240,160,74,.25)}
+.tag{position:absolute;background:var(--key);color:#1d2126;font-weight:700;font-size:11px;padding:1px 6px;border-radius:4px;white-space:nowrap}
+.hl{outline:1px solid var(--key);border-radius:4px;background:rgba(240,160,74,.12);padding:0 3px}
+.cut{color:var(--bad)}.ok{color:var(--ok)}.bad{color:var(--bad)}
+.note{color:var(--dim);font-size:12px;margin-top:6px}
+.legend{display:inline-block;background:#1f2429;border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--dim);line-height:1.6}
+table{border-collapse:collapse;white-space:nowrap}
+th{color:var(--dim);font-weight:600;font-size:12px;padding:3px 4px;text-align:right;border-bottom:1px solid var(--line)}
+td{padding:2px 4px;text-align:right;border-bottom:1px solid var(--line)}td.l,th.l{text-align:left}
+.inp{display:inline-block;width:66px;height:21px;border:1px solid #4a525b;background:var(--in);border-radius:5px;vertical-align:middle;font-size:12px;line-height:19px;padding:0 4px;text-align:right}
+.inp.bad{border-color:var(--bad);color:var(--bad);outline:1px solid var(--bad)}
+.card{background:#1f2429;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;overflow:hidden}
+.ch{display:flex;align-items:center;gap:6px;padding:5px 8px;font-weight:700;background:#2b3138}.ch .k{color:var(--key);font-weight:800}.ch .s{color:var(--dim);font-weight:400;font-size:12px}
+.ch .r{margin-left:auto;color:var(--dim);font-weight:400;font-size:12px}
+.sel{background:rgba(240,160,74,.18);outline:1px solid var(--key)}
+.btn{display:inline-block;border:1px solid #4a525b;border-radius:6px;padding:1px 8px;font-size:12px;background:var(--in)}
+.tog{display:inline-flex;border:1px solid #4a525b;border-radius:6px;overflow:hidden;font-size:12px}.tog span{padding:2px 9px}.tog .on{background:var(--key);color:#1d2126;font-weight:700}
+</style></head><body>
+<h1>묶음 라 · 그림 · 동작 — 지금 / 고친 뒤</h1>
+<div class="sub">걷기 13 · 14 · 17 · 18 · 19 · 잰 곳 1366 × 728 · 예제 교각 코핑 P3 · 주황 = 바뀌는 곳 · 값 · 저장 · 셈 그대로 · 서버 안 건드림 (19 의 DXF 글 자리만 정하실 것)</div>
+
+<div class="row">
+  <div class="lab"><b>13</b>① 1-5 치수도 범례<br><i>«● 받침» 이 하중점</i></div>
+  <div class="pane"><h3>지금 — 그림의 ● 은 하중점(받침판 자리) 인데 범례는 «● 받침» · ▲ 실제 받침 · ↑ 기둥 반력은 범례에 없음</h3>
+    <div class="shot"><img src="라_그림/①_1-5_지금.png" width="560"><div class="ring" style="left:498px;top:28px;width:58px;height:40px"></div></div>
+  </div>
+  <div class="pane new"><h3>고친 뒤 — 형식마다 범례를 맞춤 (그림은 그대로)</h3>
+    <table>
+      <tr><th class="l">형식</th><th class="l">범례 (위에서 아래로)</th></tr>
+      <tr><td class="l">깊은보</td><td class="l"><span class="hl">● 하중점 (받침판 자리)</span> · <span class="hl">▲ 받침</span> · ↓ Vu (하중계수 곱한 값) · 회색 = 콘크리트 외곽</td></tr>
+      <tr><td class="l">코핑 (1열 · 다열)</td><td class="l"><span class="hl">● 하중점 (받침 x)</span> · <span class="hl">↑ R 기둥 반력</span> · ↓ Vu · 회색 = 콘크리트 외곽</td></tr>
+      <tr><td class="l">말뚝캡</td><td class="l"><span class="hl">● 기둥 하중점</span> · <span class="hl">▲ 말뚝</span> · ↓ Vu · 회색 = 콘크리트 외곽</td></tr>
+      <tr><td class="l">확대기초 · 코벨</td><td class="l"><span class="hl">● 기둥 하중점</span> · <span class="hl">▲ 지반 반력 / 기둥</span> · ↓ Vu · 회색 = 콘크리트 외곽</td></tr>
+    </table>
+    <div class="note">보기 (코핑) : <span class="legend">● 하중점 (받침 x)<br>↑ R 기둥 반력<br>↓ Vu (하중계수 곱한 값)<br>회색 = 콘크리트 외곽</span> &nbsp; 수평력 H 는 그림에 주황 화살로 이미 있음 → 범례에 «→ H 수평력 (주황)» 한 줄 더</div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="lab"><b>14</b>① 1-3 «+ 받침»<br><i>새 줄 x 가 끝 밖</i></div>
+  <div class="pane"><h3>지금 — 새 줄 x = 마지막 x + 2,300 고정 · 깊은보 끝(TL) 3,600 인데 x 3,700 · 경고 없음</h3>
+    <div class="shot"><img src="라_그림/①_1-3_지금.png" width="418"><div class="ring" style="left:340px;top:4px;width:66px;height:26px"></div></div>
+    <div class="note">깊은보 SP 예제 : 받침 1,700 · 2,300 → «+ 받침» 누르면 <span class="cut">4,600</span> (끝 3,600 밖) · 코핑도 마지막 10,000 + 2,300 = 12,300 &gt; TL 10,800</div>
+  </div>
+  <div class="pane new"><h3>고친 뒤 — 새 줄 x = 마지막 x 와 끝(TL) 사이 가운데 · 끝 밖이면 빨강 칸 + 마우스 글</h3>
+    <table>
+      <tr><th class="l">받침</th><th>위치 x</th><th>고정하중 D</th><th>활하중 L</th><th>수평 H</th><th></th></tr>
+      <tr><td class="l">1</td><td><span class="inp">1,700</span></td><td><span class="inp">1,000</span></td><td><span class="inp">500</span></td><td><span class="inp">0</span></td><td>✕</td></tr>
+      <tr><td class="l">2</td><td><span class="inp">2,300</span></td><td><span class="inp">1,000</span></td><td><span class="inp">500</span></td><td><span class="inp">0</span></td><td>✕</td></tr>
+      <tr><td class="l">3 <span class="hl">새 줄</span></td><td><span class="inp hl">2,950</span></td><td><span class="inp">1,000</span></td><td><span class="inp">500</span></td><td><span class="inp">0</span></td><td>✕</td></tr>
+      <tr><td class="l">4 <span style="color:var(--dim)">(직접 3,700 입력)</span></td><td><span class="inp bad" title="끝 3,600 밖">3,700</span></td><td><span class="inp">1,000</span></td><td><span class="inp">500</span></td><td><span class="inp">0</span></td><td>✕</td></tr>
+    </table>
+    <div class="note">가운데 = (마지막 x + TL) ÷ 2 반올림 (2,300 · 3,600 → 2,950) · 하중은 마지막 줄 값 그대로 · x &lt; 0 또는 x &gt; TL 이면 칸 빨강 + 마우스 글 «끝 3,600 밖» · 상태줄에도 «받침 4 위치가 부재 밖» (다음 단추는 안 막음) · 받침 사이가 좁아도(끝과 100 mm) 가운데에 둠</div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="lab"><b>17</b>② 2-2 · 2-3 함께 펼침<br><i>부재 줄이 창 밑으로</i></div>
+  <div class="pane"><h3>지금 — 둘 다 펼치면 2-3 카드 바닥 927 &gt; 창 728 (단 스크롤 944 / 550)</h3>
+    <div class="shot"><img src="라_그림/②_둘펼침_지금.png" width="300"><div class="tag" style="left:160px;top:330px">… 부재 11 줄은 창 아래</div></div>
+  </div>
+  <div class="pane new"><h3>고친 뒤 — 2-2 · 2-3 은 하나만 펼침 (하나를 펼치면 다른 하나는 접힘)</h3>
+    <div class="card"><div class="ch">▸ <span class="k">2-2</span>절점 <span class="s">— 눌러 펼침 · mm · kN</span><span class="r">7 개 &nbsp;<span class="btn">Vu 반영</span> <span class="btn">+ 절점</span></span></div></div>
+    <div class="card"><div class="ch">▾ <span class="k">2-3</span>부재 <span class="s">★ = 부재력 부호와 다름</span><span class="r">11 개 &nbsp;<span class="btn">+ 부재</span></span></div>
+      <table style="width:100%">
+        <tr><th class="l">이름</th><th class="l">i</th><th class="l">j</th><th class="l">종류</th><th>각도</th><th>부재력 kN</th><th>검사</th></tr>
+        <tr><td class="l">CD</td><td class="l">C</td><td class="l">D</td><td class="l">타이</td><td>0°</td><td>4,662.9</td><td></td></tr>
+        <tr class="sel"><td class="l"><b>AD</b></td><td class="l">A</td><td class="l">D</td><td class="l">스트럿</td><td>54°</td><td>−172.0</td><td></td></tr>
+        <tr><td class="l">BD</td><td class="l">B</td><td class="l">D</td><td class="l">스트럿</td><td>40°</td><td>−3,537.1</td><td></td></tr>
+        <tr><td class="l" colspan="7" style="color:var(--dim)">… 11 줄 다 보임 (카드 바닥 약 640 &lt; 728)</td></tr>
+      </table></div>
+    <div class="note">규칙 : 2-2 머리를 누르면 2-3 접힘 · 2-3 을 누르면 2-2 접힘 · 저절로 펼칠 때(검사 ★ 가 있으면) 도 2-3 만 · 둘 다 보고 싶으면 창을 늘리면 됨 (접힘 상태는 지금처럼 기억)</div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="lab"><b>18</b>② 2-4 모델 그림 누름<br><i>손 모양인데 반응 없음</i></div>
+  <div class="pane"><h3>지금 — 커서는 손 모양(끌어 옮기기) · 부재 · 절점을 눌러도 아무 일 없음 (③ 3-4 는 누르면 3-5 식으로 감)</h3>
+    <div class="shot"><img src="라_그림/②_2-4_지금.png" width="420"></div>
+  </div>
+  <div class="pane new"><h3>고친 뒤 — 부재 선 · 글을 누르면 2-3 그 줄로 (2-3 펼치고 · 그 줄 주황 · 보이게 밀어 올림) · 절점 ● 은 2-2 그 줄로</h3>
+    <div class="shot"><img src="라_그림/②_2-4_지금.png" width="420"><div class="ring" style="left:138px;top:78px;width:60px;height:24px"></div><div class="tag" style="left:202px;top:60px">누름 → 2-3 «AD» 줄</div><div class="ring" style="left:178px;top:114px;width:22px;height:22px"></div><div class="tag" style="left:204px;top:134px">● 누름 → 2-2 «A» 줄</div></div>
+    <div class="note">커서 : 부재 선 · 글 · 절점 ● 위에서는 화살표(누를 수 있음) · 빈 곳은 손 모양 그대로(끌기 · 휠 확대 그대로) · ③ 3-4 와 같은 규칙 (3-4 는 이미 됨) · 누른 줄은 2-3 에서 주황 테 (3-3 의 고른 줄과 같은 모양)</div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="lab"><b>19</b>④ 4-4 도면 미리보기<br><i>글 7 px · 글 겹침</i></div>
+  <div class="pane"><h3>지금 — 계산서 쪽과 반씩 나눠 도면 폭 412 · 글 7.1 ~ 9.4 px · «AD −172» ↔ «BD −3,537.1» 41 % 겹침</h3>
+    <div class="shot"><img src="라_그림/④_도면_지금.png" width="250"><div class="ring" style="left:118px;top:140px;width:30px;height:24px"></div></div>
+  </div>
+  <div class="pane new"><h3>고친 뒤 — 4-4 머리에 고르개 «둘 다 · 계산서 · 도면» · «도면» 이면 폭 878 · 글 15 ~ 20 px · 부재 글은 ②③ 비켜 놓기 규칙</h3>
+    <div style="margin-bottom:6px"><span class="k" style="color:var(--key);font-weight:800">4-4</span> 미리보기 &nbsp;<span class="tog"><span>둘 다</span><span>계산서</span><span class="on">도면</span></span> <span class="note" style="display:inline">· 누를 때마다 기억 · «둘 다» 가 기본</span></div>
+    <div class="shot"><img src="라_그림/④_도면_크게.png" width="440"><div class="ring" style="left:196px;top:140px;width:44px;height:26px"></div><div class="tag" style="left:244px;top:146px">비켜 놓기로 «AD −172» 가 선 옆으로</div></div>
+    <div class="note">비켜 놓기 = 모델 그림(2-4) · 검토 그림(3-4) 과 같은 함수 (짧은 부재부터 · 다른 글 · 절점 · 선과 안 닿는 첫 자리) · 미리보기 화면만 · <b>DXF 안의 글 자리는 그대로</b> (서버 몫 · 캐드에서 옮김) → 정하실 것 : DXF 도 같이 비켜 놓을지</div>
+  </div>
+</div>
+</body></html>
