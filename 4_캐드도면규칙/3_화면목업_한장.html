@@ -163,6 +163,15 @@
   .tiles2 .tl.on{background:var(--dsm-c-soft);border:2px solid var(--dsm-ink)}
   .tiles2 .tl .nm{flex:1;min-width:120px}
   .tiles2 .tl .thumb{width:56px;flex:none}
+  .tiles2 .tl img.thumb{height:40px;object-fit:cover}
+  .cap{position:relative;border:1px solid var(--dsm-line);border-radius:10px;background:var(--dsm-in);padding:6px;text-align:center}
+  .cap img{max-width:100%;max-height:260px;border-radius:6px}
+  .cap svg{max-height:220px;width:auto;display:block;margin:0 auto;color:var(--dsm-ink)}
+  .cap .fl{font-size:12px;color:var(--dsm-faint);display:flex;justify-content:space-between;gap:8px;margin-top:4px;text-align:left}
+  .cap .fl b{color:var(--dsm-ink)}
+  .pasteon .drop{border-color:var(--dsm-c);background:var(--dsm-c-soft)}
+  .toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);background:var(--dsm-head);color:#e6e9ed;border-radius:10px;padding:8px 14px;font-size:13px;z-index:60;display:none;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+  .toast.on{display:block}
   .tiles2 .tl .nm small{display:block;color:var(--dsm-faint);font-size:12px}
   .col.m #이해칸{display:grid;grid-template-columns:repeat(auto-fit,minmax(520px,1fr));gap:10px}
   .col.m .uc{margin-bottom:0}
@@ -218,7 +227,7 @@
 </style>
 </head>
 <body>
-<div class="mock"><b>목업 v1.1 · 한 장 · 가로 띠 셋</b> · 위 띠에 자료를 넣으면(타일을 누르면) 가운데 띠에 AI 가 되짚은 것이 바로 뜨고, ○ 를 누르면 아래 띠 규칙 목록에 쌓입니다. 시험 · 기억 창고 · 틀 설정은 오른쪽 위 단추로 작은 창에서 봅니다.</div>
+<div class="mock"><b>목업 v1.2 · 한 장 · 가로 띠 셋 · 캡처 Ctrl+V</b> · 위 띠에 자료를 넣으면(타일을 누르면) 가운데 띠에 AI 가 되짚은 것이 바로 뜨고, ○ 를 누르면 아래 띠 규칙 목록에 쌓입니다. 시험 · 기억 창고 · 틀 설정은 오른쪽 위 단추로 작은 창에서 봅니다.</div>
 
 <header class="head">
   <div class="who">
@@ -230,7 +239,7 @@
   <button class="btn" style="min-height:30px;padding:4px 10px;background:#2b3036;border-color:#3a3f46;color:#e6e9ed" onclick="창열기('시험')">시험 4 / 6</button>
   <button class="btn" style="min-height:30px;padding:4px 10px;background:#2b3036;border-color:#3a3f46;color:#e6e9ed" onclick="창열기('기억')">기억 창고</button>
   <button class="btn" style="min-height:30px;padding:4px 10px;background:#2b3036;border-color:#3a3f46;color:#e6e9ed" onclick="창열기('설정')">설정</button>
-  <span class="ver" title="판 v1.1 목업 · 고친 날 2026-10-29">v1.1 목업</span>
+  <span class="ver" title="판 v1.2 목업 · 고친 날 2026-10-29">v1.2 목업</span>
   <div class="theme" title="밝기 고르개 · 처음 = 시간">
     <button data-t="">기기</button><button data-t="time" class="on">시간</button><button data-t="light">밝게</button><button data-t="dark">어둡게</button>
   </div>
@@ -244,8 +253,8 @@
     <div class="in3">
     <div class="card" style="position:relative;margin:0"><span class="kno">1-01</span>
       <div class="cb" style="padding:10px">
-        <div class="drop small"><b>폴더 · 파일 · 녹음을 여기에</b>도면 짝 · 틀 · 녹음 · 지적기록 무엇이든</div>
-        <div class="row" style="margin-top:8px"><button class="btn" onclick="자료더하기()">폴더 고르기</button><button class="btn">파일 더하기</button><button class="btn">녹음</button></div>
+        <div class="drop small" id="drop"><b>폴더 · 파일 · 녹음을 여기에</b>캡처 그림은 <b style="display:inline">Ctrl+V</b> 로 어디서나 바로 붙여 넣기 · 그림 파일 끌어 놓기도 됨</div>
+        <div class="row" style="margin-top:8px"><button class="btn" onclick="자료더하기()">폴더 고르기</button><button class="btn">파일 더하기</button><button class="btn">녹음</button><button class="btn" onclick="붙여넣기안내()">캡처 붙여넣기</button></div>
       </div>
     </div>
     <div class="card" style="position:relative;margin:0"><span class="kno">1-02</span>
@@ -285,6 +294,7 @@
   </div>
 </div>
 
+<div class="toast" id="toast"></div>
 <footer class="foot" id="foot"><div class="msg" id="footmsg"></div><button class="btn btn--main" id="올리기" onclick="올리기()">○ 받은 규칙 → 규칙 글 · 숫자 표에 올리기</button></footer>
 
 <!-- 작은 창들 -->
@@ -362,6 +372,9 @@ var 자료 = [
   {이름:"1_질문지_답.md", 종류:"말", 상태:"24 중 답 19", 이해:[
     {id:"q1", 한줄:"치수만 바뀌는 변경에서 도곽 · 제목 · 그림 자리 · 축척은 움직이지 않는다", 어디:"도면 전체", 무엇:"틀", 어떻게:"대조에서 바뀌면 보완 필요", 안:"—", 출처:"질문지 20", 전:null, 후:null, 상태:"ok"}
   ]},
+  {이름:"캡처 · 카톡으로 온 단면 (예시)", 종류:"캡처 그림", 상태:"AI 가 봄 · 벡터 없음", img:"svg", 이해:[
+    {id:"c1", 한줄:"벽 두께 350 · 기초 폭 608 · 전체 폭 838 로 읽힘. 전체 폭이 3단에 있고 오른쪽 위 지시선 「앵커 M24」 가 치수와 겹쳐 보임", 어디:"캡처 그림 · 벽 아래쪽", 무엇:"3단 + 지시선 겹침 (눈으로 읽음 · 숫자는 ± 가능)", 어떻게:"규칙 13-1 대로면 전체 폭은 지시선으로 · DWG 가 있으면 짝 지어 숫자를 다시 셈", 안:"—", 출처:"캡처 그림 1장 · 클로드가 직접 봄 · 프로그램 셈 없음", 전:"t:350,tiers:3,lead:R,bad:1", 후:"t:350,tiers:2,lead:L,leadDim:1", 상태:"wait", img:"svg"}
+  ]},
   {이름:"지적기록.md (11줄)", 종류:"지적", 상태:"승격 후보 1", 이해:[
     {id:"j1", 한줄:"같은 선상의 치수는 한 단으로 합친다 — 같은 지적 3번 (판 03 · 05 · 07)", 어디:"아래쪽 치수", 무엇:"따로 둔 것을 전무님이 합침", 어떻게:"규칙 글 13-5 로 올릴지", 안:"다른 단", 출처:"지적기록 3줄", 전:"t:350,tiers:3,lead:R", 후:"t:350,tiers:2,lead:R", 상태:"wait"}
   ]}
@@ -381,7 +394,7 @@ function 그리기(){
   자료.forEach(function(a,i){
     var n=a.이해.length, w=a.이해.filter(function(x){return x.상태!=="ok"}).length;
     var li=document.createElement("div"); li.className="tl"+(i===고른자료?" on":"");
-    li.innerHTML=(a.fig?'<span class="thumb" data-fig="'+a.fig+'"></span>':'')+'<div class="nm">'+a.이름+'<small>'+a.상태+' · 이해 '+n+(w?' · 남은 '+w:'')+'</small></div><span class="pill pill--ai">'+a.종류+'</span>';
+    li.innerHTML=(a.img&&a.img!=="svg"?'<img class="thumb" src="'+a.img+'" alt="">':a.img==="svg"?'<span class="thumb" data-fig="t:350,tiers:3,lead:R,bad:1"></span>':a.fig?'<span class="thumb" data-fig="'+a.fig+'"></span>':'')+'<div class="nm">'+a.이름+'<small>'+a.상태+' · 이해 '+n+(w?' · 남은 '+w:'')+'</small></div><span class="pill pill--ai">'+a.종류+'</span>';
     li.onclick=function(){고른자료=i;그리기();}; ul.appendChild(li);
   });
   var 전체=0,남=0; 자료.forEach(function(a){a.이해.forEach(function(x){전체++;if(x.상태!=="ok")남++;});});
@@ -398,7 +411,7 @@ function 그리기(){
     else if(u.상태==="unknown") left+='<div class="q"><button class="btn btn--main" style="min-height:34px">그 부분 다시 말하기</button><button class="btn">건너뜀</button></div>';
     else left+='<div class="q"><button class="btn btn--main" style="min-height:34px" onclick="받음(\''+u.id+'\')">○ 맞게 이해함</button><button class="btn">× 아니다</button><button class="btn">고쳐서 ○</button></div>';
     left+='</div>';
-    var right = u.전 ? '<div><div class="figs" style="grid-template-columns:1fr 1fr;gap:6px"><div class="fig" data-fig="'+u.전+'"><div class="fl"><b>전</b></div></div><div class="fig" data-fig="'+u.후+'"><div class="fl"><b>후 (이해한 대로)</b></div></div></div><div class="row" style="margin-top:6px"><button class="btn" style="min-height:30px" onclick="움직이기(this)">▶ 움직여 보기</button><button class="btn btn--view">도면 그 자리 크게</button></div></div>' : '<div class="tip">그림 없음 · 글 규칙</div>';
+    var right = u.img ? '<div><div class="cap">'+(u.img==="svg"?단면그림({t:350,tiers:3,lead:'R',bad:1}):'<img src="'+u.img+'" alt="붙여 넣은 캡처">')+'<div class="fl"><b>붙여 넣은 캡처</b><span>AI 가 직접 봄 · 벡터 없음 → 숫자는 눈으로</span></div></div>'+(u.후?'<div class="figs" style="grid-template-columns:1fr;gap:6px;margin-top:6px"><div class="fig" data-fig="'+u.후+'"><div class="fl"><b>이해한 대로 다시 그림</b><span>빨간 동그라미 = 겹침으로 본 곳</span></div></div></div>':'')+'<div class="row" style="margin-top:6px"><button class="btn" style="min-height:30px">그림 위에 동그라미 찍기</button><button class="btn btn--view">같은 자리 DWG 짝 짓기</button></div></div>' : u.전 ? '<div><div class="figs" style="grid-template-columns:1fr 1fr;gap:6px"><div class="fig" data-fig="'+u.전+'"><div class="fl"><b>전</b></div></div><div class="fig" data-fig="'+u.후+'"><div class="fl"><b>후 (이해한 대로)</b></div></div></div><div class="row" style="margin-top:6px"><button class="btn" style="min-height:30px" onclick="움직이기(this)">▶ 움직여 보기</button><button class="btn btn--view">도면 그 자리 크게</button></div></div>' : '<div class="tip">그림 없음 · 글 규칙</div>';
     d.innerHTML=h+'<div class="ub">'+left+right+'</div>'; box.appendChild(d);
   });
   box.querySelectorAll("[data-fig]").forEach(그림넣기); ul.querySelectorAll("[data-fig]").forEach(그림넣기);
@@ -443,6 +456,27 @@ function 창닫기(){ document.getElementById("ov").classList.remove("on"); }
 document.addEventListener("keydown",function(e){ if(e.key==="Escape") 창닫기(); });
 document.querySelectorAll(".theme button").forEach(function(b){ b.onclick=function(){ document.querySelectorAll(".theme button").forEach(function(x){x.classList.remove("on")}); b.classList.add("on"); var t=b.dataset.t,h=new Date().getHours(); if(t==="time") t=(h>=18||h<7)?"dark":"light"; if(t) document.documentElement.setAttribute("data-theme",t); else document.documentElement.removeAttribute("data-theme"); }; });
 (function(){ var h=new Date().getHours(); document.documentElement.setAttribute("data-theme",(h>=18||h<7)?"dark":"light"); })();
+
+/* 캡처 그림 붙여넣기 — 어디서나 Ctrl+V · 그림 파일 끌어 놓기 */
+function 알림(t){ var e=document.getElementById("toast"); e.textContent=t; e.classList.add("on"); clearTimeout(e._t); e._t=setTimeout(function(){e.classList.remove("on")},2600); }
+function 붙여넣기안내(){ 알림("화면을 찍은 뒤 이 창에서 Ctrl+V 를 누르십시오 — 어느 칸에 있든 됩니다"); }
+function 캡처넣기(file){
+  var r=new FileReader(); r.onload=function(){
+    var n=자료.filter(function(a){return a.종류==="캡처 그림"}).length+1, 때=new Date().toTimeString().slice(0,5);
+    자료.push({이름:"캡처 "+n+" · "+때, 종류:"캡처 그림", 상태:"AI 가 보는 중 (목업 : 바로 예시 문장)", img:r.result, 이해:[
+      {id:"p"+Date.now(), 한줄:"(AI 가 그림을 읽어 채움 — 목업에서는 예시) 치수선 2단 · 지시선 하나 · EL 기호 하나로 보임", 어디:"캡처 그림", 무엇:"(AI 가 채움)", 어떻게:"(AI 가 채움)", 안:"—", 출처:"캡처 "+n+" · 클로드가 직접 봄 · 프로그램 셈 없음", 전:null, 후:null, 상태:"wait", img:r.result}
+    ]});
+    고른자료=자료.length-1; 그리기(); 알림("캡처 "+n+" 을 넣었습니다 → ② 띠에 되짚기"); window.scrollTo({top:0,behavior:"smooth"});
+  }; r.readAsDataURL(file);
+}
+document.addEventListener("paste",function(e){
+  var items=(e.clipboardData||{}).items||[], got=false;
+  for(var i=0;i<items.length;i++){ if(items[i].type.indexOf("image")===0){ 캡처넣기(items[i].getAsFile()); got=true; } }
+  if(!got && e.target.tagName!=="TEXTAREA" && e.target.tagName!=="INPUT") 알림("붙여 넣을 그림이 없습니다 — 화면을 먼저 찍으십시오 (Win+Shift+S)");
+});
+["dragenter","dragover"].forEach(function(ev){ document.addEventListener(ev,function(e){ e.preventDefault(); document.body.classList.add("pasteon"); }); });
+["dragleave","drop"].forEach(function(ev){ document.addEventListener(ev,function(e){ e.preventDefault(); if(ev==="drop"||!e.relatedTarget) document.body.classList.remove("pasteon"); }); });
+document.addEventListener("drop",function(e){ var fs=e.dataTransfer.files||[], got=0; for(var i=0;i<fs.length;i++){ if(fs[i].type.indexOf("image")===0){ 캡처넣기(fs[i]); got++; } } if(fs.length&&!got) 알림("그림이 아닌 파일 "+fs.length+"개 — 목업에서는 폴더 고르기로 흉내만 냅니다"); });
 그리기();
 </script>
 </body>
