@@ -377,6 +377,7 @@ function 그리기(){
   var a = 자료.목록.filter(function(x){ return x.번호 === 고른; })[0], box = document.getElementById("이해칸"); box.innerHTML = "";
   if (!a) { box.innerHTML = '<div class="tip">자료를 고르면 여기에</div>'; }
   else {
+    box.insertAdjacentHTML("beforeend", '<div class="row" style="margin:0 0 8px;font-size:12.5px"><span class="tip">지시 문구 없이 AI 가 바로 봅니다 (설정의 도면 종류 · 지금까지 ○ 받은 규칙을 같이 보냄)</span><span class="sp"></span><button class="btn btn--view" onclick="원문보기(' + a.번호 + ',\'봐주세요\')">AI 에게 보낸 것</button><button class="btn btn--view" onclick="원문보기(' + a.번호 + ',\'파악한것\')">AI 답 원문</button></div>');
     if (a.숫자) {   // 프로그램이 센 숫자 — 근거 있음
       var n = a.숫자, 요약 = '단수 ' + esc(n["치수선.단수_최대"].값) + ' · 간격 ' + esc(n["치수선.단_간격"].값) + ' · 글자 ' + esc(n["글자.높이"].값) + ' · 지시선 ' + esc(n["지시선.각"].값) + '° · 겹침 ' + (a.겹침 ? a.겹침.겹침수 : "-");
       var t = '<div class="uc done" id="숫자카드"><div class="uh"><b>프로그램이 센 숫자</b><span class="pill pill--ok">근거 있음</span><span class="tip">' + 요약 + ' · 객체 ' + a.객체수 + '</span><span class="sp"></span><button class="btn btn--view" onclick="펼치기(this)">펴기 / 접기</button></div><div class="ub"><div><div class="tbl"><table class="numtbl"><tr><th>무엇</th><th class="n">값</th><th>출처</th></tr>';
@@ -422,6 +423,7 @@ function 아니다(번호, id){ var 왜 = prompt("어디가 아닌지 한 줄 (�
 function 고쳐서(번호, id, 글){ var t = prompt("한 줄 문장을 고쳐 주십시오 · 고친 대로 ○ 가 됩니다", 글); if (t === null || !t.trim()) return; 판정(번호, id, "edit", t.trim()); }
 async function AI다시(번호){ await api("/api/AI/다시", {번호: 번호}); 알림("AI 에게 다시 보냈습니다"); 새로고침(); }
 async function 올리기(){ var j = await api("/api/규칙/올리기", {}); if (j.올림 != null) { 알림("○ 받은 " + j.올림 + "줄을 규칙 " + j.판 + " 에 올렸습니다 · 규칙글_13장.md 를 썼습니다"); 새로고침(); if (j.시험) 창열기("시험", j.시험); } }
+async function 원문보기(번호, 어느){ var j = await api("/api/주고받기/" + 번호 + "/" + 어느); document.getElementById("창제목").textContent = (어느 === "봐주세요" ? "AI 에게 보낸 것" : "AI 답 원문") + " · 자료 " + 번호; document.getElementById("창몸").innerHTML = j.있음 ? '<div class="tip" style="margin-bottom:6px">' + esc(j.경로) + '</div><pre style="max-height:70vh;overflow:auto">' + esc(j.글) + '</pre>' : '<div class="hint">' + (어느 === "봐주세요" ? "아직 보내지 않았습니다 (도면이면 셈이 끝난 뒤 보냄)" : "아직 답이 없습니다 — AI 가 보는 중이거나 「봐주세요 봐 줘」 전") + '</div>'; document.getElementById("ov").classList.add("on"); }
 function 큰그림(url){ document.getElementById("창제목").textContent = "크게 보기"; document.getElementById("창몸").innerHTML = '<img class="big" src="' + url + '" alt="">'; document.getElementById("ov").classList.add("on"); }
 function 그림보기(번호){ var a = 자료.목록.filter(function(x){ return x.번호 === 번호; })[0]; if (!a) return; document.getElementById("창제목").textContent = a.이름 + " · 그림 " + a.그림.length + "장"; document.getElementById("창몸").innerHTML = '<div class="viewer">' + a.그림.map(function(u, k){ var 이해 = (a.이해 || [])[k]; return '<div class="v"><img src="' + u + '" onclick="큰그림(\'' + u + '\')" alt=""><div class="t"><b>그림 ' + (k + 1) + ' / ' + a.그림.length + '</b>' + (이해 ? esc(이해.한줄) : (a.이해수 ? "" : "AI 가 보는 중 · 또는 봐주세요 파일")) + '</div></div>'; }).join("") + '</div>'; document.getElementById("ov").classList.add("on"); }
 
@@ -452,13 +454,13 @@ async function 창열기(k, 미리){
     몸 = '<div class="set"><span>도면 종류</span><select id="s_도면종류">' + ["횡단면도","일반도","구조도","종평면도"].map(function(x){ return '<option' + (s.도면종류 === x ? " selected" : "") + '>' + x + '</option>'; }).join("") + '</select>'
       + '<span>출력 배율 1 :</span><input id="s_출력배율" value="' + s.출력배율 + '"><span>회사 틀 (dwt)</span><input id="s_회사틀" value="' + esc(s.회사틀) + '" placeholder="다음 판에서 읽음">'
       + '<span>정답지 잣대 · 적정 벌수</span><input id="s_적정" value="' + s.시험잣대.적정_벌수 + '"><span>정답지 잣대 · 전체 벌수</span><input id="s_전체" value="' + s.시험잣대.전체_벌수 + '"><span>정답지 잣대 · 겹침</span><input id="s_겹침" value="' + s.시험잣대.겹침 + '">'
-      + '<span>규칙 글 줄 한도</span><input id="s_한도" value="' + s.규칙글_줄한도 + '"><span>AI 모델 (비우면 계정 기본)</span><input id="s_모델" value="' + esc(s.AI모델) + '" placeholder="예 : claude-sonnet-5"></div>'
+      + '<span>규칙 글 줄 한도</span><input id="s_한도" value="' + s.규칙글_줄한도 + '"><span>AI 모델 (비우면 계정 기본)</span><input id="s_모델" value="' + esc(s.AI모델) + '" placeholder="예 : claude-sonnet-5"><span>AI 에게 늘 붙이는 한 줄</span><input id="s_늘" value="' + esc(s.AI늘한줄 || "") + '" placeholder="예 : 서대전 지하차도 횡단면도 · 출력 1:50 · 회사 틀 DSM-25"></div><div class="hint">자료를 넣을 때마다 지시를 적지 않아도 되게, 늘 같은 말은 여기 한 번. 한 번만 할 말은 ① 띠 「말로 적기」</div>'
       + '<div class="row" style="margin-top:12px"><button class="btn btn--main" onclick="설정저장()">저장</button><button class="btn" onclick="창닫기()">취소</button><span class="tip">클로드 명령 ' + (살아.클로드 ? "있음 · 서버가 바로 부름" : "없음 · 파일로 주고받음") + '</span></div>';
   }
   document.getElementById("창제목").textContent = 제목; document.getElementById("창몸").innerHTML = 몸; document.getElementById("ov").classList.add("on");
 }
 async function 시험돌리기(){ document.getElementById("창몸").insertAdjacentHTML("afterbegin", '<div class="hint"><span class="busy"></span>대조 중 …</div>'); var r = await api("/api/시험/정답지", {}); 창열기("시험", r); 새로고침(); }
-async function 설정저장(){ var g = function(id){ return document.getElementById(id).value; }; await api("/api/설정", {도면종류: g("s_도면종류"), 출력배율: +g("s_출력배율") || 50, 회사틀: g("s_회사틀"), 규칙글_줄한도: +g("s_한도") || 30, AI모델: g("s_모델"), 시험잣대: {적정_벌수: +g("s_적정") || 7, 전체_벌수: +g("s_전체") || 8, 겹침: +g("s_겹침") || 0, 자리차이_mm: 1, 새시킴_x: 2}}); 창닫기(); 알림("설정을 저장했습니다"); }
+async function 설정저장(){ var g = function(id){ return document.getElementById(id).value; }; await api("/api/설정", {도면종류: g("s_도면종류"), 출력배율: +g("s_출력배율") || 50, 회사틀: g("s_회사틀"), 규칙글_줄한도: +g("s_한도") || 30, AI모델: g("s_모델"), AI늘한줄: g("s_늘"), 시험잣대: {적정_벌수: +g("s_적정") || 7, 전체_벌수: +g("s_전체") || 8, 겹침: +g("s_겹침") || 0, 자리차이_mm: 1, 새시킴_x: 2}}); 창닫기(); 알림("설정을 저장했습니다"); }
 function 창닫기(){ document.getElementById("ov").classList.remove("on"); }
 document.addEventListener("keydown", function(e){ if (e.key === "Escape") 창닫기(); });
 document.querySelectorAll(".theme button").forEach(function(b){ b.onclick = function(){ document.querySelectorAll(".theme button").forEach(function(x){ x.classList.remove("on"); }); b.classList.add("on"); var t = b.dataset.t, h = new Date().getHours(); if (t === "time") t = (h >= 18 || h < 7) ? "dark" : "light"; if (t) document.documentElement.setAttribute("data-theme", t); else document.documentElement.removeAttribute("data-theme"); try { localStorage.setItem("dsm-theme", b.dataset.t); } catch (e) {} }; });

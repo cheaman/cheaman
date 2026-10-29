@@ -50,6 +50,8 @@ const 걸음 = [], 막힘 = [];
       if (타일보임) await 타일.click();
       else for (let k = 0; k < 8; k++) { const 지금번호 = await p.evaluate(() => 고른); if (지금번호 === 번호) break; const 방향 = (await p.evaluate((n) => 자료.목록.findIndex(x => x.번호 === n) - 자료.목록.findIndex(x => x.번호 === 고른), 번호)) > 0 ? '다음 자료' : '이전 자료'; await p.getByRole('button', { name: new RegExp(방향) }).click(); await p.waitForTimeout(150); }
       await p.waitForFunction(() => document.querySelectorAll('#이해칸 .k4').length >= 1); await p.waitForTimeout(300); }, /○ ×/, async () => (await p.locator('#이해칸 .k4').count()) >= 1);
+    await 걷기('「AI 답 원문」 → 한 화면 작은 창', p.getByRole('button', { name: 'AI 답 원문' }).first(), async () => { await p.getByRole('button', { name: 'AI 답 원문' }).first().click(); await p.waitForFunction(() => document.getElementById('ov').classList.contains('on') && /이해/.test(document.getElementById('창몸').textContent), null, { timeout: 5000 }); }, null, async () => /"한줄"/.test(await p.locator('#창몸').innerText()));
+    await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.getElementById('ov').classList.contains('on'));
     const ok = (await p.getByRole('button', { name: '○ 맞게 이해함' }).count()) ? p.getByRole('button', { name: '○ 맞게 이해함' }).first() : p.locator('#이해칸 .res .q .btn').first();   // ○ 또는 물음의 첫 답
     await 걷기((await p.getByRole('button', { name: '○ 맞게 이해함' }).count()) ? '「○ 맞게 이해함」' : '물음에 답 (첫 보기)', ok, async () => { await ok.click(); await p.waitForFunction(() => /○ 받음/.test(document.querySelector('#규칙목록').textContent), null, { timeout: 5000 }); }, /올리십시오|○ ×/, async () => !(await p.locator('#올리기').isDisabled()));
     const no = p.getByRole('button', { name: '× 아니다' }).first();

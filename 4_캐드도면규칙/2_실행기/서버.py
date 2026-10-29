@@ -190,6 +190,10 @@ class 손(BaseHTTPRequestHandler):
             if p == "/api/설정": return self._json(창고.설정())
             if p == "/api/지적": return self._json({"수": 창고.지적수(), "글": io.open(창고.지적경로, encoding="utf-8").read() if os.path.exists(창고.지적경로) else ""})
             if p == "/api/시험기록": return self._json(창고._읽기(os.path.join(창고.결과, "시험기록.json"), []))
+            m = re.match(r"^/api/주고받기/(\d+)/(봐주세요|파악한것|사용량)$", p)
+            if m:
+                q = 다리.경로(int(m.group(1)), m.group(2)) if m.group(2) != "사용량" else os.path.join(창고.주고받기, "사용량_%03d.json" % int(m.group(1)))
+                return self._json({"글": io.open(q, encoding="utf-8").read() if os.path.exists(q) else "", "있음": os.path.exists(q), "경로": q})
             m = re.match(r"^/api/그림/(\d+)/(\w+)$", p)
             if m:
                 a = 창고.자료찾기(int(m.group(1)))
