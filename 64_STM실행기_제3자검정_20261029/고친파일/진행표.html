@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>64 STM 검토기 · 진행표</title>
+<link rel="stylesheet" href="1_화면/dsm/dsm.css">
+<style>
+  body{margin:0;background:var(--dsm-bg);color:var(--dsm-ink);font-family:var(--dsm-font);font-size:15px}
+  .head{height:50px;background:var(--dsm-head-bg);color:var(--dsm-head-ink);display:flex;align-items:center;gap:14px;padding:0 20px}
+  .logo{width:30px;height:30px;border-radius:7px;background:#e8743b;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:#fff}
+  .who{font-weight:700;font-size:19px}.dim{color:var(--dsm-head-dim);font-size:14px}
+  main{max-width:1100px;margin:18px auto;padding:0 16px}
+  .card{background:var(--dsm-card);border:1px solid var(--dsm-border);border-radius:12px;box-shadow:var(--dsm-shadow);margin-bottom:14px}
+  .ch{padding:8px 16px;background:var(--dsm-ph-bg);border-bottom:1px solid var(--dsm-ph-line);border-radius:12px 12px 0 0;font-weight:700}
+  .cb{padding:10px 16px}
+  table{border-collapse:collapse;width:100%;font-size:14px}
+  th{background:var(--dsm-th-bg);color:var(--dsm-dim);font-weight:600;text-align:left;padding:6px 10px;border-bottom:1px solid var(--dsm-line2);font-size:13px}
+  td{padding:6px 10px;border-bottom:1px solid var(--dsm-line);vertical-align:top}
+  .ok{color:var(--dsm-ok);font-weight:700}.now{color:#b25000;font-weight:700}.no{color:var(--dsm-faint)}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 10px}
+  .chip{background:var(--dsm-chip);border-radius:999px;padding:4px 12px;font-size:13.5px}.chip b{font-weight:700}
+  .sign{text-align:center;color:var(--dsm-faint);font-size:12.5px;padding:10px}
+</style>
+</head>
+<body>
+<div class="head"><div class="logo">DSM</div><div class="who">STM 검토기 · 진행표</div><span class="dim">64번 폴더 · 어디까지 왔나 (큰 걸음마다 갱신 · CLAUDE.md 3절)</span><span style="flex:1"></span><span class="dim">2026-10-28 새벽</span></div>
+<main>
+  <div class="chips">
+    <span class="chip">서버 <b>v0.6.2</b> · 제3자 검정 (10-29 · 평가자 둘 · 지적 18 고침 · 안 받음 9 기록) — 절점영역 면 두께 (받침판 가로 · 말뚝 π/4·D) · 단위 정규화 · 역부호 N.G · 1.4D 경고 · 수평력 모멘트 · 인장 반력 알림 · 경계면 일부 입력 미정 · 정착 형태 검사 · 갈고리 β 1.2 · 회귀 시험 37/37 → `_주고받기\제3자검정_셈논리_20261029.md`</span>
+    <span class="chip">서버 <b>v0.5.9</b> · 정착 하나만 넣어도 빈 타이는 «미정» · 비어 있는 칸 수를 «왜» 에 (10-28) · 과업 목록 창구 (최근 고친 순) · 힘 0 부재 «검토 생략» (계산서 한 줄) · 기본안 형식 전부 (깊은보 · 코핑 1열 · 다열 · 말뚝캡 · 확대기초 · 코벨 — 띠 삼각분할 · 늘 정정) · 폭 제안 판 길이 (기둥 · 말뚝 · 지반 토막) · 오류 · 안내 글 사전 말로 · 포트 38775 · 계산서에 제공 폭 산정 식 (ACI 318 해설 꼴)</span><span class="chip">화면 <b>v0.7.9</b> · 글 넘침 — 지금 할 일 한 줄 · 판정 아래 두 줄 · 카드 설명 짧게 · 형식 칩 «새 과업 · ○○» (10-28 밤) · v0.7.8 판정 뜻 — 1.00 N.G 는 소수 셋째 (화면만) · 초안 본수 검토비 1.11 이상 · 상태 점 = 판정 색 (10-28 밤) · v0.7.7 서버 v0.6.1 · 용어 권고 39 — 부재력 0 · 하중조합 · 절점영역 · 핀 / 롤러 · 미지정 · 오류 글 꼴 (계산 값 같음 · 11벌 대조) (10-28 밤) · v0.7.6 서버 v0.6.0 · 단계 ③ AI 칸 — ② 2-5 AI 짚어 보기 (클로드 · LM 스튜디오 · 반영은 설계자 · 계산서 4절 «모델 정한 까닭») (10-28) · v0.7.5 용어 보완 10 — 바뀜 → 변경 · 고침 → 수정 · N곳 → N개 · 오류 글 «작성 실패» (10-28) · v0.7.4 새 과업 · 형식 칩 직후 «보기 값» 줄 · 점선 칸 · 상태 «치수 확인» (10-28) · 불안정 구조면 상태줄 빨강 · 되돌리기 띠가 «다음 →» 안 덮음 · ① 바뀌면 «미입력 초안» 폭 따라감 (사람 칸 그대로) (10-28) · 왼쪽 칸 폭 끌기 (두 번 누르면 420 · 폭 기억) · «과업 열기 ▾» (＋ 새 과업 · 내 과업 · 예제 · 찾기) (10-28) · 37 2차 시안 (그림 칸 맞춤 · 부재 글 비켜 놓기 · 절점 표 받침 단추 · 420 안) · ① 고치면 ② 기본안 칸 따라감 (사람 칸 그대로) · 다시 받아도 철근 · 폭 남김 · 판정 «힘 0 · 생략» · 형식 칩 여섯 다 열림 (흐린 칩은 자유 형상 DXF 만) · 하중판 칸 · 창 크기 표준 · 글 14 · 형식 칩이 옛 과업 파일을 덮지 않음 · 용어정리 보완 필요 26줄 반영 · 절점 표 Fy 칸 안 잘림 · «-0» 없앰 · «직접 입력» 뒤 할 일 = «+ 절점» · ④ 정답지 대조가 기본안 받아도 맞음 (좌표로 이름 맞춤) · 시안 A «지금 할 일 한 칸» 바름 (지금 칸 주황 테 · 다 넣은 칸 접고 값만 · ③ 판정 그림 위 · 지난 단계 ✓) · 그림 확대 · 옮기기 (37 공통 부품 dsm-zoom.js v1.15) · 용어 사전 반영 (계산서 · 판정 «미입력») · 코핑은 «직접 입력» 안내 · 글자 규격 (DSM 단 13 · 14 · 15 · 16 · 22 · 28 · 37 디자인실) · ①②③④ 판 살아 움직임 · 창에 맞춰 커짐 · 지금 할 일 한 줄 · ② 표 접기 · ③ 빈 칸 제안 (타이 본수 · 스트럿 · 절점 있는 폭 · 절점면 — 폭은 ACI 318 해설 꼴) (10-26)</span><span class="chip">셈 정답지 <b>5벌 43/43 ✔</b> · 형식별 손계산 <b>22/22 ✔</b></span><span class="chip">기준 발췌 <b>KDS 14 20 24 · 14 20 10 · 14 20 52</b></span>
+  </div>
+
+  <div class="card"><div class="ch">1. 화면 네 판 (목업 넷 OK 받음 10-25)</div><div class="cb"><table>
+    <tr><th style="width:160px">판</th><th style="width:110px">상태</th><th>지금 되는 것</th><th>다음</th></tr>
+    <tr><td>① 형상 · 하중</td><td class="ok">● 뼈대 됨</td><td>부재 꼴 (코핑 1열 · 깊은보) · 치수 → 치수도 다시 그림 · 받침 표 → 조합 Vu (서버가 곱함) · 저절로 저장 .stm.json · 예제 다섯 (정답지 셋 옮김 10-26) · 되돌리기 · 밝기 고르개</td><td>엑셀 붙여넣기 · DXF 외곽 · 그림에서 끌기 (② 뒤)</td></tr>
+    <tr><td>② 모델 (절점 · 부재)</td><td class="ok">● 뼈대 됨</td><td>절점 표 (x · y · 받침 ☑ · Fx · Fy) · 부재 표 (i · j · 종류) ↔ 모델 그림 · 서버 /api/모델검사 (이름 · 길이 · 각도 · 정정/부정정 · 힘 부호 ≠ 종류 ★) · «Vu 넣기» (① 받침 Vu → 절점 하중) · 되돌리기 · <b>서버 /api/기본안 (깊은보 A 삼각 · B 사다리꼴 · 정답지 깊은보 셋과 같은 모델 — v0.5.0 10-26) · 화면 2-1 기본안 카드 (A · B · 직접 입력 · 누르면 표 채움 · 되돌리기)</b></td><td class="now">코핑 기본 틀 (절점 자리 규칙은 전무님과) · 사재 각도 한계 (발췌 뒤) · 그림에서 절점 끌기</td></tr>
+    <tr><td>③ 검토</td><td class="ok">● 뼈대 됨</td><td>서버 /api/검토 → 3-1 판정 (O.K / N.G / 미정) · 3-2 N.G · 주의 목록 + 고칠 길 (갈고리 90° 적용 칩) · 3-3 탭 (타이 규격 · 본수 · 정착 / 스트럿 βs · 있는 폭 / 절점 면 · 닿는 것 · βn · 있는 폭 · «+ 면 더하기» · ✕ — v0.4.1) · 3-4 그림 (비 색) · 3-5 식 → 대입 → 답 [조문 = 03_조문표] · 비 = 있는 ÷ 필요 · 주의 1.00~1.11</td><td>있는 폭을 기하로 재기 (4.1.1 · 4.1.2 발췌 뒤) · 철근표 대조 (아침)</td></tr>
+    <tr><td>④ 계산서 · 도면</td><td class="ok">● 뼈대 됨</td><td>서버 /api/계산서 → 표지 (잠정 · 작성 · 검토 · 승인 칸 — v0.4.2) + 8절 계산서 (식 → 대입 → 답 · [조문]) · 저장하면 판 번호 v1 → v2 : 계산서 HTML · PDF (크롬 인쇄) · 글 (.md) · STM 모델도 DXF (흑백 · 층 여섯) · 4-2 차례 절마다 판정 · 4-3 정답지 대조 · 4-4 미리보기 (계산서 쪽 + 모델도)</td><td class="now">hwp (한글 COM · 아침) · 표지 꼴 확정 (회사 줄 · 날인) · 철근 조립도 DXF (v2)</td></tr>
+  </table></div></div>
+
+  <div class="card"><div class="ch">2. 셈 걸음 넷 (02_짜임 4절 · 정답지 없이는 한 줄도 안 씀)</div><div class="cb"><table>
+    <tr><th style="width:160px">걸음</th><th style="width:110px">상태</th><th>정답지</th><th>메모</th></tr>
+    <tr><td>① stm_풀이 옮김</td><td class="ok">● 끝</td><td>4벌 24/24</td><td>20 → 64 `2_프로그램\셈\` · 모두대조.py</td></tr>
+    <tr><td>⑥ 제3자 검정 (셈 · 검사 논리)</td><td class="ok">● 끝 10-29</td><td>겹친 지적 6 모두 진짜 · 치명 2 (면 두께 · 단위) 고침 · 회귀 37/37 · 정답지 43/43 그대로</td><td>`_주고받기\제3자검정_셈논리_20261029.md` · 다음 : 조합 묶음 · 횡철근 (4.2-3) · 자중 · 원문 확인 (αβ 1.7 · √fck 8.4)</td></tr>
+    <tr><td>② 정착.py</td><td class="ok">● 끝</td><td>8건 19/19 (손계산 · 식 그림 전무님 대조 OK)</td><td>KDS 14 20 52 (2024-12-30) 4.1.2 · 4.1.5 발췌(14)</td></tr>
+    <tr><td>③ 강성법 (부정정)</td><td class="no">○</td><td>아직 — AStrutTie 1.1 화면 부재력 + MIDAS 트러스</td><td>코핑 1.1 이 부정정</td></tr>
+    <tr><td>⑤ 점모델 안 C (점 기준 힘 길)</td><td class="ok">◐ 1차 시제</td><td>깊은보 정답지 3/3 (부재력 0.6 % 안) · 형식 6 중 4 = 규칙 A 꼴</td><td>`2_프로그램\점모델.py` · 시험 `시험\점모델대조.py` · 화면 · 서버 안 바뀜 · 코핑다열 · 코벨은 꼴 다름 · <b>각도 하한 (사람 값) 넣으면 절점 스트럿 ↔ 타이 사잇각 제약 · 못 지으면 사이 점 — 25° 로 형식 밖 넷 다 지어짐 · 미달 0 (10-28)</b></td></tr>
+    <tr><td>④ 계산서글 조문</td><td class="ok">● 끝</td><td>03_조문표 (식 줄 · 계수 근거)</td><td>λ 원문 · 4.1.1 · 4.1.2 기하 · 표준갈고리 꼴 발췌 아직</td></tr>
+  </table></div></div>
+
+  <div class="card"><div class="ch">3. 걸림 · 여쭐 것</div><div class="cb">
+    <p>아침에 여쭐 것 : 받침 수평력 H 의 하중 종류 · 조합 계수 (지금 1.2 잠정) / AStrutTie 1.1 의 L1 · L4 뜻 / 도구지도 포트 38775 등록 · 루트 도구목록 · 37 PC 아이콘 (공통 파일 허락 뒤) / 코핑 기본 틀 절점 자리 규칙 / 사재 각도 한계 조문 / <b>철근표 공칭단면적 대조</b> / 스트럿 · 절점 «있는 폭» 을 사람이 넣는 꼴 / 주의 띠 1.00~1.11 / <b>절점 면 강도에 닿는 스트럿 βs 작은 값 (KDS 조문 아님)</b> / 계산서 표지 · 날인 꼴 / 저장 자리 «과업폴더이름_출력»</p>
+    <p class="no">자세한 것은 0_다음에 여기부터.md 맨 위 절</p>
+  </div></div>
+</main>
+<div class="sign">DSM · 64 STM 검토기 · 진행표 · 2026-10-28</div>
+</body>
+</html>
