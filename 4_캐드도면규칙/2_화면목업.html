@@ -163,7 +163,7 @@
     <span class="what">· 도면 · 틀 · 말을 넣으면 AI 가 규칙 넷으로 바꿔 두고, 어디에 어떻게 기억됐는지 보인다</span>
   </div>
   <div class="sp"></div>
-  <span class="ver" title="판 v0.2 목업 · 고친 날 2026-10-29">v0.2 목업</span>
+  <span class="ver" title="판 v0.3 목업 · 고친 날 2026-10-29">v0.3 목업</span>
   <div class="theme" title="밝기 고르개 · 처음 = 시간">
     <button data-t="">기기</button><button data-t="time" class="on">시간</button><button data-t="light">밝게</button><button data-t="dark">어둡게</button>
   </div>
@@ -285,6 +285,31 @@
       <div class="res">
         <b>물음 2.</b> 지시선 각은 45° 가 138개, 30° 가 3개(판 05) 입니다. 30° 는 틀린 것입니까, 자리가 없을 때 허용입니까?
         <div class="q"><button class="btn">틀린 것 · 45° 만</button><button class="btn">자리 없으면 30° 허용</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="kno">2-05</span>
+    <div class="ch"><span class="no">2-5</span><h2>AI 가 이해한 것 되짚기 — 한 장에 다섯 꼴</h2><span class="st">규칙 1 · 전무님이 ○ 하셔야 규칙 글에 올라갑니다</span></div>
+    <div class="cb">
+      <div class="grid2" style="grid-template-columns:minmax(260px,1fr) minmax(260px,1.2fr)">
+        <div>
+          <div class="res" style="margin-top:0"><b>한 줄</b> · 치수선은 부재 바깥 2단까지 둔다. 셋째 치수는 지시선으로 뺀다.</div>
+          <div class="res">
+            <div class="k" style="display:grid;grid-template-columns:78px 1fr;gap:3px 8px">
+              <span style="color:var(--dsm-faint)">어디</span><span>횡단면도 · 벽 아래쪽 치수 (벽 두께 · 기초 폭 · 전체 폭)</span>
+              <span style="color:var(--dsm-faint)">무엇이</span><span>치수가 셋이라 3단이 생김 → 틀이 깨짐</span>
+              <span style="color:var(--dsm-faint)">어떻게</span><span>1 · 2단은 두고, 전체 폭을 지시선 「W=」 로 오른쪽 위에 뺌</span>
+              <span style="color:var(--dsm-faint)">안 건드림</span><span>1 · 2단 자리 · 간격 8 · 글자 2.5 · EL 기호</span>
+            </div>
+          </div>
+          <div class="res"><b>어디서 왔나</b> · 녹음 03:12 「두 단 넘으면 빼 버려」 · 고친 판 03 · 07 의 38곳이 그렇게 돼 있음 · 질문지 1번 답 「2단」</div>
+          <div class="q" style="margin-top:10px"><button class="btn btn--main" style="min-height:36px">○ 맞게 이해함 → 규칙 글로</button><button class="btn">× 아니다</button><button class="btn">고쳐서 ○</button></div>
+        </div>
+        <div class="fig" id="anim"><div class="fl"><b>움직여 보기 · 벽 350 → 300</b><span id="animMsg">3단이 지시선으로 바뀌는 순간을 보입니다</span></div>
+          <div class="row" style="margin-top:6px"><button class="btn" onclick="움직이기()">▶ 움직여 보기 (4초)</button><span class="tip">실제 도구에서는 서대전 도면 그 자리가 움직입니다</span></div>
+        </div>
       </div>
     </div>
   </div>
@@ -495,18 +520,18 @@ EL.가까움_mm          2</pre>
       <div class="row" style="margin-top:10px"><button class="btn btn--main">규칙 묶음 내보내기 (스킬 + json + 지적기록)</button><span class="tip">다른 PC · 부서원 과업 폴더에 같은 규칙을 심을 때</span></div>
     </div>
   </div>
-  <div class="sign">DSM · 도면 규칙 가르치기 · v0.2 목업 · 2026-10-29</div>
+  <div class="sign">DSM · 도면 규칙 가르치기 · v0.3 목업 · 2026-10-29</div>
 </section>
 </main>
 
 <footer class="foot" id="foot"></footer>
 
 <script>
-/* 생김새 : "v0.2 목업 2026-10-29 · 무엇" ← 판 글자는 여기 한 곳 */
-var 화면판 = "v0.2 목업";
+/* 생김새 : "v0.3 목업 2026-10-29 · 무엇" ← 판 글자는 여기 한 곳 */
+var 화면판 = "v0.3 목업";
 var 단계 = [
   {n:1, t:"자료 넣기",          st:"done", situ:"파일 21개 중 보는 것 19개 · 갖춤 4 · 모자람 1 → <b>1-1 에 폴더를 넣거나 [다음 : 2 AI 가 읽은 것 ▸]</b>", foot:"넣은 파일 21개 → 보는 것 19개 · 도구가 만든 것 2개 뺌", next:"2 AI 가 읽은 것 확인"},
-  {n:2, t:"AI 가 읽은 것 확인", st:"now",  situ:"도면 숫자 6 셈 · 말 규칙 14줄 중 확인 9 → <b>2-2 그림으로 보고 · 2-3 남은 5줄에 ○ × · 2-4 물음 2 에 답</b>", foot:"규칙 문장 14줄 · 확인 9 · 남은 5 · 물음 2", next:"3 규칙 넷 만들기"},
+  {n:2, t:"AI 가 읽은 것 확인", st:"now",  situ:"도면 숫자 6 셈 · 말 규칙 14줄 중 확인 9 → <b>2-3 남은 5줄에 ○ × · 2-4 물음 2 · 2-5 되짚기 한 장에 ○</b>", foot:"규칙 문장 14줄 · 확인 9 · 남은 5 · 물음 2", next:"3 규칙 넷 만들기"},
   {n:3, t:"규칙 넷 만들기",     st:"off",  situ:"확인 ○ 12줄 + 도면 숫자 6 → <b>3-1 [규칙 넷 만들기] → 3-6 샘플 셋에 ○ ×</b>", foot:"규칙 글 18줄 · 숫자 표 23칸 · 프로그램 2/3 · 샘플 3 (○ 기다림)", next:"4 정답지로 시험"},
   {n:4, t:"정답지로 시험",      st:"off",  situ:"8판 중 적정 5 · 보완 필요 2 · 자료 미비 1 → <b>4-2 판 03 틀린 곳에 까닭 · 4-3 지적 1 올리기</b>", foot:"8판 · 적정 5 · 보완 필요 2 · 자료 미비 1 · 올릴 지적 1", next:"5 기억 창고"},
   {n:5, t:"기억 창고",          st:"off",  situ:"네 층 · 저절로 읽히는 것 21줄 · 도구가 읽는 것 24칸 → <b>여기까지 보시면 끝</b>", foot:"여기까지 하시면 끝입니다 · 규칙 묶음을 내보내면 다른 과업에 심을 수 있습니다", next:null}
@@ -601,6 +626,25 @@ document.querySelectorAll("[data-fig]").forEach(function(e){
   var o={t:350,tiers:2,lead:'R'}; e.dataset.fig.split(",").forEach(function(kv){var p=kv.split(":");o[p[0].trim()]=isNaN(p[1])?p[1].trim():+p[1];});
   e.insertAdjacentHTML("afterbegin", 단면그림(o));
 });
+
+/* 움직여 보기 — 벽 350 → 300 · 끝에서 3단 → 2단 + 지시선 */
+function 움직이기(){
+  var box=document.getElementById("anim"), msg=document.getElementById("animMsg");
+  var old=box.querySelector("svg"); if(old) old.remove();
+  var t0=performance.now(), 길이=4000;
+  function 프레임(now){
+    var k=Math.min(1,(now-t0)/길이);
+    var ease=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+    var t=Math.round(350-50*ease);
+    var o = k<.75 ? {t:t,tiers:3,lead:'R'} : {t:t,tiers:2,lead:'R',leadDim:1,cloud:1};
+    var s=box.querySelector("svg"); if(s) s.remove();
+    box.insertAdjacentHTML("afterbegin", 단면그림(o));
+    msg.textContent = k<.75 ? "① 벽 두께 "+t+" · 치수 글이 따라감 · 아직 3단" : "② 3단 → 지시선 W= 로 빼고 구름 · 1 · 2단은 그대로";
+    if(k<1) requestAnimationFrame(프레임); else msg.textContent="끝 · 350 → 300 · 셋째 치수는 지시선 · 구름 1";
+  }
+  requestAnimationFrame(프레임);
+}
+document.getElementById("anim").insertAdjacentHTML("afterbegin", 단면그림({t:350,tiers:3,lead:'R'}));
 그리기();
 </script>
 </body>
