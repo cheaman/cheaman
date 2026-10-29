@@ -127,6 +127,9 @@
   #표33 input{width:40px}#표33 select{height:21px;border:1px solid var(--dsm-in-line);background:var(--dsm-in);color:var(--dsm-ink);border-radius:5px;font:inherit;font-size:var(--dsm-fs-small);max-width:64px}
   #표33 th{padding:3px 3px}#표33 td{padding:1px 3px}
   #표33 td.jd{white-space:nowrap}
+  #받침표 input.bad{border-color:var(--dsm-bad);color:var(--dsm-bad);outline:1px solid var(--dsm-bad);outline-offset:-1px}   /* v0.8.2 걷기 14 — 받침 x 가 부재 밖 */
+  #절점표 tbody tr.sel td,#부재표 tbody tr.sel td{background:var(--dsm-c2)}#모델그림 [data-부재],#모델그림 [data-절점]{cursor:pointer}   /* v0.8.2 걷기 18 — 2-4 그림 누르면 그 줄 */
+  .two4.계산서만 .dwg4{display:none}.two4.도면만 #쪽{display:none}   /* v0.8.2 걷기 19 — 4-4 보기 고르개 */
   #표33 td.정착칸{white-space:nowrap}#표33 td.정착칸 select{max-width:52px}#표33 td.정착칸 input{width:32px;margin-left:2px}#표33 td.면칸{white-space:nowrap}#표33 td.면칸 .x{padding:0 2px;margin-left:2px}   /* v0.8.1 표 폭 */
   #표33 tbody tr,#표32 tbody tr{cursor:pointer}#표33 tbody tr.sel td,#표32 tbody tr.sel td{background:var(--dsm-c2)}
   #표32 td,#표33 td{font-size:var(--dsm-fs-ui);padding:1px 4px}#표33 td{padding:1px 2px}#표32 td.l,#표33 td.l{text-align:left}   /* v0.8.1 표 폭 — 3-3 표 셀 좌우 여백 2 px */
@@ -405,7 +408,7 @@
   </div>
   <div class="col">
     <div class="card" style="flex:1;display:flex;flex-direction:column;min-height:0">
-      <div class="ch"><span class="k">4-4</span>미리보기 <span class="sub">왼쪽 계산서 쪽 · 오른쪽 STM 모델도 (DXF 와 같은 형식 · 흑백)</span></div>
+      <div class="ch"><span class="k">4-4</span>미리보기 <span class="sub" title="왼쪽 계산서 쪽 · 오른쪽 STM 모델도 (DXF 와 같은 형식 · 흑백) · «도면» 을 고르면 도면만 크게 (글 자리는 화면 미리보기에서만 비켜 놓음 · DXF 는 그대로)">계산서 쪽 · STM 모델도</span><span class="tabs" id="탭44" title="무엇을 보이나 — 이 PC 에 기억"><span class="on" data-보기="둘">둘 다</span><span data-보기="계산서">계산서</span><span data-보기="도면">도면</span></span></div>
       <div class="two4">
         <iframe id="쪽" title="계산서 미리보기"></iframe>
         <div class="dwg4"><svg id="도면" viewBox="0 0 900 420" font-family="Pretendard, Malgun Gothic, sans-serif" font-size="13"></svg></div>
@@ -466,7 +469,7 @@ function 글고정(sv) {
   for (const t of [sv, ...sv.querySelectorAll('[font-size]')]) { const px = t.dataset.px || (t.dataset.px = t.getAttribute('font-size')); t.setAttribute('font-size', (px * k).toFixed(2)); }
   for (const t of sv.querySelectorAll('[data-띠]')) t.setAttribute('stroke-width', (t.dataset.띠 * k).toFixed(2));   // 부재 글 바탕 띠 (2차 시안)
 }
-addEventListener('DOMContentLoaded', () => ['그림', '모델그림', '검토그림'].forEach(id => { const sv = document.getElementById(id); if (!sv) return; const f = () => 글고정(sv); new MutationObserver(f).observe(sv, { childList: true }); new ResizeObserver(() => { 글고정(sv); if (sv.__다시) sv.__다시(); }).observe(sv); if (window.dsmZoom) dsmZoom.붙임(sv, { 바뀜: f, 건너뜀: '[data-부재]', 선: true, 안내: id !== '검토그림' }); }));   // 그림 확대 · 옮기기 (공통 부품 dsm-zoom.js v1.15 · 선 굵기 화면 px · 검토 그림은 왼쪽 아래 범례 자리라 안내 글 뺌)
+addEventListener('DOMContentLoaded', () => ['그림', '모델그림', '검토그림'].forEach(id => { const sv = document.getElementById(id); if (!sv) return; const f = () => 글고정(sv); new MutationObserver(f).observe(sv, { childList: true }); new ResizeObserver(() => { 글고정(sv); if (sv.__다시) sv.__다시(); }).observe(sv); if (window.dsmZoom) dsmZoom.붙임(sv, { 바뀜: f, 건너뜀: '[data-부재],[data-절점]', 선: true, 안내: id !== '검토그림' }); }));   // 그림 확대 · 옮기기 (공통 부품 dsm-zoom.js v1.15 · 선 굵기 화면 px · 검토 그림은 왼쪽 아래 범례 자리라 안내 글 뺌)
 (() => {
 const 열쇠 = 'stm-64';                 // 서버.py 열쇠와 같아야 함
 const $ = s => document.querySelector(s);
@@ -549,8 +552,13 @@ function 그리기() {
   };
   $('#받침판글').textContent = k.받침판없음 ? '' : '받침판 ' + (m.형상.받침판 || []).map(글).join(' × ');
   $('#표13제목').textContent = k.받침판없음 ? '기둥 하중' : '받침 · 하중'; $('#받침표 thead th').textContent = k.받침판없음 ? '기둥' : '받침';
+  // v0.8.2 (10-29 걷기 13 · 목업 그림동작_목업) 1-5 범례 — 그림의 ● 은 하중점 · 받침은 형식마다 다른 표시
+  const 범례 = { 깊은보: ['● 하중점 (받침판 자리)', '▲ 받침'], 코핑: ['● 하중점 (받침 x)', '↑ R 기둥 반력'], 코핑다열: ['● 하중점 (받침 x)', '↑ R 기둥 반력'], 코벨: ['● 하중점', '↑ R 기둥 반력'],
+                 말뚝캡: ['● 기둥 하중점', '↑ R 반력 합 · 회색 = 말뚝'], 확대기초: ['● 기둥 하중점', '↑ 지반 반력 (초록)'] }[꼴] || ['● 하중점', '▲ 받침'];
+  $('#판1 .legend').innerHTML = [...범례, '↓ Vu (하중계수 곱한 값)', ...(m.받침표.some(r => 수(r.H)) ? ['→ H 수평력 (주황)'] : []), '회색 = 콘크리트 외곽'].map(x => `<span>${x}</span>`).join('');
   // 1-3 받침표
-  $('#받침표 tbody').innerHTML = m.받침표.map((r, i) => `<tr><td>${i + 1}</td>` + ['x', 'D', 'L', 'H'].map(c => `<td><input data-행="${i}" data-열="${c}" data-undo="받침 ${i + 1} ${c}" value="${글(r[c] ?? 0)}"></td>`).join('')
+  const TL = 수(m.형상.TL), 밖 = r => TL > 0 && (수(r.x) < 0 || 수(r.x) > TL);     // v0.8.2 (걷기 14) 받침 x 가 부재 밖 (0 ~ TL) 이면 빨강 칸
+  $('#받침표 tbody').innerHTML = m.받침표.map((r, i) => `<tr><td>${i + 1}</td>` + ['x', 'D', 'L', 'H'].map(c => `<td><input data-행="${i}" data-열="${c}" data-undo="받침 ${i + 1} ${c}" value="${글(r[c] ?? 0)}" ${c === 'x' && 밖(r) ? `class="bad" title="끝 ${글(TL)} 밖 — 위치 x 는 0 ~ TL"` : ''}></td>`).join('')
     + `<td><button class="x" data-빼기="${i}" title="받침 ${i + 1} 줄 삭제 (되돌리기 가능)">✕</button></td></tr>`).join('');
   $('#받침표').querySelectorAll('input').forEach(i => i.onchange = () => {
     const r = +i.dataset.행, c = i.dataset.열, 전 = m.받침표[r][c], 뒤 = 수(i.value);
@@ -633,6 +641,7 @@ function 글자리(sv, 글들) {
     const g = document.createElementNS(NS, 'text');
     for (const [a, v] of Object.entries({ 'data-글': '', 'text-anchor': 'middle', 'data-px': 14, 'font-size': (14 * k).toFixed(2), 'paint-order': 'stroke', stroke: 'var(--dsm-chip)', 'data-띠': 5, 'stroke-width': (5 * k).toFixed(2), 'stroke-linejoin': 'round', ...(p.속성 || {}) })) g.setAttribute(a, v);
     g.innerHTML = `<title>${p.이름}${p.값 ? ' ' + p.값 : ''}${p.제목 ? ' · ' + p.제목 : ''}</title><tspan font-weight="700" fill="${p.이름색}">${p.이름}</tspan>${p.값 ? ` <tspan fill="${p.값색}" font-weight="${p.값굵게 ? 700 : 400}">${p.값}</tspan>` : ''}`;
+    g.dataset.부재 = p.이름;      // v0.8.2 (걷기 18) 글도 누르면 그 부재
     sv.appendChild(g);
     const L = 길이(p) || 1, nx = -(p.y2 - p.y1) / L, ny = (p.x2 - p.x1) / L;
     let 됨 = false;
@@ -758,7 +767,9 @@ function 요약() {
   $('#상태').className = 'status' + (상태오류 ? ' bad' : 보기 ? ' 보기' : '');
   $('#판1').classList.toggle('보기중', 보기); $('#보기줄').hidden = !보기;
   $('#보기줄글').textContent = `${꼴표[m.형상.꼴].칩} 기본 치수 · 하중이 들어가 있음 — 내 과업 값으로 변경하십시오 (변경하면 이 줄은 사라짐)`;
-  $('#상태글').innerHTML = 상태오류 ? 상태오류 : 보기 ? `<b>치수 확인</b> · ${꼴표[m.형상.꼴].칩} 보기 값 그대로 — 1-2 치수 · 1-3 하중을 내 과업 값으로` : 다됨 ? '<b>입력 완료</b> · 다음은 ② 모델 (기본안 선택 후 수정)' : '<b>미입력 항목</b> · ' + 빈.join(' · ');
+  const 받침밖 = m.받침표.map((r, i) => (수(m.형상.TL) > 0 && (수(r.x) < 0 || 수(r.x) > 수(m.형상.TL))) ? i + 1 : 0).filter(Boolean);     // v0.8.2 (걷기 14)
+  const 밖글 = 받침밖.length ? `<b>${$('#받침표 thead th').textContent} ${받침밖.join(' · ')} 위치가 부재 밖</b> (0 ~ TL ${글(수(m.형상.TL))}) · ` : '';
+  $('#상태글').innerHTML = 밖글 + (상태오류 ? 상태오류 : 보기 ? `<b>치수 확인</b> · ${꼴표[m.형상.꼴].칩} 보기 값 그대로 — 1-2 치수 · 1-3 하중을 내 과업 값으로` : 다됨 ? '<b>입력 완료</b> · 다음은 ② 모델 (기본안 선택 후 수정)' : '<b>미입력 항목</b> · ' + 빈.join(' · '));
   // 시안 A — 다 넣은 칸은 접고 값만 · 비어 있는 첫 칸이 «지금» (사람이 누른 접기가 먼저)
   const 칸들 = 꼴표[m.형상.꼴].칸, 치수다 = 칸들.every(([키]) => 수(m.형상[키]) > 0);
   접음('카드11', true, 꼴표[m.형상.꼴].칩);
@@ -811,13 +822,23 @@ function 접음(id, 자동, 값) {
 function 지금칸(n, id) { document.querySelectorAll('#판' + n + ' .card').forEach(c => c.classList.toggle('지금', !!id && c.id === id)); }
 function 접기맞춤(고칠것) {
   const 있음 = Object.keys(과업?.절점 || {}).length > 0;
-  for (const id of ['카드22', '카드23']) 접음(id, !고칠것 && ['A', 'B'].includes(과업?.기본안) && 있음);
+  const 접 = !고칠것 && ['A', 'B'].includes(과업?.기본안) && 있음;
+  접음('카드22', 접 || 있음); 접음('카드23', 접 || !있음);      // v0.8.2 (걷기 17) 둘 중 하나만 — 저절로 펼칠 때 절점이 있으면 2-3 · 없으면 2-2 (사람이 누른 접기가 먼저)
   지금칸(2, !있음 ? (과업?.기본안 === '직접' ? '카드22' : '카드21') : 고칠것 ? '카드23' : '');
 }
 document.querySelectorAll('.ch.접개').forEach(h => h.onclick = e => {
   if (e.target.closest('button,input,select')) return;
-  const id = h.dataset.접기; 접힘손[id] = !$('#' + id).classList.contains('접힘'); 접음(id, false);
+  const id = h.dataset.접기, 펼침 = $('#' + id).classList.contains('접힘'); 접힘손[id] = !펼침; 접음(id, false);
+  const 짝 = { 카드22: '카드23', 카드23: '카드22' }[id]; if (짝 && 펼침) { 접힘손[짝] = true; 접음(짝, true); }      // v0.8.2 (걷기 17) 2-2 를 펼치면 2-3 접힘 · 반대도
 });
+// v0.8.2 (걷기 18) 2-4 그림에서 부재 · 절점을 누르면 2-2 / 2-3 그 줄로 (펼치고 · 주황 · 보이게)
+function 줄로(카드, 표, 찾기) {
+  const 짝 = 카드 === '카드22' ? '카드23' : '카드22';
+  접힘손[카드] = false; 접음(카드, false); 접힘손[짝] = true; 접음(짝, true);
+  document.querySelectorAll('#절점표 tbody tr.sel,#부재표 tbody tr.sel').forEach(r => r.classList.remove('sel'));
+  const tr = [...$('#' + 표 + ' tbody').querySelectorAll('tr')].find(찾기);
+  if (tr) { tr.classList.add('sel'); tr.scrollIntoView({ block: 'nearest' }); }
+}
 function 판열기(n) {
   if (n >= 2 && 과업?.기본안값 && 과업.기본안값.열쇠 !== 기본안열쇠값()) 기본안따라감().then(b => { if (b && document.getElementById('판' + n).classList.contains('on')) 판열기(n); });   // ① 이 바뀌었으면 기본안 칸을 따라 고친 뒤 다시 그림 (10-26 밤)
   document.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.id === '판' + n));
@@ -835,7 +856,10 @@ $('#뒤로1').onclick = () => 판열기(1);
 $('#다음3').onclick = () => 판열기(3);
 $('#폴더').onclick = () => 부름('폴더열기');
 $('#보기그대로').onclick = e => 고침('보기 값 그대로 씀', () => { delete 과업.보기값; }, e.target);
-$('#받침더').onclick = () => { const 끝 = 과업.받침표[과업.받침표.length - 1]; 고침('받침 ' + (과업.받침표.length + 1) + ' 추가', () => { 과업.받침표.push({ x: Math.round((끝?.x || 0) + 2300), D: 끝?.D || 1000, L: 끝?.L || 500, H: 0 }); }); };
+$('#받침더').onclick = () => {      // v0.8.2 (걷기 14) 새 줄 x = 마지막 x 와 끝(TL) 사이 가운데 (끝이 없거나 이미 끝 너머면 옛 규칙 + 2,300)
+  const 끝 = 과업.받침표[과업.받침표.length - 1], TL = 수(과업.형상.TL), 마지막x = 끝?.x || 0;
+  const x = TL > 마지막x ? Math.round((마지막x + TL) / 2) : Math.round(마지막x + 2300);
+  고침('받침 ' + (과업.받침표.length + 1) + ' 추가 (x ' + 글(x) + ')', () => { 과업.받침표.push({ x, D: 끝?.D || 1000, L: 끝?.L || 500, H: 0 }); }); };
 $('#과업이름').onchange = e => { const 전 = 과업.이름, 뒤 = e.target.value.trim(); if (뒤 && 뒤 !== 전) 고침(`과업 이름 ${전} → ${뒤}`, () => { 과업.이름 = 뒤; }, e.target); else e.target.value = 전; };
 $('#fck').onchange = e => { const 뒤 = 수(e.target.value); if (뒤 !== 과업.재료.fck) 고침(`fck ${과업.재료.fck} → ${뒤}`, () => { 과업.재료.fck = 뒤; }, e.target); };
 $('#fy').onchange = e => { const 뒤 = 수(e.target.value); if (뒤 !== 과업.재료.fy) 고침(`fy ${과업.재료.fy} → ${뒤}`, () => { 과업.재료.fy = 뒤; }, e.target); };
@@ -941,7 +965,7 @@ function 모델그림() {
     if (!m.절점[a] || !m.절점[b]) continue;
     const [x1, y1] = P(...m.절점[a]), [x2, y2] = P(...m.절점[b]);
     const 꼴 = 종 === '타이' ? 'stroke="#e8743b" stroke-width="3"' : 종 === '스트럿' ? 'stroke="var(--dsm-dim)" stroke-width="3" stroke-dasharray="7 5"' : 'stroke="var(--dsm-dim)" stroke-width="1.2"';
-    g += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" ${꼴}/>`;
+    g += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" ${꼴} data-부재="${이름}"/>`;
     const F = 검[이름]?.힘; const 나쁨 = 검[이름]?.검사;     // 인장 주황 · 압축 먹 · 검사 ★ 는 빨강
     글들.push({ 이름, x1, y1, x2, y2, 값: F != null ? 글(F) : '', 이름색: 나쁨 ? 'var(--dsm-bad)' : 'var(--dsm-ink)', 값색: 나쁨 ? 'var(--dsm-bad)' : F > 0 ? '#b25000' : 'var(--dsm-ink)', 값굵게: !!나쁨, 제목: 나쁨 || '' });
   }
@@ -953,12 +977,17 @@ function 모델그림() {
       if (하[1]) g += `<line x1="${sx}" y1="${sy - (하[1] < 0 ? 58 : -58)}" x2="${sx}" y2="${sy - (하[1] < 0 ? 8 : -8)}" stroke="var(--dsm-ink)" stroke-width="1.8" marker-end="url(#ar2)"/><text x="${sx}" y="${sy - (하[1] < 0 ? 64 : -72)}" text-anchor="middle" font-weight="700" fill="var(--dsm-ink)">${글(Math.abs(하[1]))}</text>`;
       if (하[0]) g += `<line x1="${sx - (하[0] > 0 ? 58 : -58)}" y1="${sy}" x2="${sx - (하[0] > 0 ? 8 : -8)}" y2="${sy}" stroke="#b25000" stroke-width="1.8" marker-end="url(#ar2)"/><text x="${sx - (하[0] > 0 ? 62 : -62)}" y="${sy - 6}" text-anchor="${하[0] > 0 ? 'end' : 'start'}" fill="#b25000" font-weight="700">${글(Math.abs(하[0]))}</text>`;
     }
-    g += `<circle cx="${sx}" cy="${sy}" r="5.5" fill="#3f7300" stroke="#fff" stroke-width="1.5"/><text x="${sx + 8}" y="${sy + 14}" font-size="13" fill="var(--dsm-ink)" font-weight="700">${n}</text>`;
+    g += `<circle cx="${sx}" cy="${sy}" r="5.5" fill="#3f7300" stroke="#fff" stroke-width="1.5" data-절점="${n}"/><text x="${sx + 8}" y="${sy + 14}" font-size="13" fill="var(--dsm-ink)" font-weight="700" data-절점="${n}">${n}</text>`;
   }
   g += `<text x="${X(f.TL / 2)}" y="${t.바닥 + 44}" text-anchor="middle" fill="var(--dsm-dim)">${꼴표[f.꼴]?.칩 || f.꼴} · 좌표 원점 = 왼 끝 · 하면 · 단위 mm · kN</text>`;
   g += AI표시(P);
   s.innerHTML = g;
   글자리(s, 글들);
+  s.onclick = e => {      // v0.8.2 (걷기 18) 부재 → 2-3 그 줄 · 절점 → 2-2 그 줄 (빈 곳은 끌기 그대로)
+    const 부 = e.target.closest && e.target.closest('[data-부재]'), 절 = !부 && e.target.closest && e.target.closest('[data-절점]');
+    if (부) 줄로('카드23', '부재표', tr => tr.querySelector('input[data-칸="0"]')?.value === 부.dataset.부재);
+    else if (절) 줄로('카드22', '절점표', tr => tr.querySelector('input[data-칸="이름"]')?.value === 절.dataset.절점);
+  };
 }
 function 모델요약() {
   const c = 검사결과, m = 과업;
@@ -1424,7 +1453,7 @@ $('#탭33').querySelectorAll('span').forEach(sp => sp.onclick = () => { 탭33 = 
 $('#NG만').onclick = () => { NG만 = !NG만; $('#NG만').textContent = NG만 ? '전체 표시' : 'N.G 만 표시'; 그리기3(); };
 
 // ─ ④ 계산서 · 도면 (서버 /api/계산서 가 HTML · 글 · PDF · DXF 를 만듦 · 화면은 보이기만)
-const 화면판 = 'v0.8.1';   // v0.8.1 (10-29 걷기 묶음 나 «표 폭» 7 · 8 · 목업 표폭_목업) 3-3 타이 «정착 · ℓanc» 한 칸 («갈 90») · βs · βn 닫힌 칸엔 값만 (펼치면 긴 글 · 마우스 글) · 절점 ✕ 는 경계면 칸 끝 · 4-3 설명 짧게 · 값 · 저장 그대로 · v0.8.0 (10-29 검정 · 목업 검정값_목업) 서버 v0.6.2 새 값 넷 — 3-3 절점 «두께» 열 (b 와 다르면 주황 · 마우스 글 까닭) · 3-3 스트럿 βs 미입력 «— (가정 0.75)» + 주황 테 · 1-3 조합 고르개 (1.2D+1.6L · 1.4D) + 서버 경고 빨강 띠 · 3-1 왜 글 ★ (역부호 · 인장 반력) 빨강 띠 · v0.7.9 (10-28 밤) 글 넘침 — 지금 할 일 한 줄 · 3-1 판정 아래 두 줄 · 카드 설명 짧게 (뜻은 마우스 글) · 형식 칩 → «새 과업 · ○○» (같은 이름이면 2 · 3) · v0.7.8 (10-28 밤) 판정 뜻 — 1.00 N.G 는 소수 셋째 (화면만) · 지배는 N.G 먼저 · 미입력 초안 타이 본수 검토비 1.11 이상 · 상태줄 점 색 = 판정 색 · v0.7.7 (10-28 밤) 용어 권고 39 — 보이는 글만 (부재력 0 · 하중조합 · 절점영역 · 핀 / 롤러 · 미지정 · 설계자 지정 · 되돌리기 가능 · 오류 글 «… 실패 — 사유» 꼴) · 계산 값 같음 · v0.7.6 (10-28) 단계 ③ AI 칸 — ② 2-5 AI 짚어 보기 (누를 때만 · 권하는 안 · 짚음 등급 셋 · 반영 / 넘김은 설계자 · 그림 파란 점선 · 실패면 묻는 글 복사 · 답 붙여 넣기 · 계산서 4절 «모델 정한 까닭») ·   // v0.7.5 (10-28) 용어 보완 10 — 바뀜 → 변경 · 고침 → 수정 · 사람이 → 설계자가 · N곳 → N개 · 꼴 → 구성 · 비움 → 초기화 · 오류 글 «작성 실패 — 사유 → 확인» ·   // v0.7.4 (10-28) 걷기 진짜 5 — 새 과업 · 형식 칩 직후는 «보기 값» : 1-2 펼침 · 맨 위 한 줄 · 점선 칸 · 상태 «치수 확인» (치수 · 하중을 바꾸면 풀림 · 다음 단추 안 막음) ·   // v0.7.3 (10-28) 걷기 진짜 셋 — 롤러로 불안정이면 상태줄 빨강 · 되돌리기 띠를 아래 단추 줄 위로 · ① 이 바뀌면 «미입력 초안» 폭을 다시 셈 (사람이 고친 칸은 그대로) ·   // v0.7.2 (10-28) 아래 띠 «예제 선택» → «과업 열기 ▾» (＋ 새 과업 · 내 과업 최근 순 · 예제 · 이름 찾기 · 새 과업 이름 겹치면 뒤에 2 · 3) · v0.7.1 (10-27 밤) 왼쪽 칸 폭 끌기 (경계를 끌면 네 판이 같이 · 360 ~ 그림 520 남는 데까지 · 두 번 누르면 420 · 폭은 이 PC 에 기억) · v0.7.0 (10-27) 37 2차 시안 — 그림이 칸에 맞춤 (전보다 약 두 배) · 부재 글 비켜 놓기 · 절점 표 받침 한 칸 세 단추 · 카드 제목 안 꺾임 · v0.6.9 (10-26 밤) ① 을 고치면 ② 기본안 칸이 따라감 (사람이 고친 칸은 그대로) · 기본안 다시 받아도 같은 부재의 철근 · 정착 · 폭 남김 · v0.6.8 (10-26 밤) 힘 0 부재 «힘 0 · 생략» 판정 (서버 v0.5.7) · v0.6.7 (10-26 밤) 형식 넷 더함 (코핑 다열 · 말뚝캡 · 확대기초 · 코벨) · 하중판 칸 · 기본안 이름은 서버 것
+const 화면판 = 'v0.8.2';   // v0.8.2 (10-29 걷기 묶음 라 «그림 · 동작» 13 · 14 · 17 · 18 · 19 · 목업 그림동작_목업) 1-5 범례 형식마다 (● 하중점 · ▲ 받침 / ↑ R) · «+ 받침» 새 줄 = 마지막 x 와 TL 가운데 · 부재 밖이면 빨강 칸 + 상태줄 · 2-2 · 2-3 하나만 펼침 · 2-4 그림 부재 · 절점 누르면 그 줄 · 4-4 보기 고르개 (둘 다 · 계산서 · 도면) + 도면 글 비켜 놓기 (화면만) · v0.8.1 (10-29 걷기 묶음 나 «표 폭» 7 · 8 · 목업 표폭_목업) 3-3 타이 «정착 · ℓanc» 한 칸 («갈 90») · βs · βn 닫힌 칸엔 값만 (펼치면 긴 글 · 마우스 글) · 절점 ✕ 는 경계면 칸 끝 · 4-3 설명 짧게 · 값 · 저장 그대로 · v0.8.0 (10-29 검정 · 목업 검정값_목업) 서버 v0.6.2 새 값 넷 — 3-3 절점 «두께» 열 (b 와 다르면 주황 · 마우스 글 까닭) · 3-3 스트럿 βs 미입력 «— (가정 0.75)» + 주황 테 · 1-3 조합 고르개 (1.2D+1.6L · 1.4D) + 서버 경고 빨강 띠 · 3-1 왜 글 ★ (역부호 · 인장 반력) 빨강 띠 · v0.7.9 (10-28 밤) 글 넘침 — 지금 할 일 한 줄 · 3-1 판정 아래 두 줄 · 카드 설명 짧게 (뜻은 마우스 글) · 형식 칩 → «새 과업 · ○○» (같은 이름이면 2 · 3) · v0.7.8 (10-28 밤) 판정 뜻 — 1.00 N.G 는 소수 셋째 (화면만) · 지배는 N.G 먼저 · 미입력 초안 타이 본수 검토비 1.11 이상 · 상태줄 점 색 = 판정 색 · v0.7.7 (10-28 밤) 용어 권고 39 — 보이는 글만 (부재력 0 · 하중조합 · 절점영역 · 핀 / 롤러 · 미지정 · 설계자 지정 · 되돌리기 가능 · 오류 글 «… 실패 — 사유» 꼴) · 계산 값 같음 · v0.7.6 (10-28) 단계 ③ AI 칸 — ② 2-5 AI 짚어 보기 (누를 때만 · 권하는 안 · 짚음 등급 셋 · 반영 / 넘김은 설계자 · 그림 파란 점선 · 실패면 묻는 글 복사 · 답 붙여 넣기 · 계산서 4절 «모델 정한 까닭») ·   // v0.7.5 (10-28) 용어 보완 10 — 바뀜 → 변경 · 고침 → 수정 · 사람이 → 설계자가 · N곳 → N개 · 꼴 → 구성 · 비움 → 초기화 · 오류 글 «작성 실패 — 사유 → 확인» ·   // v0.7.4 (10-28) 걷기 진짜 5 — 새 과업 · 형식 칩 직후는 «보기 값» : 1-2 펼침 · 맨 위 한 줄 · 점선 칸 · 상태 «치수 확인» (치수 · 하중을 바꾸면 풀림 · 다음 단추 안 막음) ·   // v0.7.3 (10-28) 걷기 진짜 셋 — 롤러로 불안정이면 상태줄 빨강 · 되돌리기 띠를 아래 단추 줄 위로 · ① 이 바뀌면 «미입력 초안» 폭을 다시 셈 (사람이 고친 칸은 그대로) ·   // v0.7.2 (10-28) 아래 띠 «예제 선택» → «과업 열기 ▾» (＋ 새 과업 · 내 과업 최근 순 · 예제 · 이름 찾기 · 새 과업 이름 겹치면 뒤에 2 · 3) · v0.7.1 (10-27 밤) 왼쪽 칸 폭 끌기 (경계를 끌면 네 판이 같이 · 360 ~ 그림 520 남는 데까지 · 두 번 누르면 420 · 폭은 이 PC 에 기억) · v0.7.0 (10-27) 37 2차 시안 — 그림이 칸에 맞춤 (전보다 약 두 배) · 부재 글 비켜 놓기 · 절점 표 받침 한 칸 세 단추 · 카드 제목 안 꺾임 · v0.6.9 (10-26 밤) ① 을 고치면 ② 기본안 칸이 따라감 (사람이 고친 칸은 그대로) · 기본안 다시 받아도 같은 부재의 철근 · 정착 · 폭 남김 · v0.6.8 (10-26 밤) 힘 0 부재 «힘 0 · 생략» 판정 (서버 v0.5.7) · v0.6.7 (10-26 밤) 형식 넷 더함 (코핑 다열 · 말뚝캡 · 확대기초 · 코벨) · 하중판 칸 · 기본안 이름은 서버 것
 let 계산서결과 = null;
 function 알림4(말, 나쁨) { $('#상태4').className = 'status' + (나쁨 === true ? ' bad' : 나쁨 ? ' ' + 나쁨 : '');
   $('#상태4글').innerHTML = 말; }
@@ -1465,15 +1494,14 @@ function 그리기4(새쪽) {
 }
 function 도면그림() {
   const c = 계산서결과, m = 과업, s = $('#도면'); if (!c || !m) { s.innerHTML = ''; return; }
-  const t = 틀(), { P, X, Y, 깊이, f } = t, 힘 = c.힘 || {};
+  const t = 틀(), { P, X, Y, 깊이, f } = t, 힘 = c.힘 || {}, 글들 = [];
   let g = `<g class="외곽4">${외곽그림(t)}</g>`;
   for (const [이름, a, b, 종] of m.부재) {
     if (!m.절점[a] || !m.절점[b]) continue;
     const [x1, y1] = P(...m.절점[a]), [x2, y2] = P(...m.절점[b]);
     g += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#111" stroke-width="${종 === '타이' ? 3.2 : 1.6}" ${종 === '스트럿' ? 'stroke-dasharray="8 5"' : ''}/>`;
-    let 각 = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI; if (각 > 90) 각 -= 180; if (각 < -90) 각 += 180;
-    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, F = 힘[이름];
-    g += `<text x="${mx}" y="${my - 6}" text-anchor="middle" font-size="12.5" fill="#111" transform="rotate(${각} ${mx} ${my})">${이름} ${F != null ? 글(F) : ''}</text>`;
+    const F = 힘[이름];     // v0.8.2 (걷기 19) 부재 글은 ②③ 과 같은 비켜 놓기 (화면 미리보기만 · DXF 글 자리는 서버 그대로)
+    글들.push({ 이름, x1, y1, x2, y2, 값: F != null ? 글(F) : '', 이름색: '#111', 값색: '#111', 속성: { stroke: '#fff' } });
   }
   for (const [n, [x, y]] of Object.entries(m.절점)) {
     const [sx, sy] = P(x, y);
@@ -1487,7 +1515,16 @@ function 도면그림() {
   g += `<text x="${X(0) - 30}" y="${위 + 22}" font-size="16" font-weight="700" fill="#111">STM 모델도</text><text x="${X(0) - 30}" y="${위 + 42}" font-size="12.5" fill="#555">${m.이름 || ''} · kN (+ 인장 · − 압축)</text>`;
   s.setAttribute('viewBox', `${X(0) - 40} ${위} ${f.TL * t.k + 90} ${밑 + 50 - 위}`);
   s.innerHTML = g;
+  글자리(s, 글들);
 }
+// v0.8.2 (걷기 19) 4-4 보기 고르개 — 둘 다 · 계산서 · 도면 (이 PC 에 기억 · 바꾸면 도면 글을 다시 놓음)
+(() => {
+  const 틀4 = $('.two4'), 칸 = $('#탭44');
+  const 놓기 = v => { 틀4.classList.toggle('계산서만', v === '계산서'); 틀4.classList.toggle('도면만', v === '도면'); 칸.querySelectorAll('span').forEach(x => x.classList.toggle('on', x.dataset.보기 === v)); try { localStorage.setItem('stm.보기44', v); } catch (e) {} if (계산서결과) 도면그림(); };
+  칸.querySelectorAll('span').forEach(x => x.onclick = () => 놓기(x.dataset.보기));
+  let v = '둘'; try { v = localStorage.getItem('stm.보기44') || '둘'; } catch (e) {} 놓기(v);
+  new ResizeObserver(() => { if (계산서결과 && $('#판4').classList.contains('on')) 도면그림(); }).observe($('#도면'));
+})();
 $('#뒤로3').onclick = () => 판열기(3);
 $('#내보내기').onclick = () => 계산서요청(true);
 $('#출력폴더').onclick = () => 부름('출력폴더열기', { 과업 }).then(r => { if (r.오류) 알림4(r.오류, true); });
