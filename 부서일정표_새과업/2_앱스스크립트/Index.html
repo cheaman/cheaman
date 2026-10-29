@@ -59,6 +59,10 @@ b{font-weight:700} button{font:inherit;cursor:pointer;color:inherit} .hidden{dis
 .ev.span{border-left-color:transparent;background:var(--k);color:#fff;border-radius:0}
 .ev.span.first{border-radius:4px 0 0 4px}.ev.span.last{border-radius:0 4px 4px 0}.ev.span.first.last{border-radius:4px}
 .more{font-size:11.5px;color:var(--dsm-dim)}
+.ev.task{background:#e9ecef;border:1px dashed #aab3bd;border-left:4px solid #6b7280;color:var(--dsm-ink)}
+.cal .d.hol .n{color:var(--bad)}.cal .d .n small{font-size:11px;margin-left:3px}
+.todaybox .day.hol small,.todaybox .day.hol b{color:var(--bad)}
+.taskline{font-size:13px;color:var(--dsm-ink);margin-top:8px;padding:8px 10px;background:#e9ecef;border-radius:9px;border:1px dashed #aab3bd}.taskline b{color:#6b7280}
 .tcap{display:flex;gap:10px;align-items:baseline;margin:0 0 6px}.tcap b{font-size:15px}.tcap span{font-size:12.5px;color:var(--dsm-dim)}
 .tsum{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
 .twrap{overflow-x:auto;min-width:0}
@@ -111,7 +115,7 @@ tr.is-now td{background:#e3efcf}tr.is-now td:first-child{box-shadow:inset 3px 0 
   .wrap{padding:10px 10px 110px}
   .grid{grid-template-columns:1fr}
   .pc-only{display:none!important}
-  .cal .d{min-height:54px;padding:3px 3px}.cal .ev{display:none}
+  .cal .d{min-height:54px;padding:3px 3px}.cal .ev{display:none}.cal .d .n small{display:none}
   .cal .dots{display:flex;gap:2px;flex-wrap:wrap}.cal .dots i{width:7px;height:7px;border-radius:50%;background:var(--k)}
   .calbox .panel-head{cursor:pointer}
   .fab{left:12px;right:12px;bottom:14px;height:52px;border-radius:14px;font-size:17px}
@@ -216,9 +220,11 @@ const 짧게 = s => { const d = P(s); return (d.getMonth() + 1) + '/' + d.getDat
 const 월요일 = s => { const d = P(s); const k = (d.getDay() + 6) % 7; d.setDate(d.getDate() - k); return F(d); };
 const 기간 = (e, s) => e.시작 <= s && s <= e.끝;
 
-const S = { 오늘: F(new Date()), 고른날: F(new Date()), 보는달: null, 부서원: [], 종류: [], 과업: [], 일정: [], 거름종류: '전체', 거름사람: '전체',
+const S = { 오늘: F(new Date()), 고른날: F(new Date()), 보는달: null, 부서원: [], 종류: [], 과업: [], 일정: [], 과업일정: [], 공휴일: {}, 거름종류: '전체', 거름사람: '전체',
   고치는: null, 입력: { 누가: '', 종류: '', 시간대: '', 과업: '' }, 떴음: false };
-const 색 = k => (S.종류.find(x => x.종류 === k) || {}).색 || '#8a929c';
+const 색 = k => k === '과업' ? '#6b7280' : ((S.종류.find(x => x.종류 === k) || {}).색 || '#8a929c');
+const 과업그날 = s => S.과업일정.filter(e => 기간(e, s));
+const 과업보임 = () => S.거름종류 === '전체' || S.거름종류 === '과업';
 let 나 = ''; try { 나 = localStorage.getItem('구조부일정.나') || ''; } catch (e) {}
 const 화면이름 = () => (나 || '?') + (폰() ? ' 폰' : ' PC');
 
@@ -234,7 +240,7 @@ async function load(기준) {
   $('now').className = 'now'; $('now').textContent = '자료 받는 중…';
   try {
     const r = await call('화면자료', 기준 || null);
-    S.오늘 = r.오늘; S.부서원 = r.부서원; S.종류 = r.종류; S.과업 = r.과업; S.일정 = r.일정;
+    S.오늘 = r.오늘; S.부서원 = r.부서원; S.종류 = r.종류; S.과업 = r.과업; S.일정 = r.일정; S.과업일정 = r.과업일정 || []; S.공휴일 = {}; (r.공휴일 || []).forEach(h => { S.공휴일[h.날짜] = h.이름; });
     if (!S.보는달) { S.보는달 = S.오늘.slice(0, 7); S.고른날 = S.오늘; }
     if (!나 || !S.부서원.some(p => p.이름 === 나)) { 나 = ''; }
     if (!S.입력.누가) S.입력.누가 = 나;
@@ -281,7 +287,7 @@ function renderToday() {
   const m = 월요일(s); let h = '';
   for (let i = 0; i < 7; i++) {
     const d = addD(m, i); const wk = i >= 5; const 점 = 그날(d).slice(0, 4).map(e => '<i style="--k:' + 색(e.종류) + '"></i>').join('');
-    h += '<button class="day' + (d === s ? ' on' : '') + (wk ? ' wk' : '') + '" data-d="' + d + '"><small>' + 요일[(i + 1) % 7] + '</small><b>' + P(d).getDate() + '</b><div class="dots">' + 점 + '</div></button>';
+    h += '<button class="day' + (d === s ? ' on' : '') + (wk ? ' wk' : '') + (S.공휴일[d] ? ' hol' : '') + '" data-d="' + d + '" title="' + esc(S.공휴일[d] || '') + '"><small>' + 요일[(i + 1) % 7] + '</small><b>' + P(d).getDate() + '</b><div class="dots">' + 점 + '</div></button>';
   }
   $('days').innerHTML = h;
   $('days').querySelectorAll('.day').forEach(b => b.onclick = () => { S.고른날 = b.dataset.d; S.보는달 = S.고른날.slice(0, 7); renderToday(); renderCal(); renderWeek(); });
@@ -290,9 +296,13 @@ function renderToday() {
   let out = '';
   out += q.밖.length ? '<div class="cards">' + q.밖.map(e => 카드(e, true)).join('') + '</div>' : '<div class="empty">' + (s === S.오늘 ? '오늘은' : '이날은') + ' 모두 자리에 있습니다</div>';
   out += '<div class="inside">자리에 있음 · ' + (q.자리.length ? esc(q.자리.join(' · ')) : '없음') + '</div>';
+  const 과업줄 = (d) => { const t = 과업그날(d); return t.length ? '<div class="taskline">과업 날짜 · ' + t.map(x => '<b>[' + esc(x.갈래) + ']</b> ' + esc((x.과업 ? x.과업 + ' ' : '') + x.이름)).join(' · ') + '</div>' : ''; };
+  if (S.공휴일[s]) out += '<div class="inside">공휴일 · ' + esc(S.공휴일[s]) + '</div>';
+  out += 과업줄(s);
   const 내일 = addD(s, 1); const q2 = 요약(내일);
   out += '<div class="sub">내일 ' + 짧게(내일) + ' <span class="dim">· ' + q2.밖수 + '명</span></div>';
   out += q2.밖.length ? '<div class="cards">' + q2.밖.map(e => '<button class="card" style="--k:' + 색(e.종류) + '" data-id="' + esc(e.id) + '"><div class="l1"><b>' + esc(e.누가) + '</b><span class="k">' + esc(e.종류) + '</span><span class="when">' + esc(진행(e, 내일)) + '</span></div>' + (e.어디 ? '<div class="l2">' + esc(e.어디) + '</div>' : '') + '</button>').join('') + '</div>' : '<div class="empty">없음</div>';
+  out += 과업줄(내일);
   const 주끝 = addD(m, 6);
   const 나머지 = S.일정.filter(e => e.끝 >= addD(s, 2) && e.시작 <= 주끝 && !기간(e, s) && !기간(e, 내일));
   out += '<div class="sub">이번 주 나머지 <span class="dim">· ' + 나머지.length + '건</span></div>';
@@ -305,7 +315,8 @@ function renderChips() {
   const ym = S.보는달; const 달일정 = S.일정.filter(e => e.시작.slice(0, 7) <= ym && e.끝.slice(0, 7) >= ym);
   const n = {}; 달일정.forEach(e => { n[e.종류] = (n[e.종류] || 0) + 1; });
   $('kindChips').innerHTML = '<span class="lab">종류</span><button class="chip' + (S.거름종류 === '전체' ? ' on' : '') + '" data-k="전체"><i style="--k:var(--dsm-ink)"></i>전체 <small>' + 달일정.length + '</small></button>' +
-    S.종류.map(k => '<button class="chip' + (S.거름종류 === k.종류 ? ' on' : '') + '" data-k="' + esc(k.종류) + '" style="--k:' + k.색 + '"><i></i>' + esc(k.종류) + ' <small>' + (n[k.종류] || 0) + '</small></button>').join('');
+    S.종류.map(k => '<button class="chip' + (S.거름종류 === k.종류 ? ' on' : '') + '" data-k="' + esc(k.종류) + '" style="--k:' + k.색 + '"><i></i>' + esc(k.종류) + ' <small>' + (n[k.종류] || 0) + '</small></button>').join('') +
+    (S.과업일정.length ? '<button class="chip' + (S.거름종류 === '과업' ? ' on' : '') + '" data-k="과업" style="--k:#6b7280" title="시트 「업무현황」 의 심의 · 납품 날짜"><i></i>과업 <small>' + S.과업일정.filter(e => e.시작.slice(0, 7) <= ym && e.끝.slice(0, 7) >= ym).length + '</small></button>' : '');
   $('kindChips').querySelectorAll('.chip').forEach(b => b.onclick = () => { S.거름종류 = b.dataset.k; renderChips(); renderCal(); renderWeek(); });
   $('whoChips').innerHTML = '<span class="lab">사람</span><button class="chip' + (S.거름사람 === '전체' ? ' on' : '') + '" data-w="전체">전체</button>' +
     S.부서원.map(p => '<button class="chip' + (S.거름사람 === p.이름 ? ' on' : '') + '" data-w="' + esc(p.이름) + '">' + esc(p.이름) + '</button>').join('');
@@ -321,30 +332,37 @@ function renderCal() {
   let h = ['월', '화', '수', '목', '금', '토', '일'].map((w, i) => '<div class="dow' + (i === 5 ? ' sat' : i === 6 ? ' sun' : '') + '">' + w + '</div>').join('');
   for (let i = 0; i < 42; i++) {
     const d = addD(start, i); const dd = P(d); const other = dd.getMonth() !== mo - 1; const wk = i % 7 >= 5;
-    const evs = list.filter(e => 기간(e, d));
+    const evs = (S.거름종류 === '과업' ? [] : list.filter(e => 기간(e, d)));
+    const tasks = 과업보임() ? 과업그날(d) : [];
     let body = '';
+    tasks.slice(0, 2).forEach(t => { body += '<span class="ev task" data-task="1" title="' + esc(t.제목) + '">' + esc('[' + t.갈래 + '] ' + (t.과업 ? t.과업 + ' ' : '') + t.이름) + '</span>'; });
     evs.slice(0, 3).forEach(e => {
       const span = e.시작 !== e.끝; const cls = 'ev' + (span ? ' span' + (e.시작 === d ? ' first' : '') + (e.끝 === d ? ' last' : '') : '');
       const txt = (e.시작 === d || !span || i % 7 === 0) ? e.종류 + ' ' + e.누가 + (e.어디 ? ' · ' + e.어디 : '') : ' ';
       body += '<span class="' + cls + '" style="--k:' + 색(e.종류) + '" title="' + esc(e.제목) + '">' + esc(txt) + '</span>';
     });
     if (evs.length > 3) body += '<span class="more">+' + (evs.length - 3) + '</span>';
-    const dots = '<div class="dots">' + evs.slice(0, 4).map(e => '<i style="--k:' + 색(e.종류) + '"></i>').join('') + '</div>';
-    h += '<button class="d' + (other ? ' other' : '') + (wk ? ' wk' : '') + (d === S.오늘 ? ' today' : '') + (d === S.고른날 ? ' sel' : '') + '" data-d="' + d + '"><div class="n">' + dd.getDate() + (d === S.오늘 ? ' 오늘' : '') + '</div>' + body + dots + '</button>';
+    const dots = '<div class="dots">' + tasks.slice(0, 1).map(() => '<i style="--k:#6b7280"></i>').join('') + evs.slice(0, 4).map(e => '<i style="--k:' + 색(e.종류) + '"></i>').join('') + '</div>';
+    const hol = S.공휴일[d];
+    h += '<button class="d' + (other ? ' other' : '') + (wk ? ' wk' : '') + (hol ? ' hol' : '') + (d === S.오늘 ? ' today' : '') + (d === S.고른날 ? ' sel' : '') + '" data-d="' + d + '"><div class="n">' + dd.getDate() + (d === S.오늘 ? ' 오늘' : '') + (hol ? '<small>' + esc(hol) + '</small>' : '') + '</div>' + body + dots + '</button>';
   }
   $('cal').innerHTML = h;
+  $('cal').querySelectorAll('.ev.task').forEach(t => t.onclick = e => { e.stopPropagation(); toast('과업 날짜는 시트 「업무현황」 에서 고칩니다'); });
   $('cal').querySelectorAll('.d').forEach(b => b.onclick = () => { S.고른날 = b.dataset.d; if (폰()) { S.보는달 = S.고른날.slice(0, 7); } renderToday(); renderCal(); renderWeek(); if (!폰()) { prefillDate(S.고른날); } });
 }
 
 function renderWeek() {
   const m = 월요일(S.고른날); const e7 = addD(m, 6);
-  const list = 보이는().filter(e => e.끝 >= m && e.시작 <= e7);
+  const list = (S.거름종류 === '과업' ? [] : 보이는()).filter(e => e.끝 >= m && e.시작 <= e7);
+  const tlist = 과업보임() ? S.과업일정.filter(e => e.끝 >= m && e.시작 <= e7) : [];
   $('weekTitle').textContent = (m <= S.오늘 && S.오늘 <= e7) ? '이번 주 일정' : '그 주 일정';
   $('weekRange').textContent = 짧게(m) + ' ~ ' + 짧게(e7);
   const n = {}; list.forEach(e => { n[e.종류] = (n[e.종류] || 0) + 1; });
-  $('weekSum').innerHTML = '<span class="chip">이 주 <b>' + list.length + '</b></span>' + Object.keys(n).map(k => '<span class="chip" style="--k:' + 색(k) + '"><i></i>' + esc(k) + ' <b>' + n[k] + '</b></span>').join('');
+  $('weekSum').innerHTML = '<span class="chip">이 주 <b>' + list.length + '</b></span>' + Object.keys(n).map(k => '<span class="chip" style="--k:' + 색(k) + '"><i></i>' + esc(k) + ' <b>' + n[k] + '</b></span>').join('') + (tlist.length ? '<span class="chip" style="--k:#6b7280"><i></i>과업 <b>' + tlist.length + '</b></span>' : '');
   $('weekRows').innerHTML = list.length ? list.map(e => '<tr class="row' + (기간(e, S.오늘) ? ' is-now' : '') + '" data-id="' + esc(e.id) + '"><td>' + 짧게(e.시작) + (e.끝 !== e.시작 ? ' ~ ' + 짧게(e.끝) : '') + (e.시간대 ? ' ' + e.시간대 : '') + '</td><td><span class="st" style="--k:' + 색(e.종류) + '"><i></i>' + esc(e.종류) + '</span></td><td>' + esc(e.누가) + '</td><td>' + (e.어디 ? esc(e.어디) : '<span class="dim">—</span>') + '</td><td>' + (e.메모 ? esc(e.메모) : '<span class="dim">—</span>') + '</td><td>' + (e.과업 ? esc(e.과업) : '<span class="dim">—</span>') + '</td><td class="dim">' + esc(e.올린 ? e.올린.split(' ')[0] : (e.화면밖 ? '캘린더 앱' : '')) + '</td></tr>').join('')
-    : '<tr><td colspan="7" class="empty">이 주에는 올린 일정이 없습니다</td></tr>';
+    : '';
+  $('weekRows').innerHTML += tlist.map(t => '<tr class="taskrow"><td>' + 짧게(t.시작) + (t.끝 !== t.시작 ? ' ~ ' + 짧게(t.끝) : '') + '</td><td><span class="st" style="--k:#6b7280"><i></i>' + esc(t.갈래) + '</span></td><td class="dim">—</td><td>' + esc(t.이름) + '</td><td class="dim">과업 날짜</td><td>' + (t.과업 ? esc(t.과업) : '<span class="dim">—</span>') + '</td><td class="dim">시트</td></tr>').join('');
+  if (!list.length && !tlist.length) $('weekRows').innerHTML = '<tr><td colspan="7" class="empty">이 주에는 올린 일정이 없습니다</td></tr>';
   $('weekRows').querySelectorAll('tr.row').forEach(r => r.onclick = () => openEdit(r.dataset.id));
 }
 

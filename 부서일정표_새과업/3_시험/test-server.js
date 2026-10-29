@@ -30,7 +30,8 @@ const calId = rows(E, '설정', 2).find(r => r[0] === '캘린더 번호')[1];
 ok(E.calendars[calId] && E.calendars[calId].getName() === '구조부 일정', '캘린더 「구조부 일정」 새로 만들어 번호를 설정에 적음');
 ok(/캘린더 「구조부 일정」 새로 만듦/.test(msg), '결과 글 — ' + msg);
 const msg2 = E.ctx.setup();
-ok(key(E) === k && Object.keys(E.calendars).length === 1 && /있는 캘린더 씀/.test(msg2), 'setup 두 번 해도 열쇠 · 캘린더 그대로');
+ok(key(E) === k && Object.keys(E.calendars).filter(x => !/holiday/.test(x)).length === 1 && /있는 캘린더 씀/.test(msg2), 'setup 두 번 해도 열쇠 · 캘린더 그대로');
+ok(/공휴일 캘린더 구독함/.test(msg) && E.calendars['ko.south_korea#holiday@group.v.calendar.google.com'], '공휴일 캘린더 구독 (한 번)');
 ok(rows(E, '부서원', 4).length === 6 && rows(E, '종류', 4).length === 7, '부서원 예시 6 · 종류 예시 7');
 
 console.log('2. 열쇠 · 웹 화면');
@@ -127,6 +128,25 @@ ok(/올림 0 · 이미 올린 줄 4 · 안 됨 1/.test(g) && E.calendars[calId].
 gs.getRange(5, 1).setValue('최○○');
 g = E.ctx.가져오기();
 ok(/올림 1 · 이미 올린 줄 4 · 안 됨 0/.test(g), '틀린 줄을 고치면 그 줄만 올라감 — ' + g);
+
+console.log('8. 공휴일 · 과업 캘린더 · 주간 요약');
+let h = E.ctx.화면자료(k, '2026-10-20');
+ok(h.공휴일.some(x => x.날짜 === '2026-10-09' && x.이름 === '한글날') && h.공휴일.filter(x => x.이름 === '추석').length === 3, '공휴일 : 한글날 · 추석 사흘 (날마다 한 줄)');
+ok(h.과업일정.length === 0, '과업 캘린더 없으면 빈 목록');
+const tc = E.g.CalendarApp.createCalendar('구조부 과업');
+E.ss.getSheetByName('설정').getRange(2, 1, 8, 2).getValues().forEach((r, i) => { if (r[0] === '과업 캘린더 번호') E.ss.getSheetByName('설정').getRange(i + 2, 2).setValue(tc.getId()); });
+tc.createAllDayEvent('[심의] D197 이설표지판 · 대전', new Date(2026, 10, 3));
+tc.createAllDayEvent('[납품] D196 강릉제진', new Date(2026, 10, 10), new Date(2026, 10, 12));
+h = E.ctx.화면자료(k, '2026-11-05');
+ok(h.과업일정.length === 2 && h.과업일정[0].갈래 === '심의' && h.과업일정[0].과업 === 'D197' && h.과업일정[0].이름 === '이설표지판 · 대전' && h.과업일정[1].끝 === '2026-11-11', '과업 캘린더 읽음 : ' + h.과업일정.map(x => x.갈래 + ' ' + x.과업).join(' · '));
+ok(!h.일정.some(e => e.id === h.과업일정[0].id), '과업 일정은 사람 일정에 섞이지 않음');
+// 주간 JSON — 오늘(실제 날짜) 기준
+const wk = JSON.parse(E.ctx.doGet({ parameter: { 주간: '', m: k } }).body);
+ok(wk.날마다.length === 7 && wk.시작 <= wk.오늘 && wk.오늘 <= wk.끝 && typeof wk.전체 === 'number' && Array.isArray(wk.과업날짜), '?주간 → 7일 · 오늘 포함 · 과업 날짜');
+E.g.CalendarApp.subscribeToCalendar.bad = true;
+E.ss.getSheetByName('설정').getRange(2, 1, 8, 2).getValues().forEach((r, i) => { if (r[0] === '공휴일 캘린더') E.ss.getSheetByName('설정').getRange(i + 2, 2).setValue('no-such#holiday'); });
+const m3 = E.ctx.setup();
+ok(/구독 못 함/.test(m3) && E.ctx.화면자료(k).공휴일.length === 0, '공휴일 구독이 안 되어도 setup 은 끝남 · 표시만 빠짐 — ' + m3.slice(-40));
 
 console.log('\n통과 ' + pass + ' · 실패 ' + fail);
 process.exit(fail ? 1 : 0);

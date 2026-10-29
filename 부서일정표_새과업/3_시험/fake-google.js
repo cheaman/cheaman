@@ -110,7 +110,8 @@ function makeGlobals(now) {
     },
     CalendarApp: {
       createCalendar: name => { const id = 'cal' + (++calSeq) + '@group.calendar.google.com'; const c = new Calendar(name, id); calendars[id] = c; return c; },
-      getCalendarById: id => calendars[id] || null
+      getCalendarById: id => calendars[id] || null,
+      subscribeToCalendar: id => { if (id === 'no-such#holiday') throw new Error('캘린더를 찾지 못함'); const c = new Calendar('공휴일', id); calendars[id] = c; c.createAllDayEvent('한글날', new Date(2026, 9, 9)); c.createAllDayEvent('추석', new Date(2026, 9, 5), new Date(2026, 9, 8)); c.createAllDayEvent('크리스마스', new Date(2026, 11, 25)); return c; }
     },
     ContentService: {
       MimeType: { JSON: 'application/json' },

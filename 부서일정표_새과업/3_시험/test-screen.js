@@ -33,6 +33,13 @@ function boot() {
   ctx.일정올리기(key, { 누가: '박○○', 종류: '외근', 시작: F(addD(today, 2)), 어디: '양촌 과도교', 화면: '시험' });
   ctx.일정올리기(key, { 누가: '김○○', 종류: '반차', 시작: F(addD(today, -5)), 시간대: '오전', 화면: '시험' });
   ctx.일정올리기(key, { 누가: '최○○', 종류: '교육', 시작: F(addD(today, 20)), 끝: F(addD(today, 22)), 메모: '내진 설계', 화면: '시험' });
+  // 공휴일(시험용 · 사흘 뒤) · 과업 캘린더(오늘 심의)
+  const hol = env.calendars['ko.south_korea#holiday@group.v.calendar.google.com'];
+  hol.createAllDayEvent('시험공휴일', addD(today, 3));
+  const tc = env.g.CalendarApp.createCalendar('구조부 과업');
+  const st = env.ss.getSheetByName('설정'); st.getRange(2, 1, 8, 2).getValues().forEach((r, i) => { if (r[0] === '과업 캘린더 번호') st.getRange(i + 2, 2).setValue(tc.getId()); });
+  tc.createAllDayEvent('[심의] D197 이설표지판 · 대전', today);
+  tc.createAllDayEvent('[납품] D196 강릉제진', addD(today, 4));
   return { ...env, ctx, key, today };
 }
 
@@ -84,6 +91,8 @@ function boot() {
   ok(/자리에 있음/.test(await p.textContent('#todayCards')) && /전채만/.test(await p.textContent('#todayCards .inside')), '자리에 있음 줄');
   ok((await p.$$('#days .day')).length === 7 && await p.locator('#days .day.on').count() === 1, '날짜 띠 7칸 · 오늘 표시');
   ok(/이번 주 나머지/.test(await p.textContent('#todayCards')), '이번 주 나머지 칸');
+  ok(/과업 날짜 · \[심의\] D197 이설표지판 · 대전/.test(await p.textContent('#todayCards .taskline')), '오늘 과업 날짜 줄 (부서 밖 셈에는 안 들어감)');
+  ok(await p.locator('#days .day.hol').count() === (addD(E.today, 3) <= addD(E.today, 6 - ((E.today.getDay() + 6) % 7)) ? 1 : 0), '날짜 띠 공휴일 빨강 (이번 주 안이면 1)');
   await p.screenshot({ path: path.join(SHOTS, '1_폰_오늘.png') });
 
   console.log('2. 폰에서 올리기');
@@ -148,6 +157,10 @@ function boot() {
   ok(await p.evaluate(() => document.documentElement.scrollWidth) === 1366, '옆으로 안 밀림');
   ok(!(await p.locator('#todayPanel').isVisible()) && await p.locator('#calBody').isVisible() && await p.locator('#form').isVisible(), 'PC 는 달력 + 올리기 카드 나란히');
   ok(await p.locator('#cal .d.today').count() === 1 && (await p.locator('#cal .d.today').boundingBox()).width > 50 && (await p.$$('#cal .d')).length === 42, '오늘 칸 하나 · 보임 · 42칸');
+  ok(await p.locator('#cal .d.today .ev.task').count() === 1 && /\[심의\] D197/.test(await p.textContent('#cal .d.today .ev.task')), '오늘 칸에 과업 띠(회색 점선)');
+  ok(/시험공휴일/.test(await p.textContent('#cal')) && await p.locator('#cal .d.hol').count() >= 1, '공휴일 이름 · 빨강');
+  ok(await p.locator('#kindChips .chip[data-k="과업"]').count() === 1, '종류 칩에 「과업」');
+  ok(await p.locator('#weekRows tr.taskrow').count() >= 1, '이번 주 표에 과업 줄');
   const evTexts = await p.$$eval('#cal .ev', els => els.map(e => e.textContent.trim()).filter(Boolean));
   ok(evTexts.some(t => /출장 난○○ · 세종/.test(t)) && evTexts.some(t => /휴가 이○○/.test(t)), '달력에 글 띠 : ' + evTexts.slice(0, 3).join(' | '));
   const 첫칸 = await p.$$eval('#cal .dow', els => els.map(e => e.textContent));
@@ -160,7 +173,13 @@ function boot() {
   console.log('6. PC 거르기 · 달 넘기기 · 표에서 고치기');
   await p.click('#kindChips .chip:has-text("휴가")');
   let evs = await p.$$eval('#cal .ev', els => els.map(e => e.textContent.trim()).filter(Boolean));
-  ok(evs.length > 0 && evs.every(t => /^휴가/.test(t)), '종류 칩 「휴가」 → 휴가만');
+  ok(evs.length > 0 && evs.every(t => /^휴가/.test(t)), '종류 칩 「휴가」 → 휴가만 (과업 띠도 빠짐)');
+  await p.click('#kindChips .chip[data-k="과업"]');
+  evs = await p.$$eval('#cal .ev', els => els.map(e => e.textContent.trim()).filter(Boolean));
+  ok(evs.length === 2 && evs.every(t => /^\[/.test(t)), '종류 칩 「과업」 → 과업 날짜만 ' + evs.length);
+  await p.click('#cal .ev.task');
+  ok(/업무현황/.test(await p.textContent('#toastMsg')), '과업 띠 누르면 안내 띠');
+  await p.click('#kindChips .chip:has-text("휴가")');
   await p.click('#whoChips .chip:has-text("전채만")');
   ok((await p.$$('#cal .ev')).length === 0, '휴가 + 전채만 → 없음');
   await p.click('#kindChips .chip:has-text("전체")'); await p.click('#whoChips .chip:has-text("전체")');

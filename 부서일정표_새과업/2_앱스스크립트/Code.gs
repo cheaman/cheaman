@@ -27,6 +27,8 @@ var 설정_줄 = [
   ['공유 열쇠', '', '자동 · 부서원에게 주는 주소 끝의 ?m= 값. 바꾸면 모두 새 주소가 필요합니다'],
   ['캘린더 이름', '구조부 일정', 'setup 이 새로 만들 때 쓰는 이름'],
   ['앞뒤 몇 달', 3, '화면이 한 번에 받아 오는 범위 (앞뒤 각각)'],
+  ['과업 캘린더 번호', '', '2판 · 심의 · 납품 날짜를 담는 둘째 캘린더 「구조부 과업」 의 번호 (비우면 없음)'],
+  ['공휴일 캘린더', 'ko.south_korea#holiday@group.v.calendar.google.com', '구글 한국 공휴일 · 비우면 공휴일 표시 없음'],
   ['마지막 결과', '', '자동']
 ];
 
@@ -78,7 +80,14 @@ function setup() {
     설정쓰기_('캘린더 번호', cal.getId());
     만든말 = '캘린더 「' + cal.getName() + '」 새로 만듦';
   }
-  var 결과 = '처음 설정 끝 — ' + 만든말 + ' · 부서원 ' + 부서원목록_().length + '명 · 종류 ' + 종류목록_().length + '개';
+  // 공휴일 캘린더 구독 (한 번) — 안 되어도 설치는 계속
+  var 공휴일말 = '';
+  var hid = String(설정값_('공휴일 캘린더') || '').trim();
+  if (hid && !CalendarApp.getCalendarById(hid)) {
+    try { CalendarApp.subscribeToCalendar(hid); 공휴일말 = ' · 공휴일 캘린더 구독함'; }
+    catch (e) { 공휴일말 = ' · 공휴일 캘린더 구독 못 함(' + e.message + ') — 표시만 빠짐'; }
+  }
+  var 결과 = '처음 설정 끝 — ' + 만든말 + 공휴일말 + ' · 부서원 ' + 부서원목록_().length + '명 · 종류 ' + 종류목록_().length + '개';
   설정쓰기_('마지막 결과', 결과);
   Logger.log(결과);
   return 결과;
@@ -143,8 +152,8 @@ function doGet(e) {
   var 열쇠 = String(설정값_('공유 열쇠') || '');
 
   // 현황판 등 다른 도구용 — 오늘 요약 JSON
-  if (p['오늘'] !== undefined) {
-    var body = (열쇠 && p.m === 열쇠) ? 오늘요약_(new Date()) : { 오류: '열쇠가 맞지 않습니다' };
+  if (p['오늘'] !== undefined || p['주간'] !== undefined) {
+    var body = (열쇠 && p.m === 열쇠) ? (p['주간'] !== undefined ? 주간요약_(new Date()) : 오늘요약_(new Date())) : { 오류: '열쇠가 맞지 않습니다' };
     return ContentService.createTextOutput(JSON.stringify(body)).setMimeType(ContentService.MimeType.JSON);
   }
 
@@ -181,9 +190,58 @@ function 화면자료(열쇠, 기준일) {
     종류: 종류목록_(),
     과업: 과업목록_(),
     일정: 일정목록_(시작, 끝),
+    과업일정: 과업일정목록_(시작, 끝),
+    공휴일: 공휴일목록_(시작, 끝),
     범위: [글날짜_(시작), 글날짜_(끝)],
     요약: 오늘요약_(오늘)
   };
+}
+
+// 둘째 캘린더 「구조부 과업」 — 심의 · 납품 · 회의 · 현장 날짜 (2판 · 시트 「업무현황」 의 거울 · 화면에서는 보기만)
+// 제목 꼴 「[심의] D197 이설표지판 · 대전」 → 갈래 · 과업 번호 · 이름
+function 과업일정목록_(시작, 끝) {
+  var id = String(설정값_('과업 캘린더 번호') || '').trim();
+  var cal = id ? CalendarApp.getCalendarById(id) : null;
+  if (!cal) return [];
+  return cal.getEvents(시작, 끝).map(function (ev) {
+    var 제목 = ev.getTitle();
+    var m = 제목.match(/^\[([^\]]+)\]\s*(\S+)?\s*(.*)$/);
+    var s = ev.isAllDayEvent() ? ev.getAllDayStartDate() : ev.getStartTime();
+    var e = ev.isAllDayEvent() ? new Date(ev.getAllDayEndDate().getTime() - 86400000) : ev.getEndTime();
+    return { id: ev.getId(), 제목: 제목, 갈래: ev.getTag('갈래') || (m ? m[1].trim() : '과업'), 과업: ev.getTag('과업') || (m && m[2] ? m[2].trim() : ''),
+      이름: (m ? m[3] : 제목).replace(/^[·\s]+/, '').trim(), 시작: 글날짜_(s), 끝: 글날짜_(e), 과업일정: true };
+  }).sort(function (a, b) { return a.시작 < b.시작 ? -1 : 1; });
+}
+
+// 공휴일 — 구글 한국 공휴일 캘린더 (구독되어 있을 때만)
+function 공휴일목록_(시작, 끝) {
+  var id = String(설정값_('공휴일 캘린더') || '').trim();
+  var cal = id ? CalendarApp.getCalendarById(id) : null;
+  if (!cal) return [];
+  var out = [];
+  try {
+    cal.getEvents(시작, 끝).forEach(function (ev) {
+      var s = ev.isAllDayEvent() ? ev.getAllDayStartDate() : ev.getStartTime();
+      var e = ev.isAllDayEvent() ? ev.getAllDayEndDate() : ev.getEndTime();
+      for (var d = 자정_(s); d < e; d = 다음날_(d)) out.push({ 날짜: 글날짜_(d), 이름: ev.getTitle() });
+    });
+  } catch (e) { /* 구독이 끊겼으면 표시만 빠짐 */ }
+  return out;
+}
+
+// 현황판용 — 이번 주(월~일) 날마다 부서 밖 명단
+function 주간요약_(날) {
+  var 오늘 = 자정_(날);
+  var k = (오늘.getDay() + 6) % 7;
+  var 월 = new Date(오늘.getFullYear(), 오늘.getMonth(), 오늘.getDate() - k);
+  var 일 = new Date(월.getFullYear(), 월.getMonth(), 월.getDate() + 6);
+  var 목록 = 일정목록_(월, 다음날_(일));
+  var 날마다 = [];
+  for (var d = 월; d <= 일; d = 다음날_(d)) {
+    var g = 글날짜_(d);
+    날마다.push({ 날짜: g, 밖: 목록.filter(function (e) { return e.시작 <= g && g <= e.끝; }).map(function (e) { return { 누가: e.누가, 종류: e.종류, 어디: e.어디, 과업: e.과업, 시간대: e.시간대 }; }) });
+  }
+  return { 시작: 글날짜_(월), 끝: 글날짜_(일), 오늘: 글날짜_(오늘), 전체: 부서원목록_().length, 날마다: 날마다, 과업날짜: 과업일정목록_(월, 다음날_(일)) };
 }
 
 // 일정 올리기 — 들어온 것 : {누가, 종류, 시작, 끝, 시간대, 어디, 메모, 과업, 화면}
