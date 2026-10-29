@@ -192,7 +192,13 @@
   .set{display:grid;grid-template-columns:150px 1fr;gap:8px 12px;font-size:13px;align-items:center}
   .set input,.set select{font:inherit;font-size:13px;padding:6px 9px;border:1px solid var(--dsm-in-line);border-radius:8px;background:var(--dsm-in);color:var(--dsm-ink);width:100%}
   @media (max-width:1100px){.wrap{grid-template-columns:260px minmax(0,1fr)}.col.r{grid-column:1/-1}}
-  @media (max-width:760px){.wrap{grid-template-columns:1fr;padding:10px 12px 90px}.uc .ub{grid-template-columns:1fr}.set{grid-template-columns:1fr}}
+  @media (max-width:760px){
+    .wrap{grid-template-columns:1fr;padding:10px 12px 110px}.uc .ub{grid-template-columns:1fr}.set{grid-template-columns:1fr}
+    .head{flex-wrap:wrap;height:auto;padding:6px 12px;row-gap:4px}
+    .head .who{width:100%}.head .who b{white-space:nowrap;font-size:14px}
+    .head .btn{min-height:28px;padding:3px 8px;font-size:12px}.head .sp{display:none}.head .theme{margin-left:auto}
+    .foot{flex-wrap:wrap;padding:8px 12px}.foot .msg{width:100%}.foot .btn--main{width:100%}
+  }
 </style>
 </head>
 <body>
