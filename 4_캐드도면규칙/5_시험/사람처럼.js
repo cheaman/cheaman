@@ -7,7 +7,7 @@ const 걸음 = [], 막힘 = [];
 (async () => {
   const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1366, height: 768 } });
   const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('dialog', d => d.accept(d.type() === 'prompt' ? '지시선 글은 오른쪽에 치수가 있으면 왼쪽' : undefined));
-  const 보이나 = async (loc) => { const h = await loc.first().elementHandle().catch(() => null); if (!h) return false; const r = await h.boundingBox(); var 가림 = await p.evaluate(() => (document.querySelector('.head') ? document.querySelector('.head').offsetHeight : 0) + (document.getElementById('페이지띠') ? document.getElementById('페이지띠').offsetHeight : 0)); return !!(r && r.y >= 가림 - 2 && r.y + r.height <= 768 && r.x >= 0 && r.width > 0); };
+  const 보이나 = async (loc) => { const h = await loc.first().elementHandle().catch(() => null); if (!h) return false; const r = await h.boundingBox(); var 가림 = await p.evaluate(() => (document.querySelector('.head') ? document.querySelector('.head').offsetHeight : 0) + (document.getElementById('페이지띠') ? document.getElementById('페이지띠').offsetHeight : 0)); var 띠안 = await h.evaluate(el => !!el.closest('.head, #페이지띠, .foot')); return !!(r && r.y >= (띠안 ? 0 : 가림 - 2) && r.y + r.height <= 768 && r.x >= 0 && r.width > 0); };   // 고정 띠 안의 단추는 늘 보임 · 본문 단추는 띠에 가리면 안 보임
   const 상황 = async () => (await p.locator('#situ').innerText()).replace(/\s+/g, ' ');
   const 알림글 = async () => (await p.locator('#toast').innerText().catch(() => '')).trim();
   let n = 0;
