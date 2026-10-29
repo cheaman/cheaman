@@ -152,6 +152,11 @@ function doGet(e) {
   var 열쇠 = String(설정값_('공유 열쇠') || '');
 
   // 현황판 등 다른 도구용 — 오늘 요약 JSON
+  // 아웃룩 · 아이폰 구독용 ICS — &ics (전체) · &ics&누가=홍길동 (그 사람 것만)
+  if (p['ics'] !== undefined) {
+    if (!열쇠 || p.m !== 열쇠) return ContentService.createTextOutput('열쇠가 맞지 않습니다').setMimeType(ContentService.MimeType.TEXT);
+    return ContentService.createTextOutput(ics_(p['누가'] || '')).setMimeType(ContentService.MimeType.ICAL);
+  }
   if (p['오늘'] !== undefined || p['주간'] !== undefined) {
     var body = (열쇠 && p.m === 열쇠) ? (p['주간'] !== undefined ? 주간요약_(new Date()) : 오늘요약_(new Date())) : { 오류: '열쇠가 맞지 않습니다' };
     return ContentService.createTextOutput(JSON.stringify(body)).setMimeType(ContentService.MimeType.JSON);
@@ -229,6 +234,36 @@ function 공휴일목록_(시작, 끝) {
   return out;
 }
 
+// ICS 글 — 앞뒤 3달 · 종일은 DATE · 시각 있으면 서울 시각 그대로(TZID)
+function ics_(누가) {
+  var 오늘 = 자정_(new Date());
+  var 시작 = new Date(오늘.getFullYear(), 오늘.getMonth() - 3, 1), 끝 = new Date(오늘.getFullYear(), 오늘.getMonth() + 4, 1);
+  var 목록 = 일정목록_(시작, 끝).filter(function (e) { return !누가 || e.누가 === 누가; });
+  var 줄 = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//DSM//구조부 일정//KO', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'X-WR-CALNAME:' + ics글_('구조부 일정' + (누가 ? ' · ' + 누가 : '')), 'X-WR-TIMEZONE:Asia/Seoul'];
+  var 찍은 = ics때_(new Date());
+  목록.forEach(function (e) {
+    줄.push('BEGIN:VEVENT');
+    줄.push('UID:' + e.id);
+    줄.push('DTSTAMP:' + 찍은);
+    if (e.시작시각) {
+      줄.push('DTSTART;TZID=Asia/Seoul:' + e.시작.replace(/-/g, '') + 'T' + e.시작시각.replace(':', '') + '00');
+      줄.push('DTEND;TZID=Asia/Seoul:' + e.시작.replace(/-/g, '') + 'T' + e.끝시각.replace(':', '') + '00');
+    } else {
+      줄.push('DTSTART;VALUE=DATE:' + e.시작.replace(/-/g, ''));
+      줄.push('DTEND;VALUE=DATE:' + addD_(e.끝, 1).replace(/-/g, ''));
+    }
+    줄.push('SUMMARY:' + ics글_(e.제목));
+    if (e.어디) 줄.push('LOCATION:' + ics글_(e.어디));
+    if (e.메모 || e.과업) 줄.push('DESCRIPTION:' + ics글_([e.메모, e.과업 ? '과업 ' + e.과업 : ''].filter(Boolean).join(' · ')));
+    줄.push('END:VEVENT');
+  });
+  줄.push('END:VCALENDAR');
+  return 줄.join('\r\n') + '\r\n';
+}
+function ics글_(t) { return String(t || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n'); }
+function ics때_(d) { return d.getUTCFullYear() + 두자리_(d.getUTCMonth() + 1) + 두자리_(d.getUTCDate()) + 'T' + 두자리_(d.getUTCHours()) + 두자리_(d.getUTCMinutes()) + '00Z'; }
+function addD_(s, n) { var d = 날짜_(s); d.setDate(d.getDate() + n); return 글날짜_(d); }
+
 // 현황판용 — 이번 주(월~일) 날마다 부서 밖 명단
 function 주간요약_(날) {
   var 오늘 = 자정_(날);
@@ -249,7 +284,7 @@ function 일정올리기(열쇠, 입력) {
   열쇠확인_(열쇠);
   var v = 입력검사_(입력);
   var cal = 캘린더_();
-  var ev = cal.createAllDayEvent(제목_(v), v.시작, 다음날_(v.끝));
+  var ev = v.시작시각 ? cal.createEvent(제목_(v), 때_(v.시작, v.시작시각), 때_(v.시작, v.끝시각)) : cal.createAllDayEvent(제목_(v), v.시작, 다음날_(v.끝));
   태그쓰기_(ev, v);
   var out = 일정꼴_(ev);
   기록_('올림', out, v.화면);
@@ -262,11 +297,11 @@ function 일정고치기(열쇠, id, 바뀜) {
   var ev = 일정찾기_(id);
   var 지금 = 일정꼴_(ev);
   var 합침 = {};
-  ['누가', '종류', '시작', '끝', '시간대', '어디', '메모', '과업'].forEach(function (k) { 합침[k] = (바뀜 && 바뀜[k] !== undefined && 바뀜[k] !== null) ? 바뀜[k] : 지금[k]; });
+  ['누가', '종류', '시작', '끝', '시간대', '어디', '메모', '과업', '시작시각', '끝시각'].forEach(function (k) { 합침[k] = (바뀜 && 바뀜[k] !== undefined && 바뀜[k] !== null) ? 바뀜[k] : 지금[k]; });
   합침.화면 = 바뀜 && 바뀜.화면;
   var v = 입력검사_(합침);
   ev.setTitle(제목_(v));
-  ev.setAllDayDates(v.시작, 다음날_(v.끝));
+  if (v.시작시각) ev.setTime(때_(v.시작, v.시작시각), 때_(v.시작, v.끝시각)); else ev.setAllDayDates(v.시작, 다음날_(v.끝));
   태그쓰기_(ev, v);
   var out = 일정꼴_(ev);
   기록_('고침', out, v.화면, '전: ' + 지금.제목 + ' ' + 지금.시작 + '~' + 지금.끝);
@@ -308,8 +343,18 @@ function 입력검사_(입력) {
   var 시간대 = String(입.시간대 || '').trim();
   if (시간대 && 시간대 !== '오전' && 시간대 !== '오후') throw new Error('시간대는 비우거나 「오전」 · 「오후」 만');
   var 과업 = String(입.과업 || '').trim();
+  var 시작시각 = 시각_(입.시작시각), 끝시각 = 시각_(입.끝시각);
+  if (입.시작시각 && !시작시각) throw new Error('시작 시각은 「14:00」 꼴로');
+  if (입.끝시각 && !끝시각) throw new Error('끝 시각은 「15:00」 꼴로');
+  if (!시작시각 && 끝시각) throw new Error('끝 시각만 있고 시작 시각이 없습니다');
+  if (시작시각) {
+    if (끝 > 시작) throw new Error('시각이 있는 일정은 하루 안에서만 — 여러 날이면 시각을 비워 주세요');
+    if (!끝시각) 끝시각 = 시각더하기_(시작시각, 60);
+    if (끝시각 <= 시작시각) throw new Error('끝 시각이 시작보다 앞입니다');
+    시간대 = '';
+  }
   return {
-    누가: 누가, 종류: 종류, 시작: 시작, 끝: 끝, 시간대: 시간대,
+    누가: 누가, 종류: 종류, 시작: 시작, 끝: 끝, 시간대: 시간대, 시작시각: 시작시각, 끝시각: 끝시각,
     어디: String(입.어디 || '').trim().slice(0, 80),
     메모: String(입.메모 || '').trim().slice(0, 200),
     과업: 과업.slice(0, 40),
@@ -322,6 +367,7 @@ function 제목_(v) {
   if (v.어디) t += ' · ' + v.어디;
   if (v.과업) t += ' · ' + v.과업;
   if (v.시간대) t += ' (' + v.시간대 + ')';
+  if (v.시작시각) t += ' ' + v.시작시각 + '~' + v.끝시각;
   return t;
 }
 
@@ -349,7 +395,8 @@ function 일정꼴_(ev) {
   return {
     id: ev.getId(), 제목: 제목, 종류: 종류, 누가: 누가,
     시작: 글날짜_(시작), 끝: 글날짜_(끝),
-    시간대: ev.getTag('시간대') || '', 어디: ev.getTag('어디') || '', 메모: ev.getTag('메모') || '',
+    시간대: ev.getTag('시간대') || '', 시작시각: ev.isAllDayEvent() ? '' : 시각글_(ev.getStartTime()), 끝시각: ev.isAllDayEvent() ? '' : 시각글_(ev.getEndTime()),
+    어디: ev.getTag('어디') || '', 메모: ev.getTag('메모') || '',
     과업: ev.getTag('과업') || '', 올린: ev.getTag('올린') || '', 화면밖: !ev.getTag('종류')
   };
 }
@@ -453,5 +500,9 @@ function 날짜_(s) {
   return isNaN(d.getTime()) ? null : d;
 }
 function 두자리_(n) { return (n < 10 ? '0' : '') + n; }
+function 시각_(v) { if (!v) return ''; var m = String(v).trim().match(/^(\d{1,2}):(\d{2})$/); if (!m) return ''; var h = Number(m[1]), mi = Number(m[2]); if (h > 23 || mi > 59) return ''; return 두자리_(h) + ':' + 두자리_(mi); }
+function 시각더하기_(t, 분) { var p = t.split(':'); var n = Number(p[0]) * 60 + Number(p[1]) + 분; if (n > 23 * 60 + 59) n = 23 * 60 + 59; return 두자리_(Math.floor(n / 60)) + ':' + 두자리_(n % 60); }
+function 때_(d, t) { var p = t.split(':'); return new Date(d.getFullYear(), d.getMonth(), d.getDate(), Number(p[0]), Number(p[1])); }
+function 시각글_(d) { return 두자리_(d.getHours()) + ':' + 두자리_(d.getMinutes()); }
 function 글날짜_(d) { return d.getFullYear() + '-' + 두자리_(d.getMonth() + 1) + '-' + 두자리_(d.getDate()); }
 function 글때_(d) { return 글날짜_(d) + ' ' + 두자리_(d.getHours()) + ':' + 두자리_(d.getMinutes()); }

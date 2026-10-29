@@ -144,7 +144,7 @@ tr.is-now td{background:#e3efcf}tr.is-now td:first-child{box-shadow:inset 3px 0 
   <div class="grid">
     <!-- 폰 첫 화면 — 오늘 -->
     <div class="panel todaybox phone-only" id="todayPanel">
-      <div class="panel-head">오늘 <span class="cnt" id="todayCnt"></span><span class="sp"></span><span class="cnt" id="todayAll"></span></div>
+      <div class="panel-head">오늘 <span class="cnt" id="todayCnt"></span><span class="sp"></span><button class="chip" id="mineChip" style="height:26px;font-size:12.5px" title="내 이름으로 올린 것만">내 것</button><span class="cnt" id="todayAll"></span></div>
       <div class="days" id="days"></div>
       <div id="todayCards"></div>
     </div>
@@ -179,12 +179,14 @@ tr.is-now td{background:#e3efcf}tr.is-now td:first-child{box-shadow:inset 3px 0 
       <div class="row"><label><b>종류</b></label><div class="chips" id="kindPick" style="margin:0"></div></div>
       <div class="row"><label><b>날짜</b> <span class="dim">· 하루면 왼쪽만</span></label>
         <div class="two"><input class="in need" type="date" id="d1"><span>~</span><input class="in" type="date" id="d2"></div>
+        <div class="two" style="margin-top:6px"><input class="in" type="time" id="t1" step="300" title="시작 시각 · 비우면 종일"><span>~</span><input class="in" type="time" id="t2" step="300" title="끝 시각 · 비우면 한 시간"></div>
+        <div class="dim" style="font-size:12.5px;margin-top:3px">시각은 비우면 종일 · 회의처럼 시간이 있으면 넣기 (하루 일정만)</div>
         <div class="quick">
           <button class="chip" data-q="오늘">오늘</button><button class="chip" data-q="내일">내일</button><button class="chip" data-q="금">이번 주 금</button>
           <button class="chip" data-h="오전">오전만</button><button class="chip" data-h="오후">오후만</button>
         </div></div>
       <div class="row"><label><b>어디</b> <span class="dim">· 비워도 됨</span></label><input class="in" id="where" maxlength="80" placeholder="대전 · 발주처"></div>
-      <div class="row"><label><b>한 줄 메모</b> <span class="dim">· 비워도 됨</span></label><input class="in" id="memo" maxlength="200" placeholder="심의 · 현장 확인 …"></div>
+      <div class="row"><label><b>한 줄 메모</b> <span class="dim">· 비워도 됨 · 휴가 사유는 안 적어도 됩니다</span></label><input class="in" id="memo" maxlength="200" placeholder="심의 · 현장 확인 …"></div>
       <div class="row" id="taskRow"><label><b>과업</b> <span class="dim">· 비워도 됨</span></label><div class="chips" id="taskPick" style="margin:0"></div></div>
       <div class="preview" id="preview"></div>
       <button class="main" id="btnSave" style="margin-top:10px">올리기</button>
@@ -221,7 +223,7 @@ const 월요일 = s => { const d = P(s); const k = (d.getDay() + 6) % 7; d.setDa
 const 기간 = (e, s) => e.시작 <= s && s <= e.끝;
 
 const S = { 오늘: F(new Date()), 고른날: F(new Date()), 보는달: null, 부서원: [], 종류: [], 과업: [], 일정: [], 과업일정: [], 공휴일: {}, 거름종류: '전체', 거름사람: '전체',
-  고치는: null, 입력: { 누가: '', 종류: '', 시간대: '', 과업: '' }, 떴음: false, 주모두: false, 나머지모두: false };
+  고치는: null, 입력: { 누가: '', 종류: '', 시간대: '', 과업: '' }, 떴음: false, 주모두: false, 나머지모두: false, 내것만: false };
 const 주처음 = 12, 나머지처음 = 8;
 const 색 = k => k === '과업' ? '#6b7280' : ((S.종류.find(x => x.종류 === k) || {}).색 || '#8a929c');
 const 과업그날 = s => S.과업일정.filter(e => 기간(e, s));
@@ -258,12 +260,13 @@ async function load(기준) {
 /* ── 셈 ── */
 const 보이는 = () => S.일정.filter(e => (S.거름종류 === '전체' || e.종류 === S.거름종류) && (S.거름사람 === '전체' || e.누가 === S.거름사람));
 const 순서 = n => { const i = S.부서원.findIndex(p => p.이름 === n); return i < 0 ? 999 : i; };
-function 그날(s) { return S.일정.filter(e => 기간(e, s)).sort((a, b) => 순서(a.누가) - 순서(b.누가)); }
+function 그날(s) { return S.일정.filter(e => 기간(e, s) && (!S.내것만 || e.누가 === 나)).sort((a, b) => 순서(a.누가) - 순서(b.누가)); }
 function 요약(s) {
-  const 밖 = 그날(s); const 이름 = {}; 밖.forEach(e => { 이름[e.누가] = true; });
+  const 밖 = S.일정.filter(e => 기간(e, s)).sort((a, b) => 순서(a.누가) - 순서(b.누가)); const 이름 = {}; 밖.forEach(e => { 이름[e.누가] = true; });
   return { 밖, 밖수: Object.keys(이름).length, 자리: S.부서원.map(p => p.이름).filter(n => !이름[n]), 전체: S.부서원.length };
 }
 function 진행(e, s) {
+  if (e.시작시각) return e.시작시각 + '~' + e.끝시각;
   if (e.시작 === e.끝) return e.시간대 ? e.시간대 : '하루';
   const n = Math.round((P(e.끝) - P(e.시작)) / DAY) + 1, i = Math.round((P(s) - P(e.시작)) / DAY) + 1;
   return 짧게(e.시작).slice(0, -3) + ' ~ ' + 짧게(e.끝).slice(0, -3) + ' · ' + (i === n ? '마지막 날' : i === 1 ? '첫날' : i + '/' + n + ' 일째');
@@ -295,17 +298,18 @@ function renderToday() {
   // 카드
   const 카드 = (e, now) => '<button class="card' + (now ? ' now' : '') + '" style="--k:' + 색(e.종류) + '" data-id="' + esc(e.id) + '"><div class="l1"><b>' + esc(e.누가) + '</b><span class="k">' + esc(e.종류) + '</span><span class="when">' + esc(진행(e, now ? s : e.시작)) + (now ? '' : ' · ' + 짧게(e.시작)) + '</span></div>' + ((e.어디 || e.메모 || e.과업) ? '<div class="l2">' + esc([e.어디, e.메모, e.과업].filter(Boolean).join(' · ')) + '</div>' : '') + '</button>';
   let out = '';
-  out += q.밖.length ? '<div class="cards">' + q.밖.map(e => 카드(e, true)).join('') + '</div>' : '<div class="empty">' + (s === S.오늘 ? '오늘은' : '이날은') + ' 모두 자리에 있습니다</div>';
+  const 오늘카드 = 그날(s);
+  out += 오늘카드.length ? '<div class="cards">' + 오늘카드.map(e => 카드(e, true)).join('') + '</div>' : '<div class="empty">' + (S.내것만 ? '내 일정 없음' : (s === S.오늘 ? '오늘은' : '이날은') + ' 모두 자리에 있습니다') + '</div>';
   out += '<div class="inside">자리에 있음 · ' + (q.자리.length ? esc(q.자리.join(' · ')) : '없음') + '</div>';
   const 과업줄 = (d) => { const t = 과업그날(d); return t.length ? '<div class="taskline">과업 날짜 · ' + t.map(x => '<b>[' + esc(x.갈래) + ']</b> ' + esc((x.과업 ? x.과업 + ' ' : '') + x.이름)).join(' · ') + '</div>' : ''; };
   if (S.공휴일[s]) out += '<div class="inside">공휴일 · ' + esc(S.공휴일[s]) + '</div>';
   out += 과업줄(s);
-  const 내일 = addD(s, 1); const q2 = 요약(내일);
+  const 내일 = addD(s, 1); const q2 = 요약(내일); q2.밖 = 그날(내일);
   out += '<div class="sub">내일 ' + 짧게(내일) + ' <span class="dim">· ' + q2.밖수 + '명</span></div>';
   out += q2.밖.length ? '<div class="cards">' + q2.밖.map(e => '<button class="card" style="--k:' + 색(e.종류) + '" data-id="' + esc(e.id) + '"><div class="l1"><b>' + esc(e.누가) + '</b><span class="k">' + esc(e.종류) + '</span><span class="when">' + esc(진행(e, 내일)) + '</span></div>' + (e.어디 ? '<div class="l2">' + esc(e.어디) + '</div>' : '') + '</button>').join('') + '</div>' : '<div class="empty">없음</div>';
   out += 과업줄(내일);
   const 주끝 = addD(m, 6);
-  const 나머지 = S.일정.filter(e => e.끝 >= addD(s, 2) && e.시작 <= 주끝 && !기간(e, s) && !기간(e, 내일));
+  const 나머지 = S.일정.filter(e => e.끝 >= addD(s, 2) && e.시작 <= 주끝 && !기간(e, s) && !기간(e, 내일) && (!S.내것만 || e.누가 === 나));
   out += '<div class="sub">이번 주 나머지 <span class="dim">· ' + 나머지.length + '건</span></div>';
   const 나머지보일 = S.나머지모두 ? 나머지 : 나머지.slice(0, 나머지처음);
   out += 나머지.length ? '<div class="cards">' + 나머지보일.map(e => 카드(e, false)).join('') + '</div>' : '<div class="empty">없음</div>';
@@ -313,6 +317,7 @@ function renderToday() {
   $('todayCards').innerHTML = out;
   $('todayCards').querySelectorAll('.card').forEach(b => b.onclick = () => openEdit(b.dataset.id));
   const rm = $('restMore'); if (rm) rm.onclick = () => { S.나머지모두 = true; renderToday(); };
+  const mc = $('mineChip'); mc.classList.toggle('on', S.내것만); mc.textContent = S.내것만 ? '내 것 ✓' : '내 것'; mc.classList.toggle('hidden', !나);
 }
 
 function renderChips() {
@@ -342,7 +347,7 @@ function renderCal() {
     tasks.slice(0, 2).forEach(t => { body += '<span class="ev task" data-task="1" title="' + esc(t.제목) + '">' + esc('[' + t.갈래 + '] ' + (t.과업 ? t.과업 + ' ' : '') + t.이름) + '</span>'; });
     evs.slice(0, 3).forEach(e => {
       const span = e.시작 !== e.끝; const cls = 'ev' + (span ? ' span' + (e.시작 === d ? ' first' : '') + (e.끝 === d ? ' last' : '') : '');
-      const txt = (e.시작 === d || !span || i % 7 === 0) ? e.종류 + ' ' + e.누가 + (e.어디 ? ' · ' + e.어디 : '') : ' ';
+      const txt = (e.시작 === d || !span || i % 7 === 0) ? (e.시작시각 ? e.시작시각 + ' ' : '') + e.종류 + ' ' + e.누가 + (e.어디 ? ' · ' + e.어디 : '') : ' ';
       body += '<span class="' + cls + '" style="--k:' + 색(e.종류) + '" title="' + esc(e.제목) + '">' + esc(txt) + '</span>';
     });
     if (evs.length > 3) body += '<span class="more">+' + (evs.length - 3) + '</span>';
@@ -364,7 +369,7 @@ function renderWeek() {
   const n = {}; list.forEach(e => { n[e.종류] = (n[e.종류] || 0) + 1; });
   $('weekSum').innerHTML = '<span class="chip">이 주 <b>' + list.length + '</b></span>' + Object.keys(n).map(k => '<span class="chip" style="--k:' + 색(k) + '"><i></i>' + esc(k) + ' <b>' + n[k] + '</b></span>').join('') + (tlist.length ? '<span class="chip" style="--k:#6b7280"><i></i>과업 <b>' + tlist.length + '</b></span>' : '');
   const 보일 = S.주모두 ? list : list.slice(0, 주처음);
-  $('weekRows').innerHTML = 보일.length ? 보일.map(e => '<tr class="row' + (기간(e, S.오늘) ? ' is-now' : '') + '" data-id="' + esc(e.id) + '"><td>' + 짧게(e.시작) + (e.끝 !== e.시작 ? ' ~ ' + 짧게(e.끝) : '') + (e.시간대 ? ' ' + e.시간대 : '') + '</td><td><span class="st" style="--k:' + 색(e.종류) + '"><i></i>' + esc(e.종류) + '</span></td><td>' + esc(e.누가) + '</td><td>' + (e.어디 ? esc(e.어디) : '<span class="dim">—</span>') + '</td><td>' + (e.메모 ? esc(e.메모) : '<span class="dim">—</span>') + '</td><td>' + (e.과업 ? esc(e.과업) : '<span class="dim">—</span>') + '</td><td class="dim">' + esc(e.올린 ? e.올린.split(' ')[0] : (e.화면밖 ? '캘린더 앱' : '')) + '</td></tr>').join('')
+  $('weekRows').innerHTML = 보일.length ? 보일.map(e => '<tr class="row' + (기간(e, S.오늘) ? ' is-now' : '') + '" data-id="' + esc(e.id) + '"><td>' + 짧게(e.시작) + (e.끝 !== e.시작 ? ' ~ ' + 짧게(e.끝) : '') + (e.시간대 ? ' ' + e.시간대 : '') + (e.시작시각 ? ' ' + e.시작시각 + '~' + e.끝시각 : '') + '</td><td><span class="st" style="--k:' + 색(e.종류) + '"><i></i>' + esc(e.종류) + '</span></td><td>' + esc(e.누가) + '</td><td>' + (e.어디 ? esc(e.어디) : '<span class="dim">—</span>') + '</td><td>' + (e.메모 ? esc(e.메모) : '<span class="dim">—</span>') + '</td><td>' + (e.과업 ? esc(e.과업) : '<span class="dim">—</span>') + '</td><td class="dim">' + esc(e.올린 ? e.올린.split(' ')[0] : (e.화면밖 ? '캘린더 앱' : '')) + '</td></tr>').join('')
     : '';
   if (list.length > 보일.length) $('weekRows').innerHTML += '<tr><td colspan="7" style="text-align:center"><button class="btn" id="weekMore">모두 보기 · ' + list.length + '줄 (지금 ' + 보일.length + ')</button></td></tr>';
   $('weekRows').innerHTML += tlist.map(t => '<tr class="taskrow"><td>' + 짧게(t.시작) + (t.끝 !== t.시작 ? ' ~ ' + 짧게(t.끝) : '') + '</td><td><span class="st" style="--k:#6b7280"><i></i>' + esc(t.갈래) + '</span></td><td class="dim">—</td><td>' + esc(t.이름) + '</td><td class="dim">과업 날짜</td><td>' + (t.과업 ? esc(t.과업) : '<span class="dim">—</span>') + '</td><td class="dim">시트</td></tr>').join('');
@@ -393,19 +398,19 @@ function preview() {
   const v = S.입력; const d1 = $('d1').value, d2 = $('d2').value || d1;
   const 어디 = $('where').value.trim();
   if (!v.누가 || !v.종류 || !d1) { $('preview').textContent = '누가 · 종류 · 날짜를 고르면 여기에 미리 보입니다'; return; }
-  let t = '[' + v.종류 + '] ' + v.누가 + (어디 ? ' · ' + 어디 : '') + (v.과업 ? ' · ' + v.과업 : '') + (v.시간대 ? ' (' + v.시간대 + ')' : '');
+  let t = '[' + v.종류 + '] ' + v.누가 + (어디 ? ' · ' + 어디 : '') + (v.과업 ? ' · ' + v.과업 : '') + (v.시간대 ? ' (' + v.시간대 + ')' : '') + ($('t1').value ? ' ' + $('t1').value + '~' + ($('t2').value || '한 시간') : '');
   $('preview').innerHTML = '캘린더에 이렇게 들어갑니다 → <b style="color:var(--dsm-ink)">' + esc(t) + '</b> (' + 짧게(d1) + (d2 !== d1 ? ' ~ ' + 짧게(d2) : '') + ')';
 }
 function prefillDate(d) { $('d1').value = d; if (!$('d2').value || $('d2').value < d) $('d2').value = ''; preview(); }
 function openNew(d) {
   S.고치는 = null; S.입력 = { 누가: 나, 종류: S.입력.종류 || (S.종류[0] || {}).종류 || '', 시간대: '', 과업: '' };
-  $('d1').value = d || S.고른날; $('d2').value = ''; $('where').value = ''; $('memo').value = ''; $('result').textContent = ''; $('result').className = 'result';
+  $('d1').value = d || S.고른날; $('d2').value = ''; $('t1').value = ''; $('t2').value = ''; $('where').value = ''; $('memo').value = ''; $('result').textContent = ''; $('result').className = 'result';
   renderForm(); showForm();
 }
 function openEdit(id) {
   const e = S.일정.find(x => x.id === id); if (!e) return;
   S.고치는 = e; S.입력 = { 누가: e.누가, 종류: e.종류, 시간대: e.시간대, 과업: e.과업 };
-  $('d1').value = e.시작; $('d2').value = e.끝 === e.시작 ? '' : e.끝; $('where').value = e.어디; $('memo').value = e.메모;
+  $('d1').value = e.시작; $('d2').value = e.끝 === e.시작 ? '' : e.끝; $('t1').value = e.시작시각 || ''; $('t2').value = e.끝시각 || ''; $('where').value = e.어디; $('memo').value = e.메모;
   $('result').textContent = e.올린 ? '올린 : ' + e.올린 : (e.화면밖 ? '캘린더 앱에서 바로 넣은 일정입니다' : ''); $('result').className = 'result';
   renderForm(); showForm();
 }
@@ -413,7 +418,7 @@ function showForm() { $('form').classList.add('open'); $('sheetBg').classList.ad
 function hideForm() { $('form').classList.remove('open'); $('sheetBg').classList.remove('open'); }
 
 async function save() {
-  const v = S.입력; const 입 = { 누가: v.누가, 종류: v.종류, 시작: $('d1').value, 끝: $('d2').value || $('d1').value, 시간대: v.시간대, 어디: $('where').value, 메모: $('memo').value, 과업: v.과업, 화면: 화면이름() };
+  const v = S.입력; const 입 = { 누가: v.누가, 종류: v.종류, 시작: $('d1').value, 끝: $('d2').value || $('d1').value, 시간대: v.시간대, 시작시각: $('t1').value, 끝시각: $('t2').value, 어디: $('where').value, 메모: $('memo').value, 과업: v.과업, 화면: 화면이름() };
   const r = $('result'); r.className = 'result'; r.textContent = '보내는 중…'; $('btnSave').disabled = true;
   try {
     if (S.고치는) {
@@ -458,11 +463,13 @@ $('fab').onclick = () => openNew();
 $('btnClose').onclick = hideForm; $('sheetBg').onclick = hideForm;
 $('btnSave').onclick = save; $('btnDel').onclick = del; $('btnNew').onclick = () => openNew();
 $('btnReload').onclick = () => load(S.고른날);
+$('mineChip').onclick = () => { S.내것만 = !S.내것만; S.거름사람 = S.내것만 ? 나 : '전체'; renderToday(); renderChips(); renderCal(); renderWeek(); };
 $('prevM').onclick = () => { const [y, m] = S.보는달.split('-').map(Number); S.보는달 = F(new Date(y, m - 2, 1)).slice(0, 7); renderChips(); renderCal(); };
 $('nextM').onclick = () => { const [y, m] = S.보는달.split('-').map(Number); S.보는달 = F(new Date(y, m, 1)).slice(0, 7); renderChips(); renderCal(); };
 $('goToday').onclick = () => { S.고른날 = S.오늘; S.보는달 = S.오늘.slice(0, 7); renderToday(); renderChips(); renderCal(); renderWeek(); };
 $('calHead').onclick = () => { if (폰()) { const b = $('calBody'); b.classList.toggle('hidden'); $('calToggle').textContent = b.classList.contains('hidden') ? '▾ 달력 보기' : '▴ 접기'; } };
-['d1', 'd2', 'where'].forEach(id => $(id).oninput = preview);
+['d1', 'd2', 't1', 't2', 'where'].forEach(id => $(id).oninput = preview);
+$('t1').onchange = () => { if ($('t1').value) { S.입력.시간대 = ''; $('d2').value = ''; renderForm(); } };
 document.querySelectorAll('.quick [data-q]').forEach(b => b.onclick = () => {
   const q = b.dataset.q; let d = S.오늘;
   if (q === '내일') d = addD(S.오늘, 1);

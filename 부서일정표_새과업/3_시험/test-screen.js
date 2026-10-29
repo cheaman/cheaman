@@ -140,6 +140,23 @@ function boot() {
   const 기록 = E.ss.getSheetByName('기록'); const 기록줄 = 기록.getRange(2, 1, 기록.getLastRow() - 1, 6).getValues();
   ok(기록줄.slice(-4).map(r => r[1]).join(',') === '올림,고침,지움,올림' && /전채만 폰/.test(기록줄.at(-1)[5]), '기록 : ' + 기록줄.slice(-4).map(r => r[1] + '(' + r[5] + ')').join(' '));
 
+  console.log('3-2. 시각 있는 일정 · 「내 것」 칩');
+  await p.click('#fab'); await p.waitForTimeout(300);
+  await p.click('#whoPick .chip:has-text("전채만")'); await p.click('#kindPick .chip:has-text("회의")');
+  await p.click('.quick [data-q="오늘"]');
+  await p.fill('#t1', '14:00'); await p.fill('#t2', '15:30'); await p.fill('#where', '회의실');
+  ok(/14:00~15:30/.test(await p.textContent('#preview')), '미리 보기에 시각 : ' + (await p.textContent('#preview')).trim().slice(-40));
+  await p.click('#btnSave'); await p.waitForSelector('#result.ok'); await p.waitForTimeout(1000);
+  const tev = calEvents().find(e => /회의\] 전채만/.test(e.getTitle()));
+  ok(tev && !tev.isAllDayEvent() && tev.getStartTime().getHours() === 14, '캘린더에 14:00 시간 일정');
+  ok(/14:00~15:30/.test(await p.$$eval('#todayCards .card', els => els.map(e => e.textContent).join())), '오늘 카드에 「14:00~15:30」');
+  await p.click('#mineChip'); await p.waitForTimeout(200);
+  let mineCards = await p.$$eval('#todayCards .card', els => els.map(e => e.textContent));
+  ok(mineCards.length >= 1 && mineCards.every(t => /전채만/.test(t)) && /내 것 ✓/.test(await p.textContent('#mineChip')), '「내 것」 칩 → 내 카드만 ' + mineCards.length + '장');
+  ok(/부서 밖 \d+명/.test(await p.textContent('#todayCnt')), '머리의 부서 밖 숫자는 부서 기준 그대로');
+  await p.click('#mineChip'); await p.waitForTimeout(200);
+  ok((await p.$$eval('#todayCards .card', els => els.length)) > mineCards.length, '다시 누르면 부서 전체');
+
   console.log('4. 폰 달력 펼치기 · 날짜 띠');
   await p.click('#calHead');
   ok(await p.locator('#calBody').isVisible() && (await p.$$('#cal .d')).length === 42, '달력 펼침 · 42칸');
@@ -201,8 +218,8 @@ function boot() {
   // 다른 PC 에서 바뀐 것 — ↻ 로 받기
   E.ctx.일정올리기(E.key, { 누가: '박○○', 종류: '회의', 시작: F(E.today), 메모: '다른 PC 에서', 화면: '다른PC' });
   await p.click('#btnReload');
-  await p.waitForFunction(() => /부서 밖 3명/.test(document.getElementById('now').textContent));
-  ok(true, '↻ 뒤 상황 줄 「부서 밖 3명」');
+  await p.waitForFunction(() => /부서 밖 4명/.test(document.getElementById('now').textContent));
+  ok(true, '↻ 뒤 상황 줄 「부서 밖 4명」 (난 출장 · 이 휴가 · 전채만 회의 + 박 회의)');
   ok(errors.length === 0, 'PC 화면 오류 0' + (errors.length ? ' — ' + errors.join(' | ') : ''));
   await p.screenshot({ path: path.join(SHOTS, '5_PC_고치기.png') });
   await p.close();

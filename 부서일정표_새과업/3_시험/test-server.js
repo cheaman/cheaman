@@ -148,5 +148,27 @@ E.ss.getSheetByName('설정').getRange(2, 1, 8, 2).getValues().forEach((r, i) =>
 const m3 = E.ctx.setup();
 ok(/구독 못 함/.test(m3) && E.ctx.화면자료(k).공휴일.length === 0, '공휴일 구독이 안 되어도 setup 은 끝남 · 표시만 빠짐 — ' + m3.slice(-40));
 
+console.log('9. 시각 있는 일정 · ICS 구독');
+let tm = E.ctx.일정올리기(k, { 누가: '전채만', 종류: '회의', 시작: '2026-11-12', 시작시각: '14:00', 끝시각: '15:30', 어디: '회의실', 화면: 'PC' });
+ok(tm.시작시각 === '14:00' && tm.끝시각 === '15:30' && tm.끝 === '2026-11-12' && /14:00~15:30$/.test(tm.제목), '회의 14:00~15:30 — ' + tm.제목);
+const tev = E.calendars[calId].getEventById(tm.id);
+ok(!tev.isAllDayEvent() && tev.getStartTime().getHours() === 14 && tev.getEndTime().getMinutes() === 30, '캘린더에 시간 일정으로');
+let tm2 = E.ctx.일정올리기(k, { 누가: '전채만', 종류: '외근', 시작: '2026-11-12', 시작시각: '9:05', 화면: 'PC' });
+ok(tm2.시작시각 === '09:05' && tm2.끝시각 === '10:05', '끝 시각 비우면 한 시간 뒤 · 「9:05」 도 받음');
+throws(() => E.ctx.일정올리기(k, { 누가: '전채만', 종류: '회의', 시작: '2026-11-12', 끝: '2026-11-13', 시작시각: '14:00' }), /하루 안에서만/, '시각 + 여러 날은 막음');
+throws(() => E.ctx.일정올리기(k, { 누가: '전채만', 종류: '회의', 시작: '2026-11-12', 시작시각: '14:00', 끝시각: '13:00' }), /앞입니다/, '끝 시각이 앞');
+throws(() => E.ctx.일정올리기(k, { 누가: '전채만', 종류: '회의', 시작: '2026-11-12', 시작시각: '오후 2시' }), /14:00/, '시각 꼴 틀림');
+let tm3 = E.ctx.일정고치기(k, tm.id, { 시작시각: '15:00', 끝시각: '16:00', 화면: 'PC' });
+ok(tm3.시작시각 === '15:00' && tev.getStartTime().getHours() === 15, '시각 고치기');
+let tm4 = E.ctx.일정고치기(k, tm.id, { 시작시각: '', 끝시각: '', 화면: 'PC' });
+ok(tm4.시작시각 === '' && tev.isAllDayEvent(), '시각을 비우면 종일로 돌아감');
+ok(E.ctx.화면자료(k, '2026-11-12').요약.밖.some(e => e.id === tm2.id), '시간 일정도 그날 요약에 들어감');
+const ics = E.ctx.doGet({ parameter: { ics: '', m: k } });
+ok(ics.mime === 'text/calendar' && /BEGIN:VCALENDAR/.test(ics.body) && /X-WR-CALNAME:구조부 일정/.test(ics.body) && (ics.body.match(/BEGIN:VEVENT/g) || []).length >= 5, 'ICS 전체 — 일정 ' + (ics.body.match(/BEGIN:VEVENT/g) || []).length + '건');
+ok(/DTSTART;TZID=Asia\/Seoul:20261112T090500/.test(ics.body) && /DTSTART;VALUE=DATE:20261103/.test(ics.body), 'ICS 에 시간 일정은 TZID · 종일은 DATE');
+const mine = E.ctx.doGet({ parameter: { ics: '', 누가: '전채만', m: k } }).body;
+ok(/X-WR-CALNAME:구조부 일정 · 전채만/.test(mine) && (mine.match(/SUMMARY:/g) || []).every(() => true) && !/난○○/.test(mine) && /전채만/.test(mine), 'ICS 내 것만 (&누가=전채만) — 남 이름 없음');
+ok(/열쇠/.test(E.ctx.doGet({ parameter: { ics: '', m: 'x' } }).body), 'ICS 도 열쇠 없으면 거절');
+
 console.log('\n통과 ' + pass + ' · 실패 ' + fail);
 process.exit(fail ? 1 : 0);

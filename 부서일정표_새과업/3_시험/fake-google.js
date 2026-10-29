@@ -69,6 +69,7 @@ class CalendarEvent {
   getAllDayStartDate() { return new Date(this.start); } getAllDayEndDate() { return new Date(this.end); }
   getStartTime() { return new Date(this.start); } getEndTime() { return new Date(this.end); }
   setAllDayDates(s, e) { this.start = new Date(s); this.end = new Date(e); this.allDay = true; return this; }
+  setTime(s, e) { if (e <= s) throw new Error('끝이 시작보다 앞'); this.start = new Date(s); this.end = new Date(e); this.allDay = false; return this; }
   getTag(k) { return this.tags[k] === undefined ? null : this.tags[k]; }
   setTag(k, v) { if (String(v) === '') throw new Error('Invalid argument: value'); this.tags[k] = String(v); return this; }
   deleteTag(k) { delete this.tags[k]; return this; }
@@ -115,7 +116,7 @@ function makeGlobals(now) {
       subscribeToCalendar: id => { if (id === 'no-such#holiday') throw new Error('캘린더를 찾지 못함'); const c = new Calendar('공휴일', id); calendars[id] = c; c.createAllDayEvent('한글날', new Date(2026, 9, 9)); c.createAllDayEvent('추석', new Date(2026, 9, 5), new Date(2026, 9, 8)); c.createAllDayEvent('크리스마스', new Date(2026, 11, 25)); return c; }
     },
     ContentService: {
-      MimeType: { JSON: 'application/json' },
+      MimeType: { JSON: 'application/json', TEXT: 'text/plain', ICAL: 'text/calendar' },
       createTextOutput: s => { const o = { kind: 'text', body: s, mime: '', setMimeType(m) { o.mime = m; return o; }, getContent() { return o.body; } }; outputs.push(o); return o; }
     },
     HtmlService: {
