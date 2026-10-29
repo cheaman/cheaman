@@ -1,0 +1,1510 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>STM 검토기</title>
+<!-- 64 STM 검토기 · 화면 v0.1.0 (2026-10-25 밤) — 목업 _계획\목업\첫화면_목업.html 을 그대로 살려 ① 판만 움직임
+     규칙 : 셈은 전부 서버(파이썬) · 이 화면은 그리기 · 고르기만 (02_짜임 틀 B) · 기준값 글은 _계획\03_조문표.md 에서 · 기억으로 안 적음
+     open_app.ps1 이 창 제목(<title>) «STM 검토기» 로 떠 있는 창을 찾으니 제목을 바꾸면 ps1 도 같이 -->
+<link rel="stylesheet" href="dsm/dsm.css">
+<script src="dsm/dsm-theme.js"></script>
+<script src="dsm/dsm-tip.js"></script>
+<script src="dsm/dsm-undo.js"></script>
+<script src="dsm/dsm-zoom.js"></script>
+<style>
+  html,body{margin:0;background:var(--dsm-bg);color:var(--dsm-ink);font-family:var(--dsm-font);font-size:var(--dsm-fs-body);overflow:hidden}
+  html{width:100vw;height:100vh}body{width:1366px;height:768px}   /* 창에 맞춤은 대본 창맞춤() — 1366 × 768 이 1배 · 1.2배까지 · 남는 자리는 그림 칸(1fr)으로 */
+  .head{height:50px;background:var(--dsm-head-bg);color:var(--dsm-head-ink);display:flex;align-items:center;gap:14px;padding:0 16px}
+  .logo{width:30px;height:30px;border-radius:7px;background:#e8743b;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:#fff}
+  .who{font-weight:700;font-size:var(--dsm-fs-h1)}
+  .proj{color:var(--dsm-head-dim);font-size:var(--dsm-fs-ui);margin-left:8px;display:flex;align-items:center;gap:6px}
+  .proj input{background:var(--dsm-head-chip);color:#fff;border:0;border-radius:6px;padding:4px 8px;font:inherit;font-weight:600;width:260px}
+  .sp{flex:1}
+  .ver{color:var(--dsm-head-dim);font-size:var(--dsm-fs-ui)}
+  .num{display:inline-flex;width:20px;height:20px;border-radius:50%;background:#e8743b;color:#fff;font-size:var(--dsm-fs-small);font-weight:700;align-items:center;justify-content:center;margin:0 6px;vertical-align:middle}
+  .steps{height:44px;background:var(--dsm-step-bg);display:flex;align-items:center;padding:0 16px;gap:8px;color:var(--dsm-step-ink);font-size:var(--dsm-fs-ui)}
+  .st{display:flex;align-items:center;gap:8px;padding:6px 14px;border-radius:8px;cursor:pointer}
+  .st i{display:inline-flex;width:22px;height:22px;border-radius:50%;background:var(--dsm-step-num);align-items:center;justify-content:center;font-style:normal;font-size:var(--dsm-fs-small);font-weight:700}
+  .st.on{background:var(--dsm-step-on);color:#fff;font-weight:700}
+  .st.on i{background:#fff;color:#3f7300}
+  .arrow{color:#5b636c}
+  .now{margin-left:auto;color:#c3cbd3}
+  .now b{color:#fff;font-weight:600}
+  #지금설명{color:#fff;font-weight:700;font-size:var(--dsm-fs-body);border-left:3px solid #e8743b;padding-left:9px;margin-left:4px;max-width:880px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;vertical-align:middle}
+  .now{display:flex;align-items:center;gap:4px;min-width:0;white-space:nowrap}#지금설명{flex:0 1 auto;min-width:0}
+  .card.접힘 > :not(.ch){display:none}
+  .card .ch.접개{cursor:pointer;user-select:none}
+  .ch .펼{color:var(--dsm-dim);font-size:var(--dsm-fs-small);width:14px;display:inline-block}
+  .ch .접힘글{font-weight:400;color:var(--dsm-dim);font-size:var(--dsm-fs-small);display:none}.card.접힘 .ch .접힘글{display:inline}
+  .card.접힘 .ch{white-space:nowrap}.card.접힘 .ch .sub,.card.접힘 .ch .r button{display:none}
+  .pane{display:none}.pane.on{display:block}
+  .body{display:grid;grid-template-columns:470px 1fr;gap:12px;padding:8px 16px 0;height:var(--본높이,598px);box-sizing:border-box}
+  .col{display:flex;flex-direction:column;gap:8px;min-height:0}
+  .card{background:var(--dsm-card);border:1px solid var(--dsm-border);border-radius:12px;box-shadow:var(--dsm-shadow)}
+  .ch{display:flex;align-items:center;gap:8px;padding:5px 14px;background:var(--dsm-ph-bg);border-bottom:1px solid var(--dsm-ph-line);border-radius:12px 12px 0 0;font-weight:700;font-size:var(--dsm-fs-body)}
+  .ch .k{display:inline-flex;min-width:34px;height:22px;padding:0 7px;border-radius:6px;background:#1f2328;color:#fff;font-size:var(--dsm-fs-small);align-items:center;justify-content:center;font-weight:700}
+  .ch .sub{font-weight:400;color:var(--dsm-dim);font-size:var(--dsm-fs-small)}
+  .ch .r{margin-left:auto;font-weight:400;color:var(--dsm-dim);font-size:var(--dsm-fs-small)}
+  .cb{padding:8px 14px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{padding:3px 8px;border-radius:999px;background:var(--dsm-chip);border:1px solid transparent;font-size:var(--dsm-fs-small);color:var(--dsm-ink);cursor:pointer;white-space:nowrap}
+  .chip.on{background:var(--dsm-c2);color:var(--dsm-c-ink);border-color:var(--dsm-c-mark);font-weight:700}
+  .chip.v2{opacity:.5;cursor:not-allowed}
+  .안들{display:flex;flex-direction:column;gap:5px}
+  .안{display:flex;gap:9px;align-items:center;text-align:left;padding:5px 8px;border:1px solid var(--dsm-border);border-radius:8px;background:var(--dsm-surface,transparent);color:var(--dsm-ink);cursor:pointer;font:inherit}
+  .안:hover{border-color:var(--dsm-c-mark)}
+  .안.on{border:2px solid var(--dsm-c-mark);background:var(--dsm-c2);padding:4px 7px}
+  .안 svg{width:64px;height:32px;flex:none}
+  .안 span{display:flex;flex-direction:column;gap:1px;min-width:0}
+  .안 i{font-style:normal;font-size:var(--dsm-fs-small);color:var(--dsm-dim)}
+  .안.없음{opacity:.5;cursor:not-allowed}
+  .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px 8px}
+  .col.l{overflow-y:auto;padding-right:2px}
+  .ch .tbtn{margin:0;padding:1px 8px}
+  .f input.sm{font-size:var(--dsm-fs-ui);padding:0 5px}
+  .f{display:flex;flex-direction:column;gap:2px}
+  .f label{font-size:var(--dsm-fs-small);color:var(--dsm-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .f input,.f select{height:24px;border:1px solid var(--dsm-in-line);background:var(--dsm-in);color:var(--dsm-ink);border-radius:6px;padding:0 8px;font:inherit;font-size:var(--dsm-fs-ui);text-align:right;font-variant-numeric:tabular-nums;box-sizing:border-box;width:100%}
+  .f select{text-align:left}
+  table{border-collapse:collapse;width:100%;font-size:var(--dsm-fs-ui)}
+  th{background:var(--dsm-th-bg);color:var(--dsm-dim);font-weight:600;text-align:right;padding:4px 8px;border-bottom:1px solid var(--dsm-line2);font-size:var(--dsm-fs-small)}
+  th:first-child,td:first-child{text-align:left}
+  td{padding:0 6px;text-align:right;border-bottom:1px solid var(--dsm-line);font-variant-numeric:tabular-nums}
+  th:first-child{white-space:nowrap}
+  td input{width:70px;height:21px;border:1px solid var(--dsm-in-line);background:var(--dsm-in);color:var(--dsm-ink);border-radius:5px;padding:0 6px;text-align:right;font:inherit;font-size:var(--dsm-fs-ui)}
+  td .x{border:0;background:transparent;color:var(--dsm-dim);cursor:pointer;font-size:var(--dsm-fs-ui);padding:0 4px}
+  .tbtn{border:1px solid var(--dsm-btn2-line);background:var(--dsm-btn2);color:var(--dsm-ink);border-radius:6px;padding:2px 9px;font-size:var(--dsm-fs-small);cursor:pointer;margin-top:5px}
+  .note{font-size:var(--dsm-fs-small);color:var(--dsm-faint);margin-top:4px}
+  .note.c{color:var(--dsm-c-ink);background:var(--dsm-c2);border-radius:6px;padding:4px 8px;line-height:1.35;font-size:var(--dsm-fs-small)}
+  .note.c b{font-weight:700}
+  .canvas{flex:1;position:relative;min-height:0}
+  .canvas svg{width:100%;height:100%}
+  .legend{position:absolute;right:12px;top:10px;display:flex;flex-direction:column;gap:4px;font-size:var(--dsm-fs-small);color:var(--dsm-dim)}
+  .kv{display:flex;gap:10px;padding:8px 14px;border-top:1px solid var(--dsm-line);flex-wrap:wrap}
+  .kv span{background:var(--dsm-chip);border-radius:999px;padding:4px 11px;font-size:var(--dsm-fs-ui)}
+  .kv span b{font-weight:700;color:var(--dsm-ink)}
+  .kv span.ok{background:var(--dsm-ok-bg);color:var(--dsm-ok)}
+  .kv span.bad{background:var(--dsm-bad-bg);color:var(--dsm-bad)}
+  .foot{height:46px;display:flex;align-items:center;gap:10px;padding:0 16px;margin-top:10px}
+  .dsm-undo-bar{bottom:72px}   /* 10-28 걷기 진짜 2 — 9초 띠가 아래 단추 줄 («다음 →») 을 덮어 누르면 말없이 되돌려지던 것 */
+  .status{flex:1;background:var(--dsm-c2);color:var(--dsm-c-ink);border-radius:10px;padding:8px 14px;font-size:var(--dsm-fs-ui);display:flex;align-items:center;gap:10px;min-width:0}
+  .status .dot{width:9px;height:9px;border-radius:50%;background:var(--dsm-ok);flex:none}
+  .status.bad{background:var(--dsm-bad-bg);color:var(--dsm-bad)}.status.bad .dot{background:var(--dsm-bad)}
+  .warn띠{background:var(--dsm-bad-bg);color:var(--dsm-bad);border:1px solid var(--dsm-bad);border-radius:6px;padding:2px 6px;margin:3px 0;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}   /* v0.8.0 ★ 왜 글 · 조합 경고 */
+  select.빈βs{outline:1px solid #b25000;outline-offset:-1px}td.두께{padding-left:2px;padding-right:2px}td.두께.다름{color:#b25000;font-weight:700}
+  .status.주의{background:var(--dsm-warn-bg)}.status.주의 .dot{background:var(--dsm-warn)}.status.미입력 .dot{background:var(--dsm-faint)}
+.status.보기{background:var(--dsm-warn-bg);color:var(--dsm-ink)}.status.보기 .dot{background:var(--dsm-warn)}.status.보기 b{color:var(--dsm-warn)}
+  .보기줄{display:flex;align-items:center;gap:8px;margin:2px 10px 6px;padding:5px 9px;border-radius:7px;background:var(--dsm-warn-bg);border:1px dashed var(--dsm-warn);font-size:var(--dsm-fs-ui);line-height:1.4}
+  .보기줄[hidden]{display:none}.보기줄 b{color:var(--dsm-warn);white-space:nowrap}
+  .보기줄 button{margin-left:auto;white-space:nowrap}
+  .보기중 #치수칸 input,.보기중 #받침표 input{border-style:dashed;border-color:var(--dsm-warn);color:var(--dsm-dim)}   /* 10-28 걷기 진짜 5 — 아직 형식 기본 값 */
+  .status .r{margin-left:auto;color:var(--dsm-dim);white-space:nowrap}
+  .b2{background:var(--dsm-btn2);border:1px solid var(--dsm-btn2-line);border-radius:10px;padding:9px 14px;font-size:var(--dsm-fs-ui);font-weight:600;color:var(--dsm-ink);cursor:pointer}
+  .b2 select{font:inherit;border:0;background:transparent;color:inherit;max-width:300px}
+  .b1{background:var(--dsm-c-btn);color:#fff;border:0;border-radius:10px;padding:10px 20px;font-size:var(--dsm-fs-body);font-weight:700;cursor:pointer}
+  .sign{text-align:center;color:var(--dsm-faint);font-size:var(--dsm-fs-small);height:20px;line-height:20px}
+  #절점표 input,#부재표 input{width:46px}
+  #절점표 input.nm,#부재표 input.nm{width:34px;text-align:left}
+  #절점표 th,#부재표 th{padding:4px 3px}
+  #절점표 input[type=checkbox]{width:16px;height:16px;vertical-align:middle}
+  #부재표 select{height:21px;border:1px solid var(--dsm-in-line);background:var(--dsm-in);color:var(--dsm-ink);border-radius:5px;font:inherit;font-size:var(--dsm-fs-small)}
+  #부재표 td.chk{font-size:var(--dsm-fs-small);color:var(--dsm-bad);text-align:left;white-space:nowrap}
+  #부재표 td.ang{color:var(--dsm-dim)}
+  .verdict{display:flex;gap:14px;align-items:center;padding:8px 16px 6px}
+  .verdict .big{font-size:var(--dsm-fs-big);font-weight:800;line-height:1;min-width:104px;color:var(--dsm-dim)}
+  .verdict.ok .big{color:var(--dsm-ok)}.verdict.bad .big{color:var(--dsm-bad)}.verdict.mid .big{color:#b25000}
+  .verdict .why{font-size:var(--dsm-fs-small);color:var(--dsm-dim);line-height:1.4}.verdict .why b{color:var(--dsm-ink)}
+  .row4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 12px 10px}
+  .mini{background:var(--dsm-chip);border-radius:8px;padding:5px 8px;font-size:var(--dsm-fs-small);color:var(--dsm-dim)}
+  .mini b{display:block;font-size:var(--dsm-fs-ui);color:var(--dsm-ink);white-space:nowrap}
+  .mini.bad{background:var(--dsm-bad-bg);color:var(--dsm-bad)}.mini.bad b{color:var(--dsm-bad)}
+  .mini.mid{background:var(--dsm-c2);color:var(--dsm-c-ink)}.mini.mid b{color:var(--dsm-c-ink)}
+  .tabs{display:inline-flex;gap:3px;margin-left:auto}
+  .ch .tbtn.제안{margin-left:auto;margin-right:6px;border-color:var(--dsm-c-mark);color:var(--dsm-ink);font-weight:700}.ch .tbtn.제안+.tabs{margin-left:0}
+  .tabs span{padding:1px 9px;border-radius:6px;cursor:pointer;font-size:var(--dsm-fs-small);color:var(--dsm-dim);border:1px solid var(--dsm-line)}
+  .tabs span{white-space:nowrap}.tabs span.on{background:var(--dsm-c-btn);color:#fff;border-color:var(--dsm-c-btn);font-weight:700}
+  #판3 .ch{white-space:nowrap}#판3 .ch .sub{overflow:hidden;text-overflow:ellipsis}
+  #표33 input{width:40px}#표33 select{height:21px;border:1px solid var(--dsm-in-line);background:var(--dsm-in);color:var(--dsm-ink);border-radius:5px;font:inherit;font-size:var(--dsm-fs-small);max-width:64px}
+  #표33 th{padding:3px 3px}#표33 td{padding:1px 3px}
+  #표33 td.jd{white-space:nowrap}
+  #표33 tbody tr,#표32 tbody tr{cursor:pointer}#표33 tbody tr.sel td,#표32 tbody tr.sel td{background:var(--dsm-c2)}
+  #표32 td,#표33 td{font-size:var(--dsm-fs-ui);padding:1px 4px}#표32 td.l,#표33 td.l{text-align:left}
+  td.jd{font-weight:700}td.jd.ok{color:var(--dsm-ok)}td.jd.bad{color:var(--dsm-bad)}td.jd.mid{color:#b25000}td.jd.dim{color:var(--dsm-faint);font-weight:400}
+  .formula{padding:6px 14px 8px;font-size:var(--dsm-fs-ui);line-height:1.5;max-height:118px;overflow-y:auto;color:var(--dsm-ink)}
+  .formula .h{display:inline-block;background:var(--dsm-chip);border-radius:4px;padding:0 5px;margin-right:4px;font-weight:700}
+  .formula .cite{color:var(--dsm-faint);font-size:var(--dsm-fs-small)}.formula .ok{color:var(--dsm-ok);font-weight:700}.formula .bad{color:var(--dsm-bad);font-weight:700}.formula .mid{color:#b25000;font-weight:700}
+  #낼것 label{display:flex;align-items:center;gap:6px;font-size:var(--dsm-fs-ui);padding:2px 0}#낼것 .dim{color:var(--dsm-dim);font-size:var(--dsm-fs-small)}
+  .path{margin-top:6px;font-size:var(--dsm-fs-small);color:var(--dsm-dim);background:var(--dsm-in);border:1px solid var(--dsm-in-line);border-radius:6px;padding:4px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #차례{margin:0;padding:0;list-style:none}#차례 li{display:flex;align-items:center;gap:8px;padding:3px 4px;font-size:var(--dsm-fs-ui);border-bottom:1px solid var(--dsm-line);cursor:pointer}#차례 li:hover{background:var(--dsm-chip)}
+  #차례 .n{display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--dsm-chip);font-size:var(--dsm-fs-small);font-weight:700;align-items:center;justify-content:center}#차례 .j{margin-left:auto;font-size:var(--dsm-fs-small);font-weight:700}
+  .j.ok{color:var(--dsm-ok)}.j.bad{color:var(--dsm-bad)}.j.mid{color:#b25000}.j.dim{color:var(--dsm-faint)}
+  #대조칸 table{border-collapse:collapse;width:100%;font-size:var(--dsm-fs-ui)}#대조칸 th{text-align:left;color:var(--dsm-dim);font-weight:600;padding:3px 6px;border-bottom:1px solid var(--dsm-line2)}#대조칸 td{padding:3px 6px;border-bottom:1px solid var(--dsm-line)}#대조칸 td.n{text-align:right}
+  .two4{display:flex;gap:10px;padding:10px;flex:1;min-height:0}
+  #쪽{flex:1.1;border:1px solid var(--dsm-border);border-radius:8px;background:#fff;min-width:0}
+  .dwg4{flex:1;background:#fff;border:1px solid var(--dsm-border);border-radius:8px;min-width:0;display:flex}.dwg4 svg{width:100%;height:100%}
+  .외곽4 polygon,.외곽4 rect{fill:#fff!important;stroke:#111!important}
+  #판4 .ch{white-space:nowrap}#판4 .ch .sub{overflow:hidden;text-overflow:ellipsis}
+  .todo{margin:40px auto;max-width:720px;background:var(--dsm-card);border:1px solid var(--dsm-border);border-radius:12px;padding:24px 28px;font-size:var(--dsm-fs-body);line-height:1.6}
+  .todo h2{margin:0 0 8px;font-size:var(--dsm-fs-h2)}
+  .todo .note{font-size:var(--dsm-fs-ui)}
+  .text{position:fixed;left:0;top:0;width:0;height:0;overflow:hidden}
+  /* v0.6 시안 A «지금 할 일 한 칸» (37 디자인실 10-26 · 전무님 고르심) — 왼쪽 420 · 지금 칸은 주황 테 · 다 넣은 칸은 접고 값만 · ③ 판정은 그림 위 · 지난 단계 ✓ */
+  .body{grid-template-columns:420px 1fr}
+  /* 왼쪽 칸 폭 끌기 (10-27 전무님 «메뉴 폭 조정» · 끌어서 폭 조절 고르심) — 경계를 끌면 네 판이 같이 · 두 번 누르면 420 · 폭은 이 PC 에 기억 */
+  .body{grid-template-columns:var(--왼폭,420px) 12px 1fr;column-gap:0}
+  .가름{cursor:col-resize;position:relative;touch-action:none}
+  .가름::after{content:"";position:absolute;left:5px;top:0;bottom:0;width:2px;border-radius:1px;background:transparent;transition:background .15s}
+  .가름:hover::after,.가름.끄는중::after{background:var(--dsm-warn)}
+  body.폭끄는중{cursor:col-resize;user-select:none}
+  /* 과업 열기 ▾ (10-28 · 목업 _계획\목업\과업열기_목업_1366.png 고르심) — 새 과업 · 내 과업 · 예제를 한 곳에서 */
+  .열기곽{position:relative}
+  #열기단추.켜짐{outline:2px solid var(--dsm-warn);outline-offset:1px}
+  #열기판{position:absolute;right:0;bottom:calc(100% + 10px);width:470px;max-height:540px;overflow-y:auto;background:var(--dsm-card,var(--dsm-c2));border:1px solid var(--dsm-line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.45);padding:10px 0 8px;z-index:50;font-size:var(--dsm-fs-ui);color:var(--dsm-ink);display:none}
+  #열기판.켜짐{display:block}
+  #열기판 .머리{display:flex;align-items:center;gap:8px;padding:0 14px 8px;font-weight:700;font-size:15px;border-bottom:1px solid var(--dsm-line)}
+  #열기판 .머리 input{margin-left:auto;font-weight:400;height:26px;width:180px;border:1px solid var(--dsm-in-line);background:var(--dsm-in);color:var(--dsm-ink);border-radius:6px;padding:0 8px;font:inherit;font-size:13px}
+  #열기판 .갈래{padding:8px 14px 4px;color:var(--dsm-dim);font-size:13px}
+  #열기판 .갈래 b{color:var(--dsm-ink)}
+  #열기판 .줄{display:flex;align-items:center;gap:10px;padding:6px 14px;cursor:pointer}
+  #열기판 .줄:hover,#열기판 .줄.지금{background:var(--dsm-row-hover,rgba(255,255,255,.06))}
+  #열기판 .줄 .이름{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #열기판 .줄 .때{color:var(--dsm-faint);font-size:13px;white-space:nowrap;font-variant-numeric:tabular-nums}
+  #열기판 .줄 .딱{font-size:12.5px;padding:1px 7px;border-radius:9px;background:var(--dsm-ok-bg);color:var(--dsm-ok);white-space:nowrap}
+  #열기판 .새{margin:8px 14px 2px;padding:10px 12px;border:1px dashed var(--dsm-warn);border-radius:10px}
+  #열기판 .새 .첫{font-weight:700;margin-bottom:8px}
+  #열기판 .칩들{display:flex;flex-wrap:wrap;gap:6px}
+  #열기판 .칩들 span{padding:4px 10px;border-radius:14px;background:var(--dsm-btn2);border:1px solid var(--dsm-btn2-line);font-size:13px;cursor:pointer}
+  #열기판 .칩들 span:hover{border-color:var(--dsm-warn)}
+  #열기판 hr{border:0;border-top:1px solid var(--dsm-line);margin:6px 0}
+  #열기판 .빈{padding:6px 14px;color:var(--dsm-faint);font-size:13px}
+  .card.지금{border-color:var(--dsm-warn);box-shadow:0 0 0 1px var(--dsm-warn)}
+  .card.지금>.ch{background:var(--dsm-warn-bg)}.card.지금>.ch .k{background:var(--dsm-warn)}
+  .ch .값{margin-left:auto;font-weight:600;color:var(--dsm-ok);font-size:var(--dsm-fs-small);white-space:nowrap;display:none}
+  .card.접힘 .ch .값{display:inline}.card.접힘 .ch .값~.r{display:none}
+  .st.done{color:var(--dsm-step-done)}
+  #판3 .verdict{display:grid;grid-template-columns:auto auto 1fr;grid-template-rows:auto auto;column-gap:12px;row-gap:4px;padding:8px 14px 6px;border-bottom:1px solid var(--dsm-line)}
+  #판3 .verdict .k3{grid-row:1/3;align-self:center;display:inline-flex;min-width:34px;height:22px;padding:0 7px;border-radius:6px;background:#1f2328;color:#fff;font-size:var(--dsm-fs-small);align-items:center;justify-content:center;font-weight:700}
+  #판3 .verdict .big{grid-row:1/3;align-self:center;min-width:0}
+  #판3 .verdict .row4{display:flex;gap:6px;padding:0;flex-wrap:wrap}
+  #판3 .verdict .mini{display:inline-flex;gap:6px;align-items:center;border-radius:999px;padding:3px 10px}#판3 .verdict .mini b{display:inline}
+  #판3 .verdict .why{grid-column:3;min-width:0}#판3 .verdict .why>div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #검토요약{display:none}
+  #받침표 td input{width:56px}
+  #절점표 td input[data-칸="Fx"]{width:58px} #절점표 td input[data-칸="Fy"]{width:84px}   /* Fy «-2,840.3» 이 잘리지 않게 · 합은 그대로 */
+  .st{white-space:nowrap}   /* 단계 띠 한 줄 (시안 A) */
+  .b1.흐림{opacity:.6}
+  /* 2차 시안 (37 디자인실 10-27 · 전무님 고르심 «가 · 표를 줄임 · 왼쪽 420 그대로») — 카드 제목 안 꺾임 (설명이 먼저 줄어듦) · 절점 · 부재 표가 420 안에 */
+  .ch{white-space:nowrap}.ch .sub{min-width:0;overflow:hidden;text-overflow:ellipsis}.ch .r{flex:none}
+  #절점표 td,#부재표 td{padding:1px 1.5px}#절점표 th,#부재표 th{padding:4px 1.5px}
+  #절점표 td input:not(.nm){width:calc(5.5ch + 8px);min-width:40px;padding:0 4px;box-sizing:border-box}
+  #절점표 td input[data-칸="Fx"]{width:calc(5.5ch + 8px)} #절점표 td input[data-칸="Fy"]{width:calc(7.5ch + 8px)}   /* «12,000» · Fy «-2,840.3» 이 안 잘리게 (쉼표는 좁음) */
+  .seg{display:inline-flex;border:1px solid var(--dsm-in-line);border-radius:6px;overflow:hidden;vertical-align:middle}
+  .seg button{border:0;background:var(--dsm-in);color:var(--dsm-dim);font:inherit;font-size:var(--dsm-fs-small);padding:0 4px;height:21px;cursor:pointer}
+  .seg button+button{border-left:1px solid var(--dsm-in-line)}
+  .seg button.on{background:var(--dsm-c-btn);color:#fff;font-weight:700}
+  #절점표 td .x,#부재표 td .x{visibility:hidden;padding:0 2px}#절점표 tr:hover .x,#부재표 tr:hover .x,#절점표 .x:focus,#부재표 .x:focus{visibility:visible}   /* ✕ 는 줄에 마우스를 올릴 때 */
+  /* 2-5 AI 짚어 보기 (v0.7.6 · 목업 _계획\목업\AI칸_목업_1366_ai.png) */
+  .ai칸 .cb{padding:6px 10px 8px}
+  .ai머리{display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:13px}
+  .ai머리 button{white-space:nowrap;flex:none}.ai머리 select{height:24px;max-width:130px;border-radius:6px;border:1px solid var(--dsm-in-line);background:var(--dsm-in);color:var(--dsm-ink);font:inherit;font-size:13px}
+  .ai머리 .쉼{color:var(--dsm-dim);margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ai권{padding:5px 8px;border-radius:7px;background:var(--dsm-ok-bg);font-size:13px;line-height:1.45;margin-bottom:5px}
+  .ai권 b{color:var(--dsm-ok)}
+  .ai줄{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px;align-items:start;padding:5px 2px;border-top:1px solid var(--dsm-line);font-size:13px;line-height:1.45}
+  .ai줄.끝남{opacity:.6}
+  .ai줄 .급{font-weight:800;white-space:nowrap;padding:0 6px;border-radius:5px}
+  .급.보{background:var(--dsm-bad-bg);color:var(--dsm-bad)} .급.권{background:var(--dsm-warn-bg);color:var(--dsm-warn)} .급.참{background:rgba(70,130,220,.14);color:#4a86d8}
+  .ai줄 i{display:block;color:var(--dsm-dim);font-style:normal}
+  .ai줄 .단{display:flex;gap:4px;white-space:nowrap}
+  .ai줄 .단 button{height:24px;padding:0 8px;font-size:13px;margin-top:0}
+  .ai줄 .됨{color:var(--dsm-ok);font-weight:700}
+  .ai끝{font-size:13px;color:var(--dsm-dim);margin-top:4px}
+  .ai없음{padding:6px 8px;border-radius:7px;border:1px dashed var(--dsm-warn);background:var(--dsm-warn-bg);font-size:13px;line-height:1.5}
+  .ai없음 .tbtn{margin-top:2px}
+  #AI붙임곽 textarea{width:100%;height:70px;box-sizing:border-box;margin-top:4px;border:1px solid var(--dsm-in-line);background:var(--dsm-in);color:var(--dsm-ink);border-radius:6px;font:inherit;font-size:13px;padding:4px 6px}
+  .ai표시{fill:none;stroke:#4a86d8;stroke-width:3;stroke-dasharray:6 4}
+</style>
+</head>
+<body>
+
+<div class="head">
+  <div class="logo">DSM</div>
+  <div class="who">STM 검토기</div>
+  <span data-dsm-undo></span>
+  <span class="num">1</span><span class="proj">과업 <input id="과업이름" data-undo="과업 이름" title="과업 이름 — 저장 파일 이름이 됨 (3_자료\과업\이름.stm.json)"> · <span id="기준글">KDS 14 20 24 (2021)</span></span>
+  <div class="sp"></div>
+  <span class="ver" id="판글">v0.1.0</span><span class="num">2</span>
+  <div class="dsm-theme"></div>
+</div>
+
+<div class="steps">
+  <div class="st on" data-판="1"><i>1</i>형상 · 하중</div><span class="arrow">›</span>
+  <div class="st" data-판="2"><i>2</i>모델 (절점 · 부재)</div><span class="arrow">›</span>
+  <div class="st" data-판="3"><i>3</i>검토 (스트럿 · 타이 · 절점영역 · 정착)</div><span class="arrow">›</span>
+  <div class="st" data-판="4"><i>4</i>계산서 · 도면</div>
+  <div class="now"><span class="num">3</span>지금 할 일 · <b id="지금글">형상 · 하중</b> <span id="지금설명">치수 · 하중을 입력하십시오</span></div>
+</div>
+
+<!-- ① 형상 · 하중 -->
+<div class="pane on" id="판1">
+<div class="body">
+  <div class="col l">
+    <div class="card" id="카드11">
+      <div class="ch 접개" data-접기="카드11"><span class="펼">▾</span><span class="k">1-1</span>부재 형식 <span class="sub">하나 선택 · 나머지 형식은 다음 버전</span><span class="값"></span></div>
+      <div class="cb chips" id="꼴칩"></div>
+    </div>
+
+    <div class="card" id="카드12">
+      <div class="ch 접개" data-접기="카드12"><span class="펼">▾</span><span class="k">1-2</span>치수 <span class="sub">mm · 변경하면 그림에 바로 반영</span><span class="값"></span></div>
+      <div class="보기줄" id="보기줄" hidden><b>보기 값</b><span id="보기줄글"></span><button class="tbtn" id="보기그대로" title="보기 값을 내 과업 값으로 씀 — 이 줄 · 점선이 사라짐 (되돌리기 가능)">보기 값 그대로 씀</button></div>
+      <div class="cb grid" id="치수칸"></div>
+    </div>
+
+    <div class="card" id="카드13">
+      <div class="ch 접개" data-접기="카드13"><span class="펼">▾</span><span class="k">1-3</span><span id="표13제목">받침 · 하중</span> <span class="sub">kN · mm</span><span class="값"></span><span class="r"><span id="받침판글"></span> &nbsp;<button class="tbtn" id="받침더" title="받침 줄 추가 (마지막 받침에서 2,300 오른쪽)">+ 받침</button></span></div>
+      <div class="cb" style="padding-top:4px;padding-bottom:6px">
+        <table id="받침표"><thead><tr><th>받침</th><th>위치 x</th><th>고정하중 D</th><th>활하중 L</th><th>수평 H</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+    <div class="card" id="카드14">
+      <div class="ch 접개" data-접기="카드14"><span class="펼">▾</span><span class="k">1-4</span>재료 · 기준 <span class="sub">현재 KDS 14 20 24 만</span><span class="값"></span></div>
+      <div class="cb grid" style="grid-template-columns:1fr 1fr 2fr">
+        <div class="f"><label>fck MPa</label><input id="fck" data-undo="fck"></div>
+        <div class="f"><label>fy MPa</label><input id="fy" data-undo="fy"></div>
+        <div class="f"><label>설계기준</label><select id="기준" title="ACI 는 다음 버전"><option value="KDS">KDS 14 20 24 (2021)</option></select></div>
+      </div>
+      <div class="cb" style="padding-top:0"><div class="note c" id="조합글">하중조합 — 서버에 묻는 중</div></div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="card" style="flex:1;display:flex;flex-direction:column;min-height:0">
+      <div class="ch"><span class="k">1-5</span>치수도 <span class="sub">왼쪽 칸 값으로 그림 · 하중 값은 하중계수를 곱한 계수하중 Vu</span></div>
+      <div class="canvas">
+        <svg id="그림" viewBox="0 0 900 470" font-family="Pretendard, Malgun Gothic, sans-serif" font-size="13"></svg>
+        <div class="legend"><span>● 받침</span><span>↓ Vu (하중계수 곱한 값)</span><span>회색 = 콘크리트 외곽</span></div>
+      </div>
+      <div class="kv" id="요약"><span class="num" style="margin:0 2px 0 0">4</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="foot">
+  <span class="num">5</span>
+  <div class="status" id="상태"><span class="dot"></span><span id="상태글">여는 중</span><span class="r" id="저장글"></span></div>
+  <span class="열기곽"><button class="b2" id="열기단추" title="새 과업 · 저장된 내 과업 · 기준 예제를 엶 (지금 과업은 이미 저절로 저장됨)">과업 열기 ▾</button><div id="열기판"></div></span>
+  <button class="b2" id="폴더" title="과업 파일이 저장되는 폴더(3_자료\과업)를 탐색기로 엶">과업 폴더</button>
+  <button class="b1" id="다음" title="② 모델 단계로">다음 → ② 모델 (절점 · 부재)</button>
+</div>
+</div>
+
+<!-- ② 모델 (절점 · 부재) — v0.5.0 : 2-1 기본안 (서버 규칙) 을 고르고 표에서 고침 · 프로그램은 검사 · 확정은 사람 -->
+<div class="pane" id="판2">
+<div class="body">
+  <div class="col l">
+    <div class="card" id="카드21">
+      <div class="ch"><span class="k">2-1</span>기본안 <span class="sub" title="형상 · 하중 위치로 프로그램이 규칙에 따라 작성 · 확정은 설계자">규칙으로 작성 · 확정은 설계자</span></div>
+      <div class="cb 안들" id="안들">
+        <button class="안" data-안="A"><svg viewBox="0 0 100 50"><rect x="2" y="4" width="96" height="42" fill="none" stroke="#8a929a" stroke-width="1.5"/><line x1="10" y1="40" x2="90" y2="40" stroke="#e8743b" stroke-width="3"/><line x1="10" y1="40" x2="50" y2="10" stroke="#8a929a" stroke-width="2" stroke-dasharray="4 3"/><line x1="90" y1="40" x2="50" y2="10" stroke="#8a929a" stroke-width="2" stroke-dasharray="4 3"/></svg><span><b>기본안 A · 삼각 (기본)</b><i id="안A글">하중점 — 받침을 바로 잇는 사재</i></span></button>
+        <button class="안" data-안="B"><svg viewBox="0 0 100 50"><rect x="2" y="4" width="96" height="42" fill="none" stroke="#8a929a" stroke-width="1.5"/><line x1="10" y1="40" x2="90" y2="40" stroke="#e8743b" stroke-width="3"/><line x1="10" y1="40" x2="30" y2="10" stroke="#8a929a" stroke-width="2" stroke-dasharray="4 3"/><line x1="30" y1="10" x2="70" y2="10" stroke="#8a929a" stroke-width="2" stroke-dasharray="4 3"/><line x1="90" y1="40" x2="70" y2="10" stroke="#8a929a" stroke-width="2" stroke-dasharray="4 3"/><line x1="30" y1="40" x2="50" y2="10" stroke="#8a929a" stroke-width="2" stroke-dasharray="4 3"/><line x1="70" y1="40" x2="50" y2="10" stroke="#8a929a" stroke-width="2" stroke-dasharray="4 3"/><line x1="30" y1="10" x2="30" y2="40" stroke="#e8743b" stroke-width="2"/><line x1="70" y1="10" x2="70" y2="40" stroke="#e8743b" stroke-width="2"/></svg><span><b>기본안 B · 사다리꼴</b><i id="안B글">사재 각도가 낮을 때 · 수직 타이로 각도를 키움</i></span></button>
+        <button class="안" data-안="직접"><svg viewBox="0 0 100 50"><rect x="2" y="4" width="96" height="42" fill="none" stroke="#8a929a" stroke-width="1.5" stroke-dasharray="3 3"/></svg><span><b>직접 입력</b><i>빈 모델에서 시작 · 아래 표에 입력</i></span></button>
+        <div class="note c" style="margin-top:2px">누르면 아래 절점 · 부재 표가 채워짐 · 수정은 표에서 · 되돌리기 가능 · 좌표 : x 왼 끝 0 · y 하면 0 (위 +) · mm · 하중 kN 아래 −</div>
+      </div>
+    </div>
+    <div class="card" id="카드22">
+      <div class="ch 접개" data-접기="카드22"><span class="펼">▾</span><span class="k">2-2</span>절점 <span class="접힘글">— 눌러 펼침 (숫자로 수정할 때)</span> <span class="sub">mm · kN</span><span class="r"><span id="절점수"></span> &nbsp;<button class="tbtn" id="Vu넣기" title="① 받침 표의 Vu 를 받침 x 와 같은 x 의 맨 위 절점에 Fy = −Vu 로 (수평 H 는 Fx)">Vu 반영</button> <button class="tbtn" id="절점더" title="절점 줄 추가 (이름은 n1 · n2 …)">+ 절점</button></span></div>
+      <div class="cb" style="padding-top:4px"><table id="절점표"><thead><tr><th>이름</th><th>x</th><th>y</th><th style="text-align:left;padding-left:8px" title="받침 — ↔↕ 핀 · ↕ 롤러 · x 만 고정">받침</th><th>Fx</th><th>Fy</th><th></th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="card" id="카드23">
+      <div class="ch 접개" data-접기="카드23"><span class="펼">▾</span><span class="k">2-3</span>부재 <span class="접힘글">— 눌러 펼침</span> <span class="sub" title="종류는 설계자 지정 · 부재력 부호와 다르면 ★">★ = 부재력 부호와 다름</span><span class="r"><span id="부재수"></span> &nbsp;<button class="tbtn" id="부재더" title="부재 줄 추가 (이름은 m1 · m2 …)">+ 부재</button></span></div>
+      <div class="cb" style="padding-top:4px"><table id="부재표"><thead><tr><th>이름</th><th>i</th><th>j</th><th>종류</th><th>각도</th><th>부재력 kN</th><th>검사</th><th></th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="card ai칸" id="카드25">
+      <div class="ch"><span class="k">2-5</span>AI 짚어 보기 <span class="sub" title="짚기만 · 좌표 · 판정은 프로그램 · 반영은 설계자">짚기만 · 반영은 설계자</span></div>
+      <div class="cb">
+        <div class="ai머리"><button class="b2" id="AI묻기" style="height:26px;padding:0 10px" title="누를 때만 부름 · 지금 모델과 프로그램 점검을 보이고 다시 볼 곳을 받음 · 같은 모델은 지난 답을 다시 씀">AI 에게 묻기</button><select id="AI길" title="클로드 = 이 PC 의 claude 명령 · LM 스튜디오 = 이 PC 안 모델 (밖으로 안 나감 · localhost:1234 를 켜 둘 것)"><option value="claude">클로드 (이 PC)</option><option value="lmstudio">LM 스튜디오 (밖으로 안 나감)</option></select><span class="쉼" id="AI쉼"></span></div>
+        <div id="AI몸"></div>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card" style="flex:1;display:flex;flex-direction:column;min-height:0">
+      <div class="ch"><span class="k">2-4</span>모델 그림 <span class="sub">회색 외곽 위에 절점 ● · 타이 = 주황 실선 · 스트럿 = 점선 · 미지정 = 가는 선</span></div>
+      <div class="canvas"><svg id="모델그림" viewBox="0 0 900 470" font-family="Pretendard, Malgun Gothic, sans-serif" font-size="13"></svg></div>
+      <div class="kv" id="모델요약"></div>
+    </div>
+  </div>
+</div>
+<div class="foot">
+  <span class="num">5</span>
+  <div class="status" id="상태2"><span class="dot"></span><span id="상태2글">검사 중</span></div>
+  <button class="b2" id="뒤로1">← ① 형상 · 하중</button>
+  <button class="b1" id="다음3" title="③ 검토 단계로">다음 → ③ 검토</button>
+</div>
+</div>
+<!-- ③ 검토 — v0.3.0 : 셈은 서버 /api/검토 (stm_풀이 · 정착 그대로) · 화면은 표 넷 · 그림 · 식 줄만 -->
+<div class="pane" id="판3">
+<div class="body">
+  <div class="col l">
+    <div class="card" id="카드32">
+      <div class="ch 접개" data-접기="카드32"><span class="펼">▾</span><span class="k">3-2</span>N.G · 주의 목록 · 조치 방안 <span class="sub">줄을 누르면 3-5 에 식</span><span class="값"></span></div>
+      <div class="cb" style="padding-top:4px"><table id="표32"><thead><tr><th>부재</th><th>항목</th><th>제공</th><th>소요</th><th>검토비</th><th>조치 방안</th></tr></thead><tbody></tbody></table>
+      <div class="chips" id="고칠길칩" style="margin-top:6px"></div></div>
+    </div>
+    <div class="card" id="카드33">
+      <div class="ch"><span class="k">3-3</span><span id="표33제목">타이</span> <span class="sub" id="표33설명"></span><button class="tbtn 제안" id="제안넣기" title="미입력 칸만 채움 — 타이 : 규격 D25 (선택한 규격은 그대로) · 본수 = 소요 As × 1.11 ÷ 1본 단면적 올림 (검토비 1.11 이상) / 스트럿 · 절점 제공 폭 · 경계면 : ACI 318 해설 방법 (받침판 면 = 받침판 길이 · 타이 면 = 2 × 타이 중심 높이 · 사면 = lb·sinθ + wt·cosθ) · 설계자가 입력한 칸은 안 덮음 · 되돌리기 가능">미입력 초안</button><span class="tabs" id="탭33"><span class="on" data-탭="타이" title="규격 · 본수 · 정착은 설계자 입력 · Fu 는 3-5">타이</span><span data-탭="스트럿" title="제공 폭 미입력 칸은 «미입력 초안» (ACI 318 해설 방법) · 수정 입력하면 그 값">스트럿</span><span data-탭="절점" title="경계면 · 작용력 · βn · 제공 폭은 설계자 입력">절점영역</span></span></div>
+      <div class="cb" style="padding-top:4px"><table id="표33"><thead></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card" style="flex:1;display:flex;flex-direction:column;min-height:0">
+      <div class="ch"><span class="k">3-4</span>검토 그림 <span class="sub">글자 = 검토비 (제공 ÷ 소요) · 부재를 누르면 3-5 에 식</span></div>
+      <div class="verdict" id="판정칸" title="3-1 판정 — 스트럿 + 타이 + 절점영역 + 정착 · 하나라도 N.G 면 N.G · 미입력 값이 남으면 미입력"><span class="k3">3-1</span><div class="big" id="판정큰">…</div><div class="row4" id="판정넷"></div><div class="why" id="판정왜">검토 중</div></div>
+      <div class="canvas"><svg id="검토그림" viewBox="0 0 900 400" font-family="Pretendard, Malgun Gothic, sans-serif" font-size="13"></svg>
+        <div class="legend" style="top:auto;right:auto;bottom:8px;left:14px"><span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--dsm-ok);margin-right:4px"></i>O.K (검토비 1.11 이상)</span><span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#b25000;margin-right:4px"></i>주의 1.00 ~ 1.11</span><span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--dsm-bad);margin-right:4px"></i>N.G (1.00 미만)</span><span><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--dsm-faint);margin-right:4px"></i>미입력 (설계자 입력 값)</span></div>
+      </div>
+      <div class="kv" id="검토요약"></div>
+    </div>
+    <div class="card">
+      <div class="ch"><span class="k">3-5</span><span id="식제목">선택한 부재 — 식 → 대입 → 답</span> <span class="sub">계산서에 이 글이 그대로 들어감 · [조문] = KDS 조문 번호</span></div>
+      <div class="formula" id="식칸">부재를 선택하십시오</div>
+    </div>
+  </div>
+</div>
+<div class="foot">
+  <span class="num">5</span>
+  <div class="status" id="상태3"><span class="dot"></span><span id="상태3글">검토 중</span></div>
+  <button class="b2" id="뒤로2">← ② 모델</button>
+  <button class="b2" id="NG만" title="3-3 표에 N.G · 주의 줄만 표시 (다시 누르면 전체)">N.G 만 표시</button>
+  <button class="b1" id="다음4" title="④ 계산서 · 도면 — N.G 인 채로 넘겨도 잠그지 않음 · 계산서에 N.G 로 기재">다음 → ④ 계산서 · 도면</button>
+</div>
+</div>
+<div class="pane" id="판4">
+<div class="body">
+  <div class="col l">
+    <div class="card" id="카드41">
+      <div class="ch"><span class="k">4-1</span>출력 항목 <span class="sub">저장할 때마다 버전 번호 v1 → v2 · 덮어쓰지 않음</span></div>
+      <div class="cb" id="낼것">
+        <label><input type="checkbox" data-낼="pdf" checked> 계산서 PDF <span class="dim">A4 · 이 PC 크롬으로 인쇄</span></label>
+        <label><input type="checkbox" checked disabled> 계산서 HTML <span class="dim">항상 저장 · PDF 의 원본</span></label>
+        <label><input type="checkbox" data-낼="dxf" checked> STM 모델도 DXF <span class="dim">1:1 mm · 흑백 · 레이어 6개 · 절점 · 힘</span></label>
+        <label><input type="checkbox" data-낼="md" checked> 계산서 글 (.md) <span class="dim">hwp 로 옮길 때 원고</span></label>
+        <div class="path" id="출력자리">과업 폴더</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ch"><span class="k">4-2</span>계산서 목차 <span class="sub">누르면 4-4 그 절로</span><span class="r" id="판정작은">…</span></div>
+      <div class="cb" style="padding:4px 14px"><ol id="차례"></ol></div>
+    </div>
+    <div class="card" id="카드43">
+      <div class="ch 접개" data-접기="카드43"><span class="펼">▾</span><span class="k">4-3</span>기준값 대조 <span class="sub">과업에 기준값이 있을 때만 · 차이 0.6 % 이내면 일치</span><span class="값"></span></div>
+      <div class="cb" style="padding-top:4px" id="대조칸"></div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card" style="flex:1;display:flex;flex-direction:column;min-height:0">
+      <div class="ch"><span class="k">4-4</span>미리보기 <span class="sub">왼쪽 계산서 쪽 · 오른쪽 STM 모델도 (DXF 와 같은 형식 · 흑백)</span></div>
+      <div class="two4">
+        <iframe id="쪽" title="계산서 미리보기"></iframe>
+        <div class="dwg4"><svg id="도면" viewBox="0 0 900 420" font-family="Pretendard, Malgun Gothic, sans-serif" font-size="13"></svg></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="foot">
+  <span class="num">6</span>
+  <div class="status" id="상태4"><span class="dot"></span><span id="상태4글">계산서 작성 중</span></div>
+  <button class="b2" id="뒤로3">← ③ 검토</button>
+  <button class="b2" id="크게" title="계산서를 새 창에서 엶 (거기서 Ctrl+P 로 인쇄)">새 창에서 보기</button>
+  <button class="b2" id="출력폴더" title="과업 폴더 안 «이름_출력» 폴더를 탐색기로">폴더 열기</button>
+  <button class="b1" id="내보내기" title="4-1 에서 선택한 항목을 과업 폴더 안 «이름_출력» 에 버전 번호 붙여 저장 — N.G · 미입력도 그대로 기재">저장 → PDF · DXF</button>
+</div>
+</div>
+
+<div class="sign" id="서명">DSM · 64 STM 검토기 · v0.1.0 · 기준 예제 5건 대조 일치 (43/43) · 기준값 출처 KDS 발췌 14건</div>
+
+<script>
+// ─ 창 크기에 맞춤 (10-26 전무님 «창 크기 재검토» · 고칠거리 나) — 1366 × 768 판을 창에 맞춰 키움 (최대 1.2배 · 글자 15 → 18px)
+//   키우고도 남는 가로 · 세로는 판 안 그림 칸이 받음 · 작은 창은 0.75배까지 줄임
+function 창맞춤() {
+  // 글자 규격 (37 디자인실 10-26) — 키우기만 : 1366 ~ 1 배 · 1600 ~ 1.1 배 · 2200 ~ 1.2 배 · 높이가 모자라면 덜 키움 · 1 배 밑으로 안 줄임 (13px 하한)
+  const 단 = innerWidth < 1600 ? 1 : innerWidth < 2200 ? 1.1 : 1.2;
+  const s = Math.max(1, Math.min(단, innerHeight / 768)), b = document.body;
+  b.style.zoom = s; b.style.width = innerWidth / s + 'px'; b.style.height = innerHeight / s + 'px';
+  b.style.setProperty('--본높이', Math.max(420, innerHeight / s - 170) + 'px');
+}
+창맞춤(); addEventListener('resize', 창맞춤);
+// 왼쪽 칸 폭 끌기 — 360 ~ (그림 칸 520 남는 데까지) · 두 번 누르면 420 · 이 PC 에 기억 (못 읽어도 420 으로 그냥 됨)
+(function 왼폭() {
+  const 처음 = 420, 최소 = 360, 그림최소 = 520, 열쇠 = 'stm검토기.왼폭';
+  const 놓기 = w => document.documentElement.style.setProperty('--왼폭', w + 'px');
+  const 최대 = () => Math.max(최소, document.body.clientWidth - 32 - 12 - 그림최소);
+  try { const v = +localStorage.getItem(열쇠); if (v) 놓기(Math.min(Math.max(v, 최소), 최대())); } catch (e) {}
+  document.querySelectorAll('.body').forEach(b => {
+    const l = b.querySelector(':scope > .col.l'); if (!l) return;
+    const g = document.createElement('div'); g.className = '가름'; g.title = '끌어서 왼쪽 칸 폭 바꾸기 · 두 번 누르면 처음 폭 (420)';
+    l.after(g);
+    g.addEventListener('pointerdown', e => {
+      e.preventDefault(); g.setPointerCapture(e.pointerId); g.classList.add('끄는중'); document.body.classList.add('폭끄는중');
+      const s = parseFloat(document.body.style.zoom) || 1, 왼 = b.getBoundingClientRect().left;
+      const 움 = ev => 놓기(Math.round(Math.min(Math.max((ev.clientX - 왼) / s - 16 - 6, 최소), 최대())));
+      const 끝 = () => {
+        g.classList.remove('끄는중'); document.body.classList.remove('폭끄는중'); g.removeEventListener('pointermove', 움); g.removeEventListener('pointerup', 끝);
+        try { localStorage.setItem(열쇠, parseInt(getComputedStyle(document.documentElement).getPropertyValue('--왼폭')) || 처음); } catch (e) {}
+      };
+      g.addEventListener('pointermove', 움); g.addEventListener('pointerup', 끝);
+    });
+    g.addEventListener('dblclick', () => { 놓기(처음); try { localStorage.removeItem(열쇠); } catch (e) {} });
+  });
+})();
+// 그림 속 글은 화면 px 고정 (37 디자인실 10-26) — 그림에 적은 font-size 를 «화면 px» 로 보고 그림 배율로 나눔 · ④ 도면 미리보기는 종이 기준이라 뺌
+function 글고정(sv) {
+  const m = sv.getScreenCTM && sv.getScreenCTM(); if (!m || !m.a) return;
+  const k = (parseFloat(document.body.style.zoom) || 1) / Math.hypot(m.a, m.b);
+  for (const t of [sv, ...sv.querySelectorAll('[font-size]')]) { const px = t.dataset.px || (t.dataset.px = t.getAttribute('font-size')); t.setAttribute('font-size', (px * k).toFixed(2)); }
+  for (const t of sv.querySelectorAll('[data-띠]')) t.setAttribute('stroke-width', (t.dataset.띠 * k).toFixed(2));   // 부재 글 바탕 띠 (2차 시안)
+}
+addEventListener('DOMContentLoaded', () => ['그림', '모델그림', '검토그림'].forEach(id => { const sv = document.getElementById(id); if (!sv) return; const f = () => 글고정(sv); new MutationObserver(f).observe(sv, { childList: true }); new ResizeObserver(() => { 글고정(sv); if (sv.__다시) sv.__다시(); }).observe(sv); if (window.dsmZoom) dsmZoom.붙임(sv, { 바뀜: f, 건너뜀: '[data-부재]', 선: true, 안내: id !== '검토그림' }); }));   // 그림 확대 · 옮기기 (공통 부품 dsm-zoom.js v1.15 · 선 굵기 화면 px · 검토 그림은 왼쪽 아래 범례 자리라 안내 글 뺌)
+(() => {
+const 열쇠 = 'stm-64';                 // 서버.py 열쇠와 같아야 함
+const $ = s => document.querySelector(s);
+const 수 = v => { const x = parseFloat(String(v ?? '').replace(/,/g, '')); return isFinite(x) ? x : 0; };
+const 글 = v => (Math.round(v * 10) / 10 + 0).toLocaleString('ko-KR');   // + 0 : 힘 0 부재가 «-0» 으로 나오지 않게
+const 꼴표 = {
+  '코핑':   { 칩: '교각 코핑 (1열)', 칸: [['TL', 'TL 길이'], ['b', 'b 두께'], ['H1', 'H1 끝 높이'], ['H2', 'H2 중앙'], ['L1', 'L1 왼'], ['L4', 'L4 오른'], ['CW', 'CW 기둥'], ['피복상', '피복 상'], ['피복하', '피복 하']],
+             기본: { TL: 10800, b: 2700, H1: 1300, H2: 2700, L1: 4050, L4: 4050, CW: 2400, 피복상: 150, 피복하: 100, 받침판: [1200, 2000] } },
+  '깊은보': { 칩: '깊은보', 칸: [['TL', 'TL 길이'], ['H', 'H 높이'], ['b', 'b 폭'], ['지간', '지간 (중심)'], ['피복상', '피복 상'], ['피복하', '피복 하']],
+             기본: { TL: 3600, H: 1600, b: 500, 지간: 3000, 피복상: 100, 피복하: 100, 받침판: [300, 500] } },
+  // 아래 넷 = 10-26 밤 «전체 유형별 계산 되도록» · 기본안 규칙 2_프로그램\기본안.py 일반() · 받는 점 형상.py (외곽 꼴도 형상.py 와 같게)
+  '코핑다열': { 칩: '교각 코핑 (다열)', 칸: [['TL', 'TL 길이'], ['H', 'H 높이'], ['b', 'b 두께'], ['CW', 'CW 기둥 폭'], ['기둥수', '기둥 수'], ['기둥간격', '기둥 간격'], ['피복상', '피복 상'], ['피복하', '피복 하']],
+             기본: { TL: 12000, H: 2000, b: 2000, CW: 1500, 기둥수: 2, 기둥간격: 7000, 피복상: 150, 피복하: 150, 받침판: [600, 800] },
+             받침표: [1500, 4500, 7500, 10500].map(x => ({ x, D: 1000, L: 500, H: 0 })) },
+  '말뚝캡': { 칩: '말뚝캡', 칸: [['TL', 'TL 길이'], ['H', 'H 두께'], ['b', 'b 폭'], ['CW', 'CW 기둥 폭'], ['말뚝수', '말뚝 수'], ['말뚝간격', '말뚝 간격'], ['말뚝지름', '말뚝 지름'], ['피복상', '피복 상'], ['피복하', '피복 하']],
+             기본: { TL: 4000, H: 1500, b: 2000, CW: 1200, 말뚝수: 2, 말뚝간격: 2400, 말뚝지름: 600, 피복상: 100, 피복하: 150 }, 받침판없음: true,
+             받침표: [1700, 2300].map(x => ({ x, D: 1500, L: 800, H: 0 })) },
+  '확대기초': { 칩: '확대기초', 칸: [['TL', 'TL 길이'], ['H', 'H 두께'], ['b', 'b 폭'], ['CW', 'CW 기둥 폭'], ['피복상', '피복 상'], ['피복하', '피복 하']],
+             기본: { TL: 5000, H: 1200, b: 1000, CW: 1000, 피복상: 100, 피복하: 100 }, 받침판없음: true,
+             받침표: [2250, 2750].map(x => ({ x, D: 1000, L: 500, H: 0 })) },
+  '코벨':   { 칩: '코벨', 칸: [['TL', 'TL 끝까지'], ['CW', 'CW 기둥 폭'], ['H', 'H 기둥 면 높이'], ['H1', 'H1 끝 높이'], ['b', 'b 폭'], ['피복상', '피복 상'], ['피복하', '피복 하']],
+             기본: { TL: 1300, CW: 600, H: 800, H1: 500, b: 500, 피복상: 60, 피복하: 60, 받침판: [200, 300] },
+             받침표: [{ x: 1050, D: 300, L: 150, H: 0 }] },
+};
+const v2칩 = ['자유 형상 (DXF)'];
+const 반력말 = { 코핑: '평형 만족 (기둥 반력 = 연직 합)', 코핑다열: '기둥 반력 합 = 연직 합', 말뚝캡: '말뚝 반력 합 = 연직 합', 확대기초: '지반 반력 합 = 연직 합', 코벨: '기둥 반력 = 연직 합' };
+let 과업 = null, 조합결과 = null, 조합때, 저장때, 상태오류 = '';
+
+async function 부름(길, 몸) {
+  const r = await fetch('/api/' + 길, { method: 'POST', headers: { 'Content-Type': 'application/json; charset=utf-8', 'X-Tool': 열쇠 }, body: JSON.stringify(몸 || {}) });
+  return r.json();
+}
+const 받음 = 길 => fetch('/api/' + 길, { cache: 'no-store' }).then(r => r.json());
+
+function 빈과업(꼴) {
+  const k = 꼴표[꼴];
+  return { 이름: '새 과업 · ' + k.칩, 단위: 'kN-mm-MPa', 기준: 'KDS', 형상: Object.assign({ 꼴 }, JSON.parse(JSON.stringify(k.기본))),
+           받침표: JSON.parse(JSON.stringify(k.받침표 || [{ x: Math.round(k.기본.TL / 2), D: 1000, L: 500, H: 0 }])), 조합: '1.2D+1.6L', 재료: { fck: 24, fy: 400 }, 폭b: k.기본.b,
+           절점: {}, 부재: [], 받침: {}, 하중: {}, 철근: {}, 정착: {}, 판: {} };
+}
+
+// ─ 고침 한 걸음 (되돌리기 부품이 있으면 걸음으로 · 없으면 바로)
+function 고침(말, f, 칸) {
+  if (window.dsmUndo) dsmUndo.고침(말, f, 칸); else f();
+  그리기(); if ($('#판2').classList.contains('on')) 그리기2(); 바뀜();
+}
+
+function 그리기() {
+  const m = 과업, 꼴 = m.형상.꼴, k = 꼴표[꼴];
+  $('#과업이름').value = m.이름 || '';
+  // 1-1 칩
+  const 칩들 = Object.keys(꼴표).map(n => `<span class="chip${n === 꼴 ? ' on' : ''}" data-꼴="${n}">${꼴표[n].칩}</span>`)
+             .concat(v2칩.map(n => `<span class="chip v2" title="${n} 은 다음 버전에서">${n}</span>`)).join('');
+  $('#꼴칩').innerHTML = 칩들;
+  $('#꼴칩').querySelectorAll('.chip[data-꼴]').forEach(c => c.onclick = async () => {
+    if (c.dataset.꼴 === 과업.형상.꼴) return;
+    // 새 형식 과업은 «새 과업 · ○○» · 같은 이름이면 뒤에 2 · 3 — 옛 이름 그대로면 저절로 저장이 옛 과업 파일을 빈 모델로 덮음 (10-26 걷기 시험 진짜 2 · 걷기 16 10-28)
+    try { const r = await 받음('과업목록'); if (r.됨) 과업목록 = r.과업; } catch (e) { }
+    const 있는 = 과업목록.map(x => x.이름).concat(과업목록.map(x => x.파일.replace(/\.stm\.json$/, '')), [과업.이름]);
+    const 앞 = '새 과업 · ' + 꼴표[c.dataset.꼴].칩; let 이름 = 앞, i = 2; while (있는.includes(이름)) 이름 = 앞 + ' ' + i++;
+    고침('부재 형식 ' + 꼴표[과업.형상.꼴].칩 + ' → ' + 꼴표[c.dataset.꼴].칩, () => { const 새 = 빈과업(c.dataset.꼴); 새.이름 = 이름; 새.재료 = 과업.재료; 새.보기값 = true; 과업 = 새; }, c);
+  });
+  // 1-2 치수
+  $('#치수칸').innerHTML = k.칸.map(([key, 이름]) => `<div class="f"><label title="${이름}">${이름}</label><input data-치수="${key}" data-undo="${이름}" value="${글(m.형상[key] ?? 0)}"></div>`).join('')
+    + (k.받침판없음 ? '' : `<div class="f"><label>받침판 w × h</label><input class="sm" data-받침판 data-undo="받침판" value="${(m.형상.받침판 || [0, 0]).join('×')}"></div>`)
+    + `<div class="f"><label title="하중판 길이 — 하중이 작용하는 판 (미입력 초안이 씀) · 0 = ${k.받침판없음 ? '기둥 폭/2' : '받침판 w'}">하중판</label><input data-하중판 data-undo="하중판" value="${글(수(m.형상.하중판))}"></div>`;
+  $('#치수칸').querySelectorAll('input[data-치수]').forEach(i => i.onchange = () => {
+    const key = i.dataset.치수, 전 = m.형상[key], 뒤 = 수(i.value);
+    if (뒤 === 전) { i.value = 글(전); return; }
+    고침(`${(k.칸.find(x => x[0] === key) || [key, key])[1]} ${글(전)} → ${글(뒤)}`, () => { delete 과업.보기값; 과업.형상[key] = 뒤; if (key === 'b') 과업.폭b = 뒤; }, i);
+  });
+  $('#치수칸').querySelector('input[data-하중판]').onchange = e => {
+    const 전 = 수(m.형상.하중판), 뒤 = 수(e.target.value); if (뒤 === 전) { e.target.value = 글(전); return; }
+    고침(`하중판 ${글(전)} → ${글(뒤)}`, () => { delete 과업.보기값; 과업.형상.하중판 = 뒤 || null; }, e.target);
+  };
+  const 받판칸 = $('#치수칸').querySelector('input[data-받침판]');
+  if (받판칸) 받판칸.onchange = e => {
+    const t = e.target.value.split(/[×x*]/).map(수); if (t.length < 2 || !t[0] || !t[1]) { 그리기(); return; }
+    고침('받침판 → ' + t.slice(0, 2).map(글).join(' × '), () => { delete 과업.보기값; 과업.형상.받침판 = t.slice(0, 2); }, e.target);
+  };
+  $('#받침판글').textContent = k.받침판없음 ? '' : '받침판 ' + (m.형상.받침판 || []).map(글).join(' × ');
+  $('#표13제목').textContent = k.받침판없음 ? '기둥 하중' : '받침 · 하중'; $('#받침표 thead th').textContent = k.받침판없음 ? '기둥' : '받침';
+  // 1-3 받침표
+  $('#받침표 tbody').innerHTML = m.받침표.map((r, i) => `<tr><td>${i + 1}</td>` + ['x', 'D', 'L', 'H'].map(c => `<td><input data-행="${i}" data-열="${c}" data-undo="받침 ${i + 1} ${c}" value="${글(r[c] ?? 0)}"></td>`).join('')
+    + `<td><button class="x" data-빼기="${i}" title="받침 ${i + 1} 줄 삭제 (되돌리기 가능)">✕</button></td></tr>`).join('');
+  $('#받침표').querySelectorAll('input').forEach(i => i.onchange = () => {
+    const r = +i.dataset.행, c = i.dataset.열, 전 = m.받침표[r][c], 뒤 = 수(i.value);
+    if (뒤 === 전) { i.value = 글(전); return; }
+    고침(`받침 ${r + 1} ${c} ${글(전)} → ${글(뒤)}`, () => { delete 과업.보기값; 과업.받침표[r][c] = 뒤; }, i);
+  });
+  $('#받침표').querySelectorAll('[data-빼기]').forEach(b => b.onclick = () => {
+    if (m.받침표.length <= 1) { 알림(k.받침판없음 ? '기둥은 1개 이상 필요' : '받침은 1개 이상 필요', true); return; }
+    const i = +b.dataset.빼기; 고침(`받침 ${i + 1} 삭제`, () => { 과업.받침표.splice(i, 1); });
+    if (window.dsmUndo) dsmUndo.띠(`받침 ${i + 1} 삭제`);
+  });
+  // 1-4
+  $('#fck').value = 글(m.재료.fck); $('#fy').value = 글(m.재료.fy); $('#기준').value = m.기준 || 'KDS';
+  치수도(); 요약();
+}
+
+// ─ 그림 틀 : mm 가 몇 px 인지 재서 그림이 늘 칸에 들어가게 — X · Y 는 «왼 끝 · 위» 기준(치수도) · P(x, y) 는 모델 좌표(왼 끝 0 · 하면 0 · 위 +) → 화면
+// 새 형식 외곽 (모델 좌표) — 2_프로그램\형상.py 외곽점 과 같은 꼴 · 코핑 · 깊은보는 옛 그림 그대로
+function 외곽(f) {
+  const TL = 수(f.TL), H = 수(f.H), CW = 수(f.CW), 사각 = (x1, x2, y1, y2) => [[x1, y1], [x2, y1], [x2, y2], [x1, y2]];
+  const 자리 = (n, 간) => { n = Math.max(1, Math.round(n)); return Array.from({ length: n }, (_, i) => TL / 2 + (i - (n - 1) / 2) * 간); };
+  if (f.꼴 === '코벨') return { 몸: [[CW, 0], [TL, H - 수(f.H1)], [TL, H], [CW, H]], 덧: [사각(0, CW, -300, H + 300)], 위: H };
+  const 덧 = [];
+  if (f.꼴 === '코핑다열') for (const x of 자리(수(f.기둥수) || 2, 수(f.기둥간격))) 덧.push(사각(x - CW / 2, x + CW / 2, -800, 0));
+  if (f.꼴 === '말뚝캡' || f.꼴 === '확대기초') 덧.push(사각(TL / 2 - CW / 2, TL / 2 + CW / 2, H, H + 500));
+  if (f.꼴 === '말뚝캡') { const D = 수(f.말뚝지름) || 600; for (const x of 자리(수(f.말뚝수) || 2, 수(f.말뚝간격))) 덧.push(사각(x - D / 2, x + D / 2, -800, 0)); }
+  return { 몸: 사각(0, TL, 0, H), 덧, 위: H, 자리 };
+}
+// 칸 = { 높 : 그림 viewBox 높이 · 위 · 아래 : 하중 화살 · 받침 · 글 몫 } → 그림 칸 900 × 높 에 맞춤 (가로 옆 70 씩 · 가운데) — 37 2차 시안 (10-27 · 전에는 높이 220 묶음이라 모델이 칸의 40 % 였음)
+// 칸이 없으면 옛 틀 그대로 (① 치수도는 치수선 자리 · ④ 도면은 둘레를 따로 조임)
+function 틀(칸) {
+  const f = 과업.형상, 꼴 = f.꼴, 위 = 칸 ? 칸.위 : 120;
+  const 맞춤k = 몸높이 => 칸 ? Math.min(760 / Math.max(f.TL, 1), (칸.높 - 칸.위 - 칸.아래) / Math.max(몸높이, 1)) : null;
+  const 왼 = k => 칸 ? (900 - f.TL * k) / 2 : 120;
+  if (꼴 !== '코핑' && 꼴 !== '깊은보') {         // Y(mm) = 몸 윗면에서 아래로 mm · P = 모델 좌표 → 화면
+    const o = 외곽(f), ys = [...o.몸, ...o.덧.flat()].map(p => p[1]), 꼭 = Math.max(...ys), 밑 = Math.min(...ys), 깊이 = o.위;
+    const k = 맞춤k(꼭 - 밑) ?? Math.min(660 / Math.max(f.TL, 1), 230 / Math.max(꼭 - 밑, 1)), 위0 = 위 + (꼭 - 깊이) * k, 왼0 = 왼(k);
+    const X = mm => 왼0 + mm * k, Y = mm => 위0 + mm * k;
+    return { f, 꼴, k, 깊이, X, Y, P: (x, y) => [X(x), Y(깊이 - y)], 바닥: Y(깊이 - 밑), 외곽: o };
+  }
+  const 깊이 = 꼴 === '코핑' ? f.H2 : f.H;
+  const k = 맞춤k(꼴 === '코핑' ? f.H2 + 1000 : f.H)      // 코핑은 기둥 토막 (1000) 까지
+    ?? Math.min(660 / Math.max(f.TL, 1), 220 / Math.max(꼴 === '코핑' ? f.H2 + 1200 : f.H + 600, 1));   // mm → px
+  const 왼0 = 왼(k);
+  return { f, 꼴, k, 깊이, X: mm => 왼0 + mm * k, Y: mm => 위 + mm * k, P: (x, y) => [왼0 + x * k, 위 + (깊이 - y) * k], 바닥: 위 + (깊이 + (꼴 === '코핑' ? 1000 : 0)) * k };
+}
+// ─ 부재 글 자리 (37 디자인실 2차 시안 A «비켜 놓기» · 10-27 전무님 고르심) — 모델 그림 · 검토 그림 같이 씀
+//   짧은 부재부터 · 부재 위 0.5 → 0.38 · 0.62 → 0.28 · 0.72 → 0.2 · 0.8 × 양쪽 × 띄움 12 · 22 · 32 (화면 px) 가운데 · 글 14 로 안 되면 13 으로 한 번 더
+//   다른 글 · 절점 (±9) · 받침 · 다른 부재 선 · 외곽 변 · 하중 화살과 안 닿는 첫 자리 · 없으면 이름만 13 (힘은 마우스 title)
+//   글 = 이름 굵게 + 값 · 바탕 띠 (글 뒤 콘크리트 바탕색 테 5 px) · 그림을 다시 그리거나 칸 크기가 바뀌면 다시 놓음
+function 글배율(sv) { const m = sv.getScreenCTM && sv.getScreenCTM(); return m && m.a ? (parseFloat(document.body.style.zoom) || 1) / Math.hypot(m.a, m.b) : 0; }
+function 글자리(sv, 글들) {
+  sv.__다시 = () => 글자리(sv, 글들);     // 칸 크기가 바뀌면 다시 놓음 (아래 ResizeObserver)
+  sv.querySelectorAll('[data-글]').forEach(e => e.remove());
+  글고정(sv);
+  const k = 글배율(sv) || 1, 보임 = !!글배율(sv), NS = 'http://www.w3.org/2000/svg';
+  const 상자 = el => { const b = el.getBBox(); return [b.x, b.y, b.x + b.width, b.y + b.height]; };
+  const 겹 = (a, b) => Math.min(a[2], b[2]) > Math.max(a[0], b[0]) && Math.min(a[3], b[3]) > Math.max(a[1], b[1]);
+  const 선닿음 = (r, x1, y1, x2, y2) => {      // 선분이 상자에 닿나 (37 시안 그대로)
+    const 안 = (x, y) => x >= r[0] && x <= r[2] && y >= r[1] && y <= r[3]; if (안(x1, y1) || 안(x2, y2)) return true;
+    const o = (p, q, s) => Math.sign((q[0] - p[0]) * (s[1] - p[1]) - (q[1] - p[1]) * (s[0] - p[0]));
+    const 교 = (a, b, c, d) => o(a, b, c) * o(a, b, d) < 0 && o(c, d, a) * o(c, d, b) < 0;
+    const p = [x1, y1], q = [x2, y2], c = [[r[0], r[1]], [r[2], r[1]], [r[2], r[3]], [r[0], r[3]]];
+    return [0, 1, 2, 3].some(i => 교(p, q, c[i], c[(i + 1) % 4]));
+  };
+  const 놓인 = [], 선들 = 글들.map(p => [p.이름, p.x1, p.y1, p.x2, p.y2]), vb = sv.viewBox.baseVal, 칸 = [vb.x, vb.y, vb.x + vb.width, vb.y + vb.height];
+  if (보임) {
+    sv.querySelectorAll('circle').forEach(c => { const x = +c.getAttribute('cx'), y = +c.getAttribute('cy'), r = 9 * k; 놓인.push([x - r, y - r, x + r, y + r]); });
+    sv.querySelectorAll('text, polygon[fill="var(--dsm-ink)"]').forEach(e => 놓인.push(상자(e)));
+    sv.querySelectorAll('line[marker-end]').forEach(l => 선들.push(['화살', +l.getAttribute('x1'), +l.getAttribute('y1'), +l.getAttribute('x2'), +l.getAttribute('y2')]));
+    sv.querySelectorAll('[stroke-width="1.6"]').forEach(e => {     // 외곽 (몸 · 기둥 · 말뚝) 변
+      const 점 = e.tagName === 'rect' ? (([x, y, w, h]) => [[x, y], [x + w, y], [x + w, y + h], [x, y + h]])(['x', 'y', 'width', 'height'].map(a => +e.getAttribute(a)))
+        : (e.getAttribute('points') || '').trim().split(/\s+/).map(p => p.split(',').map(Number));
+      점.forEach((p, i) => { const q = 점[(i + 1) % 점.length]; 선들.push(['외', ...p, ...q]); });
+    });
+  }
+  const 길이 = p => Math.hypot(p.x2 - p.x1, p.y2 - p.y1);
+  let 이름만 = 0;
+  for (const p of [...글들].sort((a, b) => 길이(a) - 길이(b))) {
+    const g = document.createElementNS(NS, 'text');
+    for (const [a, v] of Object.entries({ 'data-글': '', 'text-anchor': 'middle', 'data-px': 14, 'font-size': (14 * k).toFixed(2), 'paint-order': 'stroke', stroke: 'var(--dsm-chip)', 'data-띠': 5, 'stroke-width': (5 * k).toFixed(2), 'stroke-linejoin': 'round', ...(p.속성 || {}) })) g.setAttribute(a, v);
+    g.innerHTML = `<title>${p.이름}${p.값 ? ' ' + p.값 : ''}${p.제목 ? ' · ' + p.제목 : ''}</title><tspan font-weight="700" fill="${p.이름색}">${p.이름}</tspan>${p.값 ? ` <tspan fill="${p.값색}" font-weight="${p.값굵게 ? 700 : 400}">${p.값}</tspan>` : ''}`;
+    sv.appendChild(g);
+    const L = 길이(p) || 1, nx = -(p.y2 - p.y1) / L, ny = (p.x2 - p.x1) / L;
+    let 됨 = false;
+    for (const 크기 of [14, 13]) { if (됨) break; g.dataset.px = 크기; g.setAttribute('font-size', (크기 * k).toFixed(2));
+    for (const t of [0.5, 0.38, 0.62, 0.28, 0.72, 0.2, 0.8]) { for (const 쪽 of [-1, 1]) { for (const d of [12, 22, 32]) {
+      const cx = p.x1 + (p.x2 - p.x1) * t + nx * 쪽 * d * k, cy = p.y1 + (p.y2 - p.y1) * t + ny * 쪽 * d * k;
+      g.setAttribute('x', cx.toFixed(1)); g.setAttribute('y', (cy + 5 * k).toFixed(1));
+      if (!보임) { 됨 = true; break; }
+      const r = 상자(g), rr = [r[0] - 2 * k, r[1] - k, r[2] + 2 * k, r[3] + k];
+      if (rr[0] < 칸[0] || rr[1] < 칸[1] || rr[2] > 칸[2] || rr[3] > 칸[3]) continue;     // 그림 칸 밖
+      if (놓인.some(o => 겹(o, rr)) || 선들.some(([n, ...q]) => n !== p.이름 && 선닿음(rr, ...q))) continue;
+      놓인.push(rr); 됨 = true; break;
+    } if (됨) break; } if (됨) break; } }
+    if (!됨) {      // 자리 없음 → 이름만 (힘은 마우스)
+      이름만++;
+      g.setAttribute('x', ((p.x1 + p.x2) / 2).toFixed(1)); g.setAttribute('y', ((p.y1 + p.y2) / 2 + 5 * k).toFixed(1)); g.dataset.px = 13; g.setAttribute('font-size', (13 * k).toFixed(2));
+      g.innerHTML = `<title>${p.이름}${p.값 ? ' ' + p.값 : ''}${p.제목 ? ' · ' + p.제목 : ''}</title><tspan font-weight="700" fill="${p.이름색}">${p.이름}</tspan>`;
+      놓인.push(상자(g));
+    }
+  }
+  sv.dataset.이름만 = 이름만;
+}
+function 외곽그림(t) {
+  const { f, 꼴, k, X, Y } = t;
+  if (t.외곽) {
+    const 점들 = a => a.map(([x, y]) => t.P(x, y).join(',')).join(' ');
+    return t.외곽.덧.map(d => `<polygon points="${점들(d)}" fill="var(--dsm-th-bg)" stroke="var(--dsm-ink)" stroke-width="1.6"/>`).join('') + `<polygon points="${점들(t.외곽.몸)}" fill="var(--dsm-chip)" stroke="var(--dsm-ink)" stroke-width="1.6"/>`;
+  }
+  if (꼴 === '코핑') {
+    const cx = f.TL / 2, 면1 = cx - f.CW / 2, 면2 = cx + f.CW / 2;
+    const 꺾1 = Math.min(f.L1, 면1), 꺾2 = Math.max(f.TL - f.L4, 면2);   // 헌치 : L1 · L4 끝에서 기둥 면까지 (L1 뜻은 아침에 여쭐 것 — 0_다음에)
+    const pts = [[0, 0], [f.TL, 0], [f.TL, f.H1], [꺾2, f.H2], [꺾1, f.H2], [0, f.H1]].map(([x, y]) => `${X(x)},${Y(y)}`).join(' ');
+    return `<polygon points="${pts}" fill="var(--dsm-chip)" stroke="var(--dsm-ink)" stroke-width="1.6"/><rect x="${X(면1)}" y="${Y(f.H2)}" width="${(면2 - 면1) * k}" height="${1000 * k}" fill="var(--dsm-th-bg)" stroke="var(--dsm-ink)" stroke-width="1.6"/>`;
+  }
+  return `<rect x="${X(0)}" y="${Y(0)}" width="${f.TL * k}" height="${f.H * k}" fill="var(--dsm-chip)" stroke="var(--dsm-ink)" stroke-width="1.6"/>`;
+}
+function 치수도() {
+  const m = 과업, f = m.형상, 꼴 = f.꼴, s = $('#그림');
+  const t = 틀(), { k, X, Y } = t;
+  let g = `<defs><marker id="ar" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--dsm-ink)"/></marker></defs>`;
+  const 치수 = (x1, y1, x2, y2, 글자, dx = 0, dy = 17, 끝 = 'middle') => `<g stroke="var(--dsm-dim)" stroke-width="1" fill="var(--dsm-dim)"><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`
+      + (y1 === y2 ? `<line x1="${x1}" y1="${y1 - 7}" x2="${x1}" y2="${y1 + 7}"/><line x1="${x2}" y1="${y1 - 7}" x2="${x2}" y2="${y1 + 7}"/>` : `<line x1="${x1 - 7}" y1="${y1}" x2="${x1 + 7}" y2="${y1}"/><line x1="${x1 - 7}" y1="${y2}" x2="${x1 + 7}" y2="${y2}"/>`)
+      + `<text x="${(x1 + x2) / 2 + dx}" y="${(y1 + y2) / 2 + dy}" text-anchor="${끝}" stroke="none">${글자}</text></g>`;
+  let 바닥;
+  if (꼴 === '코핑') {
+    const cx = f.TL / 2, 면1 = cx - f.CW / 2, 면2 = cx + f.CW / 2;
+    g += 외곽그림(t);
+    바닥 = Y(f.H2 + 1000);
+    g += 치수(X(0), 바닥 + 46, X(f.TL), 바닥 + 46, 'TL = ' + 글(f.TL));
+    g += 치수(X(면1), 바닥 + 18, X(면2), 바닥 + 18, 'CW = ' + 글(f.CW), 0, 15);
+    g += 치수(X(0), Y(f.H2) + 26, X(f.L1), Y(f.H2) + 26, 'L1 = ' + 글(f.L1), 0, 16);
+    g += 치수(X(f.TL - f.L4), Y(f.H2) + 26, X(f.TL), Y(f.H2) + 26, 'L4 = ' + 글(f.L4), 0, 16);
+    g += 치수(X(0) - 28, Y(0), X(0) - 28, Y(f.H1), 'H1 = ' + 글(f.H1), -8, 4, 'end');
+    g += 치수(X(f.TL) + 40, Y(0), X(f.TL) + 40, Y(f.H2), 'H2 = ' + 글(f.H2), 8, 4, 'start');
+    g += `<text x="${X(f.TL) + 48}" y="${Y(f.H2) / 2 + Y(0) / 2 + 22}" fill="var(--dsm-dim)">b = ${글(f.b)}</text>`;
+    const R = 조합결과 ? 글(조합결과.기둥반력) : '…';
+    g += `<text x="${X(cx)}" y="${바닥 - 10}" text-anchor="middle" font-weight="700" fill="var(--dsm-ink)">↑ 기둥 반력 R = ${R} kN</text>`;
+  } else if (t.외곽) {
+    const o = t.외곽, 아래 = 꼴 === '코벨' ? f.H1 : f.H;
+    g += 외곽그림(t);
+    바닥 = t.바닥;
+    const 줄 = 꼴 === '코핑다열' || 꼴 === '말뚝캡' ? 70 : 46;
+    g += 치수(X(0), 바닥 + 줄, X(f.TL), 바닥 + 줄, 'TL = ' + 글(f.TL));
+    g += 치수(X(f.TL) + 40, Y(0), X(f.TL) + 40, Y(아래), (꼴 === '코벨' ? 'H1 = ' : 'H = ') + 글(아래), 8, 4, 'start');
+    g += `<text x="${X(f.TL) + 48}" y="${Y(아래 / 2) + 22}" fill="var(--dsm-dim)">b = ${글(f.b)}</text>`;
+    if (꼴 === '코벨') {
+      g += 치수(X(0) - 28, Y(0), X(0) - 28, Y(f.H), 'H = ' + 글(f.H), -8, 4, 'end');
+      g += 치수(X(0), 바닥 + 18, X(f.CW), 바닥 + 18, 'CW = ' + 글(f.CW), 0, 15);
+    } else if (꼴 === '코핑다열') {
+      const xs = o.자리(수(f.기둥수) || 2, 수(f.기둥간격));
+      g += 치수(X(xs[0] - f.CW / 2), 바닥 + 18, X(xs[0] + f.CW / 2), 바닥 + 18, 'CW = ' + 글(f.CW), 0, 15);
+      if (xs.length > 1) g += 치수(X(xs[0]), 바닥 + 44, X(xs[1]), 바닥 + 44, '기둥 간격 = ' + 글(f.기둥간격), 0, 15);
+    } else {
+      g += `<text x="${X(f.TL) + 48}" y="${Y(아래 / 2) + 42}" fill="var(--dsm-dim)">CW = ${글(f.CW)}</text>`;
+      if (꼴 === '말뚝캡') {
+        const xs = o.자리(수(f.말뚝수) || 2, 수(f.말뚝간격));
+        if (xs.length > 1) g += 치수(X(xs[0]), 바닥 + 44, X(xs[1]), 바닥 + 44, '말뚝 간격 = ' + 글(f.말뚝간격), 0, 15);
+        g += `<text x="${X(xs[0]) - 10}" y="${바닥 + 16}" text-anchor="end" fill="var(--dsm-dim)">D = ${글(f.말뚝지름)}</text>`;
+      } else {
+        for (let i = 0; i < 9; i++) { const x = X(f.TL * (i + 0.5) / 9); g += `<line x1="${x}" y1="${Y(f.H) + 28}" x2="${x}" y2="${Y(f.H) + 6}" stroke="#3f7300" stroke-width="1.4" marker-end="url(#ar)"/>`; }
+        g += `<text x="${X(f.TL) + 10}" y="${Y(f.H) + 22}" fill="#3f7300" font-weight="700">↑ 지반 반력</text>`;
+      }
+    }
+  } else {
+    const 왼받 = (f.TL - f.지간) / 2, 오받 = 왼받 + f.지간;
+    g += 외곽그림(t);
+    바닥 = Y(f.H);
+    for (const x of [왼받, 오받]) g += `<polygon points="${X(x)},${바닥} ${X(x) - 9},${바닥 + 16} ${X(x) + 9},${바닥 + 16}" fill="var(--dsm-ink)"/>`;
+    g += 치수(X(왼받), 바닥 + 40, X(오받), 바닥 + 40, '지간 = ' + 글(f.지간));
+    g += 치수(X(0), 바닥 + 66, X(f.TL), 바닥 + 66, 'TL = ' + 글(f.TL));
+    g += 치수(X(f.TL) + 40, Y(0), X(f.TL) + 40, Y(f.H), 'H = ' + 글(f.H), 8, 4, 'start');
+    g += `<text x="${X(f.TL) + 48}" y="${Y(f.H / 2) + 22}" fill="var(--dsm-dim)">b = ${글(f.b)}</text>`;
+    const R = 조합결과 ? 글(조합결과.기둥반력 / 2) : '…';
+    g += `<text x="${X(f.TL / 2)}" y="${바닥 + 92}" text-anchor="middle" fill="var(--dsm-dim)">받침 반력 합 = ${조합결과 ? 글(조합결과.연직합) : '…'} kN (대칭이면 각 ${R})</text>`;
+  }
+  // 받침 · 하중 화살
+  m.받침표.forEach((r, i) => {
+    const x = X(r.x), Vu = 조합결과?.줄?.[i]?.Vu, Hu = 조합결과?.줄?.[i]?.Hu;
+    g += `<line x1="${x}" y1="${Y(0) - 62}" x2="${x}" y2="${Y(0) - 6}" stroke="var(--dsm-ink)" stroke-width="1.8" marker-end="url(#ar)"/>`;
+    g += `<circle cx="${x}" cy="${Y(0)}" r="6" fill="#3f7300" stroke="#fff" stroke-width="1.5"/>`;
+    g += `<text x="${x}" y="${Y(0) - 70}" text-anchor="middle" font-weight="700" fill="var(--dsm-ink)">${Vu == null ? '…' : 글(Vu)}</text>`;
+    g += `<text x="${x}" y="${Y(0) - 16}" text-anchor="middle" font-size="13" fill="var(--dsm-dim)">x ${글(r.x)}</text>`;
+    if (Hu) g += `<line x1="${x}" y1="${Y(0) + 18}" x2="${x + 70}" y2="${Y(0) + 18}" stroke="#b25000" stroke-width="1.8" marker-end="url(#ar)"/><text x="${x + 80}" y="${Y(0) + 23}" fill="#b25000" font-weight="700">H ${글(Hu)}</text>`;
+  });
+  g += `<text x="${X(f.TL / 2)}" y="${Y(0) - 92}" text-anchor="middle" fill="var(--dsm-dim)">Vu = ${조합결과 ? 조합결과.조합 : m.조합} (kN) · 받침 1 ~ ${m.받침표.length}</text>`;
+  s.innerHTML = g;
+}
+
+function 요약() {
+  const m = 과업, c = 조합결과;
+  const 반력 = c ? `<span class="ok">● ${반력말[m.형상.꼴] || '받침 반력 합 = 연직 합'}</span>` : '';
+  $('#요약').innerHTML = `<span class="num" style="margin:0 2px 0 0">4</span><span>연직 합 <b>${c ? 글(c.연직합) : '…'} kN</b></span><span>수평 합 <b>${c ? 글(c.수평합) : '…'} kN</b></span>${반력}<span>받침 <b>${m.받침표.length}</b></span><span>조합 <b>${m.조합}</b></span>`;
+  // v0.8.0 (10-29 검정) 조합 고르개 (1.2D+1.6L · 1.4D) + 서버 «경고» (다른 조합이 어느 받침에서 더 큼) 는 빨강 띠 — 목업 _계획\목업\검정값_목업.html 3
+  const 조합들 = ['1.2D+1.6L', '1.4D'];
+  $('#조합글').innerHTML = c ? `하중조합 <select id="조합고름" title="하중조합 — 고르면 받침 Vu · Hu 와 모델 하중을 다시 셈 (되돌리기 가능)">${조합들.map(k => `<option ${k === c.조합 ? 'selected' : ''}>${k}</option>`).join('')}</select> (D × ${c.계수.D} · L × ${c.계수.L}) [${c.조문}] · 수평력 H 는 고정하중 계수 적용 (확인 필요)`
+    + (c.경고 || []).map(g => `<div class="warn띠" title="${g}">★ ${g}</div>`).join('') : '하중조합 — 서버에 묻는 중';
+  const 고름 = $('#조합고름'); if (고름) 고름.onchange = () => 고침(`하중조합 → ${고름.value}`, () => { 과업.조합 = 고름.value; }, 고름);
+  const 빈 = [];
+  if (!m.이름) 빈.push('과업 이름');
+  if (!m.받침표.some(r => r.D || r.L)) 빈.push('받침 하중');
+  if (!m.재료.fck || !m.재료.fy) 빈.push('재료');
+  const 다됨 = 빈.length === 0 && !상태오류, 보기 = !!m.보기값 && !상태오류;   // 보기 = 새 과업 · 형식 칩 뒤 아직 형식 기본 값 (10-28 걷기 진짜 5)
+  $('#상태').className = 'status' + (상태오류 ? ' bad' : 보기 ? ' 보기' : '');
+  $('#판1').classList.toggle('보기중', 보기); $('#보기줄').hidden = !보기;
+  $('#보기줄글').textContent = `${꼴표[m.형상.꼴].칩} 기본 치수 · 하중이 들어가 있음 — 내 과업 값으로 변경하십시오 (변경하면 이 줄은 사라짐)`;
+  $('#상태글').innerHTML = 상태오류 ? 상태오류 : 보기 ? `<b>치수 확인</b> · ${꼴표[m.형상.꼴].칩} 보기 값 그대로 — 1-2 치수 · 1-3 하중을 내 과업 값으로` : 다됨 ? '<b>입력 완료</b> · 다음은 ② 모델 (기본안 선택 후 수정)' : '<b>미입력 항목</b> · ' + 빈.join(' · ');
+  // 시안 A — 다 넣은 칸은 접고 값만 · 비어 있는 첫 칸이 «지금» (사람이 누른 접기가 먼저)
+  const 칸들 = 꼴표[m.형상.꼴].칸, 치수다 = 칸들.every(([키]) => 수(m.형상[키]) > 0);
+  접음('카드11', true, 꼴표[m.형상.꼴].칩);
+  접음('카드12', 치수다 && !보기, 칸들.slice(0, 3).map(([키]) => 글(수(m.형상[키]))).join(' × '));
+  접음('카드13', false, '');
+  접음('카드14', !!(m.재료.fck && m.재료.fy), `fck ${m.재료.fck} · fy ${m.재료.fy} MPa · ${m.조합}`);
+  지금칸(1, !치수다 || 보기 ? '카드12' : 빈.includes('받침 하중') ? '카드13' : 빈.includes('재료') ? '카드14' : '');
+  할일(1, 상태오류 ? '아래 빨간 줄을 수정하십시오' : 보기 ? '1-2 치수 · 1-3 하중을 내 값으로' : 다됨 ? '맞으면 «다음 → ② 모델»' : '미입력 항목 입력 — ' + 빈.join(' · '));
+}
+
+function 알림(말, 나쁨) { 상태오류 = 나쁨 ? 말 : ''; 요약(); if (!나쁨 && 말) { $('#상태글').innerHTML = 말; } }
+
+// ─ 바뀜 : 조합은 0.25초 뒤 서버에 · 저장은 0.8초 뒤 (저절로 저장 · 단추 없음)
+function 바뀜() {
+  clearTimeout(조합때); clearTimeout(저장때); clearTimeout(검사때);
+  조합때 = setTimeout(조합요청, 250);
+  검사때 = setTimeout(검사요청, 300);
+  clearTimeout(검토때); 검토때 = setTimeout(검토요청, 350);
+  저장때 = setTimeout(저장요청, 800);
+}
+async function 조합요청() {
+  try {
+    const r = await 부름('조합', { 조합: 과업.조합, 받침: 과업.받침표 });
+    if (r.오류) { 조합결과 = null; 알림(r.오류, true); }
+    else { 조합결과 = r; 상태오류 = ''; }
+  } catch (e) { 조합결과 = null; 알림('연결 실패 — 서버 응답 없음 → 0_STM 검토기 열기.bat 으로 다시', true); }
+  치수도(); 요약();
+}
+async function 저장요청() {
+  try {
+    const r = await 부름('저장', { 이름: 과업.이름, 과업 });
+    if (r.됨) $('#저장글').textContent = '저장 완료 ' + r.때.slice(11) + ' · ' + r.경로.split('\\').pop();
+    else $('#저장글').textContent = '저장 실패 — ' + (r.오류 || '');
+  } catch (e) { $('#저장글').textContent = '저장 실패 — 서버 응답 없음'; }
+}
+
+// ─ 판 넘기기 (②③④ 는 뼈대)
+const 판이름 = { 1: ['형상 · 하중', '— 입력 완료 후 ② 모델로'], 2: ['모델', '— 기본안 선택 → 표에서 수정 · 확정은 설계자'], 3: ['검토', '— 철근 · 제공 폭 입력 · 4개 항목 모두 O.K 면 O.K'], 4: ['계산서 · 도면', '— N.G · 미입력도 그대로 기재 · 저장마다 버전 번호'] };
+// ─ «지금 할 일» 한 줄 (고칠거리 라 · 다음 할 일은 하나) — 판마다 상태에서 정함 · 지금 판이면 머리 줄에 바로
+var 할일글 = {};
+function 할일(n, 글) { 할일글[n] = 글; if ($('#판' + n)?.classList.contains('on')) $('#지금설명').textContent = $('#지금설명').title = 글; }
+// ─ ② 표 접기 (고칠거리 다 · 정보 많음) — 사람이 누른 것이 먼저 · 안 눌렀으면 기본안 모델은 접고 직접 입력 · 고칠 것이 있으면 펼침
+var 접힘손 = {};
+function 접음(id, 자동, 값) {
+  const c = $('#' + id); if (!c) return;
+  const 손 = 접힘손 || {}, 접 = 손[id] !== undefined ? 손[id] : 자동;
+  c.classList.toggle('접힘', 접); const p = c.querySelector('.펼'); if (p) p.textContent = 접 ? '▸' : '▾';
+  if (값 !== undefined) { const v = c.querySelector('.값'); if (v) v.innerHTML = 값; }
+}
+function 지금칸(n, id) { document.querySelectorAll('#판' + n + ' .card').forEach(c => c.classList.toggle('지금', !!id && c.id === id)); }
+function 접기맞춤(고칠것) {
+  const 있음 = Object.keys(과업?.절점 || {}).length > 0;
+  for (const id of ['카드22', '카드23']) 접음(id, !고칠것 && ['A', 'B'].includes(과업?.기본안) && 있음);
+  지금칸(2, !있음 ? (과업?.기본안 === '직접' ? '카드22' : '카드21') : 고칠것 ? '카드23' : '');
+}
+document.querySelectorAll('.ch.접개').forEach(h => h.onclick = e => {
+  if (e.target.closest('button,input,select')) return;
+  const id = h.dataset.접기; 접힘손[id] = !$('#' + id).classList.contains('접힘'); 접음(id, false);
+});
+function 판열기(n) {
+  if (n >= 2 && 과업?.기본안값 && 과업.기본안값.열쇠 !== 기본안열쇠값()) 기본안따라감().then(b => { if (b && document.getElementById('판' + n).classList.contains('on')) 판열기(n); });   // ① 이 바뀌었으면 기본안 칸을 따라 고친 뒤 다시 그림 (10-26 밤)
+  document.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.id === '판' + n));
+  document.querySelectorAll('.st').forEach(s => { const k = +s.dataset.판; s.classList.toggle('on', k === n); s.classList.toggle('done', k < n); s.querySelector('i').textContent = k < n ? '✓' : k; });   // 지난 단계 ✓ (시안 A)
+  $('#지금글').textContent = 판이름[n][0]; $('#지금설명').textContent = $('#지금설명').title = 할일글[n] || 판이름[n][1];
+  if (n === 2) { 그리기2(); 검사요청(); }
+  if (n === 3) { 그리기3(); 검토요청(); }
+  if (n === 4) { 그리기4(); 계산서요청(false); }
+}
+$('#뒤로2').onclick = () => 판열기(2);
+$('#다음4').onclick = () => 판열기(4);
+document.querySelectorAll('.st').forEach(s => s.onclick = () => 판열기(+s.dataset.판));
+$('#다음').onclick = () => 판열기(2);
+$('#뒤로1').onclick = () => 판열기(1);
+$('#다음3').onclick = () => 판열기(3);
+$('#폴더').onclick = () => 부름('폴더열기');
+$('#보기그대로').onclick = e => 고침('보기 값 그대로 씀', () => { delete 과업.보기값; }, e.target);
+$('#받침더').onclick = () => { const 끝 = 과업.받침표[과업.받침표.length - 1]; 고침('받침 ' + (과업.받침표.length + 1) + ' 추가', () => { 과업.받침표.push({ x: Math.round((끝?.x || 0) + 2300), D: 끝?.D || 1000, L: 끝?.L || 500, H: 0 }); }); };
+$('#과업이름').onchange = e => { const 전 = 과업.이름, 뒤 = e.target.value.trim(); if (뒤 && 뒤 !== 전) 고침(`과업 이름 ${전} → ${뒤}`, () => { 과업.이름 = 뒤; }, e.target); else e.target.value = 전; };
+$('#fck').onchange = e => { const 뒤 = 수(e.target.value); if (뒤 !== 과업.재료.fck) 고침(`fck ${과업.재료.fck} → ${뒤}`, () => { 과업.재료.fck = 뒤; }, e.target); };
+$('#fy').onchange = e => { const 뒤 = 수(e.target.value); if (뒤 !== 과업.재료.fy) 고침(`fy ${과업.재료.fy} → ${뒤}`, () => { 과업.재료.fy = 뒤; }, e.target); };
+// ─ 과업 열기 ▾ (10-28) — ＋ 새 과업 (형식 칩) · 내 과업 (서버 /api/과업목록 · 최근 순) · 예제 · 지금 과업은 이미 저절로 저장돼 있음
+let 예제목록 = [], 과업목록 = [];
+const 때글 = t => { const 오늘 = new Date(); const d = `${오늘.getFullYear()}-${String(오늘.getMonth() + 1).padStart(2, '0')}-${String(오늘.getDate()).padStart(2, '0')}`; return t.startsWith(d) ? '오늘 ' + t.slice(11) : t.slice(5); };
+async function 열기판그림() {
+  const 판 = $('#열기판'); let 지금 = '', 못 = '';
+  try { const r = await 받음('과업목록'); if (r.됨) { 과업목록 = r.과업; 지금 = r.지금; } else 못 = '서버가 옛 판 — 0_STM 검토기 열기.bat 으로 다시 여십시오'; }
+  catch (e) { 못 = '연결 실패 — 서버 응답 없음 → 0_STM 검토기 열기.bat 으로 다시 여십시오'; }
+  const 찾 = ($('#열기찾기')?.value || '').trim();
+  const 맞 = n => !찾 || n.includes(찾);
+  const 줄 = (x, 갈) => `<div class="줄${갈 === '과업' && x.파일 === 지금 ? ' 지금' : ''}" data-갈="${갈}" data-파일="${x.파일}" title="${x.이름}"><span class="이름">${갈 === '예제' ? x.이름.replace(/^예제 · /, '') : x.이름}</span>${갈 === '과업' && x.파일 === 지금 ? '<span class="딱">지금 열림</span>' : ''}${x.때 ? `<span class="때">${때글(x.때)}</span>` : ''}</div>`;
+  const 과 = 과업목록.filter(x => 맞(x.이름)), 예 = 예제목록.filter(x => 맞(x.이름));
+  판.innerHTML = `<div class="머리">과업 열기<input id="열기찾기" placeholder="이름으로 찾기 …" value="${찾}"></div>
+    <div class="새"><div class="첫">＋ 새 과업 — 부재 형식을 고르면 빈 과업이 열림</div>
+      <div class="칩들">${Object.keys(꼴표).map(n => `<span data-새="${n}">${꼴표[n].칩}</span>`).join('')}</div></div>
+    <div class="갈래"><b>내 과업</b> · 최근 고친 순 · 3_자료\\과업 (저절로 저장된 것)</div>
+    ${못 ? `<div class="빈">${못}</div>` : (과.map(x => 줄(x, '과업')).join('') || '<div class="빈">없음</div>')}
+    <hr><div class="갈래"><b>예제</b> · 기준 예제 (열면 «예제 · …» 이름으로 내 과업에 따로 저장 · 원본 안 덮음)</div>
+    ${예.map(x => 줄(x, '예제')).join('') || '<div class="빈">없음</div>'}`;
+  const 칸 = $('#열기찾기'); 칸.oninput = () => { const 끝 = 칸.selectionStart; 열기판그림().then(() => { const c = $('#열기찾기'); c.focus(); c.setSelectionRange(끝, 끝); }); };
+}
+function 열기판닫기() { $('#열기판').classList.remove('켜짐'); $('#열기단추').classList.remove('켜짐'); }
+$('#열기단추').onclick = async e => {
+  e.stopPropagation();
+  if ($('#열기판').classList.contains('켜짐')) return 열기판닫기();
+  $('#열기판').innerHTML = ''; await 열기판그림(); $('#열기판').classList.add('켜짐');   // 열 때마다 찾기 글 비움 $('#열기단추').classList.add('켜짐');
+};
+$('#열기판').onclick = async e => {
+  e.stopPropagation();
+  const 새 = e.target.closest('[data-새]');
+  if (새) {
+    const 꼴 = 새.dataset.새, 있는 = 과업목록.map(x => x.이름).concat(과업목록.map(x => x.파일.replace(/\.stm\.json$/, '')));
+    const 앞 = '새 과업 · ' + 꼴표[꼴].칩; let 이름 = 앞, i = 2; while (있는.includes(이름)) 이름 = 앞 + ' ' + i++;   // 같은 이름이면 저절로 저장이 옛 과업을 덮음 → 뒤에 2 · 3
+    열기판닫기(); 고침('새 과업 «' + 이름 + '»', () => { 과업 = 빈과업(꼴); 과업.이름 = 이름; 과업.보기값 = true; }); 판열기(1); return;
+  }
+  const 줄 = e.target.closest('.줄'); if (!줄) return;
+  열기판닫기();
+  const r = await 받음('열기?이름=' + encodeURIComponent(줄.dataset.파일));
+  if (!r.됨) { 알림(r.까닭, true); return; }
+  고침((줄.dataset.갈 === '예제' ? '예제' : '과업') + ' «' + (r.과업.이름 || 줄.dataset.파일) + '» 엶', () => { 과업 = 채우기(r.과업); }); 판열기(1);
+};
+document.addEventListener('click', e => { if (!e.target.closest('.열기곽')) 열기판닫기(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#열기판').classList.contains('켜짐')) 열기판닫기(); });
+
+// ══ ② 모델 판 — 표 둘 (절점 · 부재) ↔ 그림 · 검사는 서버 /api/모델검사 (셈은 서버만)
+let 검사결과 = null, 검사때;
+function 새이름(앞, 있는) { let i = 1; while (있는.includes(앞 + i)) i++; return 앞 + i; }
+function 절점이름바꾸기(전, 뒤) {
+  const 새 = {}; for (const [k, v] of Object.entries(과업.절점)) 새[k === 전 ? 뒤 : k] = v; 과업.절점 = 새;
+  과업.부재.forEach(p => { if (p[1] === 전) p[1] = 뒤; if (p[2] === 전) p[2] = 뒤; });
+  for (const 칸 of ['받침', '하중', '절점면', 'βn']) if (과업[칸] && 과업[칸][전] !== undefined) { 과업[칸][뒤] = 과업[칸][전]; delete 과업[칸][전]; }
+}
+function 그리기2() {
+  const m = 과업; m.절점 = m.절점 || {}; m.부재 = m.부재 || []; m.받침 = m.받침 || {}; m.하중 = m.하중 || {};
+  const 이름들 = Object.keys(m.절점);
+  $('#절점수').textContent = 이름들.length + ' 개';
+  $('#절점표 tbody').innerHTML = 이름들.map(n => {
+    const [x, y] = m.절점[n], 받 = m.받침[n] || [], 하 = m.하중[n] || [0, 0];
+    return `<tr><td><input class="nm" data-절점="${n}" data-칸="이름" data-undo="절점 이름" value="${n}"></td><td><input data-절점="${n}" data-칸="x" value="${글(x)}"></td><td><input data-절점="${n}" data-칸="y" value="${글(y)}"></td>`
+      + `<td style="text-align:left"><span class="seg" title="받침 — ↔↕ 핀 (x · y 고정) · ↕ 롤러 (y 만 고정) · — 없음${받.length === 1 && 받[0] === 'x' ? ' · 현재 x 만 고정' : ''}">${[['xy', '↔↕'], ['y', '↕'], ['', '—']].map(([v, 글자]) => `<button data-받침="${n}" data-값="${v}" class="${['x', 'y'].filter(d => 받.includes(d)).join('') === v ? 'on' : ''}">${글자}</button>`).join('')}</span></td>`
+      + `<td><input data-절점="${n}" data-칸="Fx" value="${글(하[0])}"></td><td><input data-절점="${n}" data-칸="Fy" value="${글(하[1])}"></td><td><button class="x" data-절점빼기="${n}" title="절점 ${n} 삭제 (붙은 부재 · 받침 · 하중도 · 되돌리기 가능)">✕</button></td></tr>`;
+  }).join('') || `<tr><td colspan="7" style="text-align:left;color:var(--dsm-faint)">절점 없음 — 2-1 기본안을 누르거나 «+ 절점» 으로 추가하십시오</td></tr>`;
+  $('#절점표').querySelectorAll('input').forEach(i => i.onchange = () => {
+    const n = i.dataset.절점, 칸 = i.dataset.칸;
+    if (칸 === '이름') { const 뒤 = i.value.trim(); if (!뒤 || 뒤 === n) { i.value = n; return; } if (과업.절점[뒤]) { 알림2('절점 이름 ' + 뒤 + ' 이 이미 있음', true); i.value = n; return; } 고침(`절점 ${n} → ${뒤}`, () => 절점이름바꾸기(n, 뒤), i); return; }
+    if (칸 === 'x' || 칸 === 'y') { const 뒤 = 수(i.value), k = 칸 === 'x' ? 0 : 1, 전 = 과업.절점[n][k]; if (뒤 === 전) { i.value = 글(전); return; } 고침(`절점 ${n} ${칸} ${글(전)} → ${글(뒤)}`, () => { 과업.절점[n][k] = 뒤; }, i); return; }
+    if (칸 === '받침x' || 칸 === '받침y') { const d = 칸.slice(-1); 고침(`절점 ${n} 받침 ${d} ${i.checked ? '지정' : '해제'}`, () => { const s = new Set(과업.받침[n] || []); i.checked ? s.add(d) : s.delete(d); const a = ['x', 'y'].filter(v => s.has(v)); if (a.length) 과업.받침[n] = a; else delete 과업.받침[n]; }, i); return; }
+    if (칸 === 'Fx' || 칸 === 'Fy') { const 뒤 = 수(i.value), k = 칸 === 'Fx' ? 0 : 1, 전 = (과업.하중[n] || [0, 0])[k]; if (뒤 === 전) { i.value = 글(전); return; } 고침(`절점 ${n} ${칸} ${글(전)} → ${글(뒤)}`, () => { const h = (과업.하중[n] || [0, 0]).slice(); h[k] = 뒤; if (h[0] || h[1]) 과업.하중[n] = h; else delete 과업.하중[n]; }, i); }
+  });
+  $('#절점표').querySelectorAll('[data-받침]').forEach(b => b.onclick = () => {
+    const n = b.dataset.받침, v = b.dataset.값, 전 = ['x', 'y'].filter(d => (과업.받침[n] || []).includes(d)).join('');
+    if (v === 전) return;
+    고침(`절점 ${n} 받침 ${({ xy: '핀', y: '롤러', x: 'x 만 고정' })[전] || '없음'} → ${({ xy: '핀', y: '롤러', x: 'x 만 고정' })[v] || '없음'}`, () => { if (v) 과업.받침[n] = v.split(''); else delete 과업.받침[n]; });
+  });
+  $('#절점표').querySelectorAll('[data-절점빼기]').forEach(b => b.onclick = () => {
+    const n = b.dataset.절점빼기;
+    고침(`절점 ${n} 삭제`, () => { delete 과업.절점[n]; delete 과업.받침[n]; delete 과업.하중[n]; 과업.부재 = 과업.부재.filter(p => p[1] !== n && p[2] !== n); });
+    if (window.dsmUndo) dsmUndo.띠(`절점 ${n} 삭제`);
+  });
+  // 부재 표 — 검사 결과(각도 · 힘 · 검사)는 서버가 준 것만 적음
+  const 검 = {}; (검사결과?.부재 || []).forEach(b => 검[b.이름] = b);
+  $('#부재수').textContent = m.부재.length + ' 개';
+  const 옵 = 종 => ['스트럿', '타이', '미정'].map(s => `<option value="${s}" ${s === 종 ? 'selected' : ''}>${s === '미정' ? '미지정' : s}</option>`).join('');
+  $('#부재표 tbody').innerHTML = m.부재.map((p, i) => { const g = 검[p[0]] || {};
+    return `<tr><td><input class="nm" data-부재="${i}" data-칸="0" value="${p[0]}"></td><td><input class="nm" data-부재="${i}" data-칸="1" value="${p[1]}"></td><td><input class="nm" data-부재="${i}" data-칸="2" value="${p[2]}"></td><td><select data-부재="${i}" data-칸="3">${옵(p[3])}</select></td>`
+      + `<td class="ang">${g.각도 != null ? g.각도 + '°' : '—'}</td><td>${g.힘 != null ? 글(g.힘) : '—'}</td><td class="chk" title="${g.제안 ? '부재력 부호로는 ' + (g.제안 === '힘 0' ? '부재력 0' : g.제안) : ''}">${g.검사 || (g.제안 && p[3] === '미정' ? '→ ' + (g.제안 === '힘 0' ? '부재력 0' : g.제안) : '')}</td><td><button class="x" data-부재빼기="${i}" title="부재 ${p[0]} 삭제 (되돌리기 가능)">✕</button></td></tr>`;
+  }).join('') || `<tr><td colspan="8" style="text-align:left;color:var(--dsm-faint)">부재 없음 — «+ 부재» 로 추가</td></tr>`;
+  $('#부재표').querySelectorAll('input,select').forEach(i => i.onchange = () => {
+    const r = +i.dataset.부재, c = +i.dataset.칸, 전 = 과업.부재[r][c], 뒤 = i.value.trim();
+    if (!뒤 || 뒤 === 전) { i.value = 전; return; }
+    고침(`부재 ${과업.부재[r][0]} ${['이름', 'i', 'j', '종류'][c]} ${전 === '미정' ? '미지정' : 전} → ${뒤 === '미정' ? '미지정' : 뒤}`, () => { 과업.부재[r][c] = 뒤; }, i);
+  });
+  $('#부재표').querySelectorAll('[data-부재빼기]').forEach(b => b.onclick = () => { const i = +b.dataset.부재빼기, 이름 = 과업.부재[i][0]; 고침(`부재 ${이름} 삭제`, () => { 과업.부재.splice(i, 1); }); if (window.dsmUndo) dsmUndo.띠(`부재 ${이름} 삭제`); });
+  모델그림(); 모델요약(); 기본안미리(); AI그리기();
+}
+function 모델그림() {
+  const m = 과업, t = 틀({ 높: 470, 위: 84, 아래: 64 }), { P, X, Y, 깊이, f } = t, s = $('#모델그림'), 글들 = [];
+  let g = `<defs><marker id="ar2" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--dsm-ink)"/></marker></defs>` + 외곽그림(t);
+  const 검 = {}; (검사결과?.부재 || []).forEach(b => 검[b.이름] = b);
+  for (const [이름, a, b, 종] of m.부재) {
+    if (!m.절점[a] || !m.절점[b]) continue;
+    const [x1, y1] = P(...m.절점[a]), [x2, y2] = P(...m.절점[b]);
+    const 꼴 = 종 === '타이' ? 'stroke="#e8743b" stroke-width="3"' : 종 === '스트럿' ? 'stroke="var(--dsm-dim)" stroke-width="3" stroke-dasharray="7 5"' : 'stroke="var(--dsm-dim)" stroke-width="1.2"';
+    g += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" ${꼴}/>`;
+    const F = 검[이름]?.힘; const 나쁨 = 검[이름]?.검사;     // 인장 주황 · 압축 먹 · 검사 ★ 는 빨강
+    글들.push({ 이름, x1, y1, x2, y2, 값: F != null ? 글(F) : '', 이름색: 나쁨 ? 'var(--dsm-bad)' : 'var(--dsm-ink)', 값색: 나쁨 ? 'var(--dsm-bad)' : F > 0 ? '#b25000' : 'var(--dsm-ink)', 값굵게: !!나쁨, 제목: 나쁨 || '' });
+  }
+  for (const [n, [x, y]] of Object.entries(m.절점)) {
+    const [sx, sy] = P(x, y), 받 = m.받침[n] || [], 하 = m.하중[n];
+    if (받.includes('y')) g += `<polygon points="${sx},${sy + 6} ${sx - 9},${sy + 22} ${sx + 9},${sy + 22}" fill="var(--dsm-ink)"/>`;
+    if (받.includes('x')) g += `<polygon points="${sx - 6},${sy} ${sx - 22},${sy - 9} ${sx - 22},${sy + 9}" fill="var(--dsm-ink)"/>`;
+    if (하 && (하[0] || 하[1])) {
+      if (하[1]) g += `<line x1="${sx}" y1="${sy - (하[1] < 0 ? 58 : -58)}" x2="${sx}" y2="${sy - (하[1] < 0 ? 8 : -8)}" stroke="var(--dsm-ink)" stroke-width="1.8" marker-end="url(#ar2)"/><text x="${sx}" y="${sy - (하[1] < 0 ? 64 : -72)}" text-anchor="middle" font-weight="700" fill="var(--dsm-ink)">${글(Math.abs(하[1]))}</text>`;
+      if (하[0]) g += `<line x1="${sx - (하[0] > 0 ? 58 : -58)}" y1="${sy}" x2="${sx - (하[0] > 0 ? 8 : -8)}" y2="${sy}" stroke="#b25000" stroke-width="1.8" marker-end="url(#ar2)"/><text x="${sx - (하[0] > 0 ? 62 : -62)}" y="${sy - 6}" text-anchor="${하[0] > 0 ? 'end' : 'start'}" fill="#b25000" font-weight="700">${글(Math.abs(하[0]))}</text>`;
+    }
+    g += `<circle cx="${sx}" cy="${sy}" r="5.5" fill="#3f7300" stroke="#fff" stroke-width="1.5"/><text x="${sx + 8}" y="${sy + 14}" font-size="13" fill="var(--dsm-ink)" font-weight="700">${n}</text>`;
+  }
+  g += `<text x="${X(f.TL / 2)}" y="${t.바닥 + 44}" text-anchor="middle" fill="var(--dsm-dim)">${꼴표[f.꼴]?.칩 || f.꼴} · 좌표 원점 = 왼 끝 · 하면 · 단위 mm · kN</text>`;
+  g += AI표시(P);
+  s.innerHTML = g;
+  글자리(s, 글들);
+}
+function 모델요약() {
+  const c = 검사결과, m = 과업;
+  const 정정 = c ? `<span class="${c.정정.startsWith('정정') ? 'ok' : 'bad'}">● ${c.정정}</span>` : '';
+  const 불안 = !!c && /불안정/.test(c.정정 || '');          // 받침이 모자라 이 하중에서만 평형 — 초록으로 보이지 않게 (10-28 걷기 진짜 6)
+  const 불안말 = '<b>불안정 구조</b> — 받침 방향이 모자람 · 2-2 받침 칸에서 하나는 ↔↕ 핀으로 바꾸십시오';
+  const 평형 = 불안 ? '' : c && c.평형 === true ? `<span class="ok">● 평형 만족 (해석 완료)</span>` : c && c.평형 === false ? `<span class="bad">● 해석 실패</span>` : '';
+  $('#모델요약').innerHTML = `<span class="num" style="margin:0 2px 0 0">4</span><span>절점 <b>${Object.keys(m.절점 || {}).length}</b></span><span>부재 <b>${(m.부재 || []).length}</b></span><span>반력 <b>${c ? c.반력수 : '…'}</b></span><span>방정식 수 2n <b>${c ? c.식 : '…'}</b> · 미지수 m+r <b>${c ? c.모름 : '…'}</b></span>${정정}${평형}`;
+  const 문제 = c?.문제 || [], 별 = (c?.부재 || []).filter(b => b.검사).length;
+  const 나쁨 = 문제.length > 0 || 별 > 0 || 불안;
+  $('#상태2').className = 'status' + (나쁨 ? ' bad' : '');
+  할일(2, !Object.keys(m.절점 || {}).length ? (m.기본안 === '직접' ? '2-2 «+ 절점» 으로 절점부터 추가' : 기본안없음() ? '기본안 없는 형식 — «직접 입력» 뒤 2-2 «+ 절점»' : '2-1 기본안 A 또는 B 선택') : !c ? (검사오류 || '검사 중') : 문제.length ? '표에서 수정 필요 — ' + 문제[0] : 별 ? '2-3 ★ ' + 별 + '개 — 종류를 부재력 부호에 맞춤' : 불안 ? '불안정 구조 — 2-2 받침 하나를 핀으로' : c.평형 ? '맞으면 «다음 → ③ 검토»' : c.정정);
+  접기맞춤(문제.length > 0 || 별 > 0);
+  $('#상태2글').innerHTML = !Object.keys(m.절점 || {}).length ? (기본안없음() ? '<b>모델 없음</b> — 이 형식은 기본안이 없음 · 2-2 «+ 절점» 으로 추가하십시오' : '<b>모델 없음</b> — 2-1 기본안 A · B 를 누르거나 2-2 «+ 절점» 으로 추가하십시오') : !c ? (검사오류 || '검사 중') : 문제.length ? '<b>수정 필요</b> · ' + 문제.join(' · ') : 별 ? `<b>종류 ★ ${별}</b> — 부재력 부호와 다른 부재 (표의 검사 칸)` : 불안 ? 불안말 : c.평형 ? '<b>모델 검사 완료</b> · 평형 만족 · 다음은 ③ 검토' : (Object.keys(m.절점 || {}).length ? '<b>' + c.정정 + '</b>' : '절점 · 부재를 입력하십시오');
+}
+function 알림2(말, 나쁨) { $('#상태2').className = 'status' + (나쁨 ? ' bad' : ''); $('#상태2글').innerHTML = 말; }
+let 검사오류 = '';      // 검사가 못 되면 «검사 중» 대신 까닭 (10-26 고칠거리 라)
+async function 검사요청() {
+  if (!과업 || !Object.keys(과업.절점 || {}).length) { 검사결과 = null; if ($('#판2').classList.contains('on')) { 모델그림(); 모델요약(); } return; }
+  try { const r = await 부름('모델검사', { 과업 }); 검사결과 = r.오류 ? null : r; 검사오류 = r.오류 ? '<b>검사 실패</b> · ' + r.오류 : ''; if (r.오류) 알림2(r.오류, true); }
+  catch (e) { 검사결과 = null; 검사오류 = '<b>검사 실패</b> · 연결 실패 — 서버 응답 없음 → 프로그램을 닫고 다시 여십시오'; }
+  if ($('#판2').classList.contains('on')) 그리기2();
+}
+// ─ 2-1 기본안 (서버 /api/기본안 · 규칙은 2_프로그램\기본안.py · 정답지 깊은보 셋과 같은 모델)
+let 기본안결과 = null, 기본안열쇠 = '';
+const 기본안없음 = () => 기본안결과 && 기본안결과.됨 === false;   // 이 형식은 기본안 규칙이 없음 → 할 일 글을 «직접 입력» 으로
+const 모델칸들 = ['절점', '부재', '받침', '하중', 'βs', 'βn', '판길이', '절점면', '철근', '정착', '스트럿폭', '절점폭'];   // 판길이 = 기본안이 준 절점별 판 길이 (기둥 · 말뚝 · 지반 토막 — 폭 제안이 씀)
+const 안이름 = { A: '기본안 A · 삼각 (기본)', B: '기본안 B · 사다리꼴' };
+async function 기본안미리() {
+  const 열쇠2 = JSON.stringify([과업?.형상, 과업?.받침표, 과업?.조합]);
+  if (열쇠2 !== 기본안열쇠) {
+    기본안열쇠 = 열쇠2;
+    try { 기본안결과 = await 부름('기본안', { 과업: { 형상: 과업.형상, 받침표: 과업.받침표, 조합: 과업.조합 } }); } catch (e) { 기본안결과 = { 됨: false, 까닭: '연결 실패 — 서버 응답 없음' }; }
+  }
+  const r = 기본안결과 || {};
+  for (const 안 of ['A', 'B']) {
+    const b = document.querySelector(`.안[data-안="${안}"]`), 글칸 = $('#안' + 안 + '글');
+    const a = r.됨 ? r.안.find(x => x.안 === 안) : null;
+    b.classList.toggle('없음', !a);
+    b.classList.toggle('on', 과업.기본안 === 안);
+    글칸.textContent = a ? `절점 ${a.절점수} · 부재 ${a.부재수} · 사재 최소 ${a.사재최소각}°` : ((r.빠짐 || []).find(x => x.startsWith(안 + ' '))?.slice(4) || r.까닭 || '…');
+    b.querySelector('b').textContent = a ? a.이름 + (안 === 'A' ? ' (기본)' : '') : 안이름[안];
+  }
+  document.querySelector('.안[data-안="직접"]').classList.toggle('on', 과업.기본안 === '직접');
+  모델요약();
+}
+document.querySelectorAll('.안[data-안]').forEach(b => b.onclick = async () => {
+  const 안 = b.dataset.안;
+  if (안 === '직접') {
+    고침('모델 초기화 (직접 입력)', () => { for (const 칸 of 모델칸들) 과업[칸] = 칸 === '부재' ? [] : {}; 과업.기본안 = '직접'; });
+    if (window.dsmUndo) dsmUndo.띠('모델 초기화 — 되돌리기로 복원');
+    return;
+  }
+  await 기본안미리();
+  const a = 기본안결과?.됨 ? 기본안결과.안.find(x => x.안 === 안) : null;
+  if (!a) { 알림2(기본안결과?.까닭 || '기본안 작성 실패', true); return; }
+  const 새 = JSON.parse(JSON.stringify(a)); let 남김 = 0;
+  고침(`${a.이름} 반영`, () => { 남김 = 기본안넣기(새, 안); });
+  if (window.dsmUndo) dsmUndo.띠(`${a.이름} 반영 — ${남김 ? '같은 부재 · 절점의 철근 · 정착 · 폭 ' + 남김 + '개는 남김' : '철근 · 정착 · 폭 입력은 초기화'} · 되돌리기 가능`);
+});
+// ─ 2-5 AI 짚어 보기 (10-28 단계 ③ · 서버 /api/AI검토 → 2_프로그램\AI다리.py) — 누를 때만 부름 · AI 는 짚기만 · 반영은 설계자가 누름 · 과업.AI 에 저장
+let AI묻는중 = false, AI실패 = null;
+const AI이름 = { claude: '클로드', lmstudio: 'LM 스튜디오' }, AI급 = { '보완 필요': '보', '권고': '권', '참고': '참' };
+const AI글 = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function AI열쇠() { return JSON.stringify([과업?.절점, 과업?.부재, 과업?.받침, 과업?.하중]); }
+function AI옛() { return !!과업?.AI && 과업.AI.열쇠 !== AI열쇠(); }
+function AI처리(i, 말, 칸) { 고침(`AI 짚음 ${i + 1} ${말}`, () => { 과업.AI.처리 = Object.assign({}, 과업.AI.처리, { [i]: 말 }); }, 칸); }
+function AI그리기() {
+  const a = 과업?.AI, 몸 = $('#AI몸'), 쉼 = $('#AI쉼'), 단 = $('#AI묻기');
+  const 설명 = $('#카드21 .note'); if (설명) 설명.hidden = Object.keys(과업?.절점 || {}).length > 0;   // 모델이 있으면 2-1 설명 줄을 접어 2-5 자리 (1366)
+  단.disabled = AI묻는중;
+  단.textContent = AI묻는중 ? '묻는 중 …' : a?.답 || AI실패 ? '다시 묻기' : 'AI 에게 묻기';
+  if (AI묻는중) { 쉼.textContent = '보통 1분 · 길면 5분 · 그동안 다른 일 가능'; return; }
+  if (AI실패) {
+    쉼.textContent = '';
+    몸.innerHTML = `<div class="ai없음"><b>연결 실패 — AI 응답 없음</b> · ${AI글(AI실패.까닭)}<br>모델 · 검토는 그대로 진행 가능 → «다음 → ③ 검토»${AI실패.글 ? ' · 묻는 글을 복사해 다른 창에 물을 수 있음 <button class="tbtn" id="AI복사">묻는 글 복사</button>' : ''} <button class="tbtn" id="AI붙임">답 붙여 넣기</button>`
+      + `<div id="AI붙임곽" hidden><textarea id="AI붙임칸" placeholder="다른 창에서 받은 답 (JSON) 을 붙여 넣고 «넣기»"></textarea><button class="tbtn" id="AI붙임넣기">넣기</button></div></div>`;
+    if ($('#AI복사')) $('#AI복사').onclick = () => AI복사(AI실패.글);
+    $('#AI붙임').onclick = () => { $('#AI붙임곽').hidden = false; $('#AI붙임칸').focus(); };
+    $('#AI붙임넣기').onclick = () => AI묻기({ 답글: $('#AI붙임칸').value });
+    return;
+  }
+  if (!a?.답) { 쉼.textContent = ''; 몸.innerHTML = '<div class="note" style="margin:0">누르면 지금 모델 (절점 · 부재 · 받침 · 하중 · 프로그램 점검) 을 AI 에게 보이고 다시 볼 곳을 받음 · 안 불러도 ③ 으로 진행 가능</div>'; return; }
+  쉼.textContent = `답 받음 · ${AI이름[a.AI] || a.AI}${a.초 != null ? ' · ' + a.초 + '초' : ''}${a.기억 ? ' (지난 답)' : ''}`;
+  const 처 = a.처리 || {}, 권 = a.답.권함;
+  let h = AI옛() ? '<div class="note" style="margin:0 0 4px">모델이 변경됨 — 아래 답은 앞 모델 기준 · 새 모델로 보려면 «다시 묻기»</div>' : '';
+  if (권) h += `<div class="ai권"><b>권하는 안 ${권.안 === '지금 그대로' ? '— 지금 모델 그대로' : AI글((안이름[권.안] || '기본안 ' + 권.안).replace(' (기본)', ''))}</b> — ${AI글(권.까닭)}</div>`;
+  h += (a.답.짚음 || []).map((x, i) => {
+    const 됨 = 처[i], 안 = (String(x.손질).match(/^기본안 ([AB]) 로/) || [])[1], 넘 = `<button class="tbtn" data-짚="${i}" data-할="넘김">넘김</button>`;
+    const 단추 = 됨 ? `<span class="됨">✓ ${AI글(됨)}</span>`
+      : 안 && 과업.기본안 !== 안 ? `<button class="tbtn" data-짚="${i}" data-할="안${안}" title="2-1 기본안 ${안} 을 누른 것과 같음 · 되돌리기 가능">반영</button>` + 넘
+      : x.손질 === '③ 에서 입력' ? `<button class="tbtn" data-짚="${i}" data-할="③" title="③ 검토 판으로 가서 입력">③ 으로</button>` + 넘
+      : x.손질 === '계산서에 한 줄' ? `<button class="tbtn" data-짚="${i}" data-할="반영" title="계산서 4절 «모델 정한 까닭» 에 남김">반영</button>` + 넘
+      : `<button class="tbtn" data-짚="${i}" data-할="확인">확인</button>`;
+    return `<div class="ai줄${됨 ? ' 끝남' : ''}"><span class="급 ${AI급[x.등급] || '참'}">${AI글(x.등급)}</span><span>${AI글(x.무엇)}<i>${AI글(x.어디)} · ${AI글(x.까닭)} → 손질 «${AI글(x.손질)}»</i></span><span class="단">${단추}</span></div>`;
+  }).join('') || '<div class="note">짚은 것 없음</div>';
+  h += '<div class="ai끝">반영 · 넘김은 계산서 4절 «모델 정한 까닭» 에 남음 · AI 의견은 참고 — 좌표 · 부재력 · 판정은 프로그램</div>';
+  몸.innerHTML = h;
+  몸.querySelectorAll('[data-짚]').forEach(b => b.onclick = () => {
+    const i = +b.dataset.짚, 할 = b.dataset.할;
+    if (할.startsWith('안')) { AI처리(i, '반영 (기본안 ' + 할.slice(1) + ')', b); document.querySelector(`.안[data-안="${할.slice(1)}"]`).click(); return; }
+    if (할 === '③') { AI처리(i, '③ 검토에서 입력', b); 판열기(3); return; }
+    AI처리(i, 할, b);
+  });
+}
+async function AI묻기(덧 = {}) {
+  if (AI묻는중 || !과업) return;
+  if (!Object.keys(과업.절점 || {}).length || !(과업.부재 || []).length) { 알림2('<b>모델 없음</b> — 2-1 기본안을 고르거나 절점 · 부재를 입력한 뒤 묻기', true); return; }
+  const 그과업 = 과업, 열쇠 = AI열쇠(), 길 = $('#AI길').value, 새로 = !덧.답글 && !!과업.AI && 과업.AI.열쇠 === 열쇠;   // 같은 모델에서 다시 누르면 지난 답 말고 새로
+  const 실패전 = AI실패; AI묻는중 = true; AI실패 = null; AI그리기();
+  let r;
+  try { r = await 부름('AI검토', Object.assign({ 과업, AI: 길, 새로 }, 덧)); } catch (e) { r = { 됨: false, 까닭: '연결 실패 — 서버 응답 없음' }; }
+  AI묻는중 = false;
+  if (과업 !== 그과업) { AI그리기(); return; }                    // 기다리는 동안 다른 과업을 엶 — 답은 버림
+  if (r.오류) r = { 됨: false, 까닭: r.오류, 글: 실패전?.글 };
+  if (!r.됨) { AI실패 = r; AI그리기(); return; }
+  고침(`AI 짚음 받음 (${AI이름[r.AI] || r.AI})`, () => { 과업.AI = { 열쇠, 지문: r.지문, AI: r.AI, 초: r.초, 때: r.때, 기억: r.기억, 답: r.답, 처리: {} }; }, $('#AI묻기'));
+}
+async function AI복사(글) {
+  try { await navigator.clipboard.writeText(글); }
+  catch (e) { const t = document.createElement('textarea'); t.value = 글; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
+  알림2('묻는 글 복사 완료 — 다른 창 (클로드 앱 등) 에 붙여 넣고 받은 답을 «답 붙여 넣기» 로');
+}
+$('#AI묻기').onclick = () => AI묻기();
+function AI표시(P) {           // 2-4 그림 — 처리 안 한 짚음의 부재 · 절점에 파란 점선
+  const a = 과업?.AI; if (!a?.답 || AI옛()) return '';
+  const 처 = a.처리 || {}; let g = '';
+  (a.답.짚음 || []).forEach((x, i) => {
+    if (처[i]) return;
+    const 말 = String(x.어디 || '').split(' '), 종 = 말[0], 이름 = 말[말.length - 1], 제목 = `<title>AI ${i + 1} · ${AI글(x.무엇)}</title>`;
+    if (종 === '부재') {
+      const p = (과업.부재 || []).find(q => q[0] === 이름); if (!p || !과업.절점[p[1]] || !과업.절점[p[2]]) return;
+      const [x1, y1] = P(...과업.절점[p[1]]), [x2, y2] = P(...과업.절점[p[2]]), cx = (x1 + x2) / 2, cy = (y1 + y2) / 2;
+      g += `<ellipse class="ai표시" cx="${cx}" cy="${cy}" rx="${Math.max(24, Math.hypot(x2 - x1, y2 - y1) * 0.35)}" ry="16" transform="rotate(${Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI} ${cx} ${cy})">${제목}</ellipse>`;
+    } else if (종 === '절점' && 과업.절점[이름]) { const [sx, sy] = P(...과업.절점[이름]); g += `<circle class="ai표시" cx="${sx}" cy="${sy}" r="18">${제목}</circle>`; }
+  });
+  return g;
+}
+// ─ 기본안 넣기 · 따라감 (10-26 밤 · 걷기 흠 4 · 5 · 6)
+//   받을 때 기본안이 준 값을 과업.기본안값 에 적어 둠 → ① 형상 · 받침 · 하중이 바뀌면 «지금 값 = 그때 기본안 값» 인 칸만 새 기본안 값으로 (사람이 고친 칸은 그대로)
+//   다시 받을 때는 이름 · 두 끝이 같은 부재와 같은 이름 절점의 철근 · 정착 · 스트럿 폭 · 절점 폭 · 경계면을 남김 (전엔 다 지워짐)
+const 따라칸 = ['절점', '받침', '하중', 'βs', 'βn', '판길이'];
+function 기본안열쇠값() { return JSON.stringify([과업?.형상, 과업?.받침표, 과업?.조합]); }   // function = 판열기 (위) 가 먼저 불러도 됨
+const 같음 = (x, y) => JSON.stringify(x) === JSON.stringify(y);
+function 기본안값적기(a) { 과업.기본안값 = JSON.parse(JSON.stringify({ 열쇠: 기본안열쇠값(), 부재: a.부재 || [], ...Object.fromEntries(따라칸.map(k => [k, a[k] || {}])) })); }
+function 기본안넣기(새, 안) {
+  const 옛부 = 과업.부재 || [], 새점 = 새.절점 || {};
+  const 남부 = new Set((새.부재 || []).filter(p => 옛부.some(q => q[0] === p[0] && [q[1], q[2]].sort().join() === [p[1], p[2]].sort().join())).map(p => p[0]));
+  const 남점 = new Set(Object.keys(새점).filter(n => (과업.절점 || {})[n]));
+  const 하중열쇠 = new Set(Object.keys(새.하중 || {}));
+  const 거름 = (칸, 됨) => Object.fromEntries(Object.entries(과업[칸] || {}).filter(([k, v]) => 됨(k, v)));
+  const 사람 = {
+    철근: 거름('철근', k => 남부.has(k)), 정착: 거름('정착', k => 남부.has(k)), 스트럿폭: 거름('스트럿폭', k => 남부.has(k)),
+    절점폭: 거름('절점폭', k => 남점.has(k.split(' ')[0])),
+    절점면: Object.fromEntries(Object.entries(과업.절점면 || {}).filter(([n]) => 남점.has(n)).map(([n, 면]) => [n, Object.fromEntries(Object.entries(면 || {}).filter(([, 키]) => 남부.has(키) || (String(키).startsWith('P:') && 하중열쇠.has(String(키).slice(2)))))]).filter(([, 면]) => Object.keys(면).length)),
+  };
+  기대옮김(새);
+  for (const 칸 of 모델칸들) 과업[칸] = 칸 === '부재' ? [] : {};
+  for (const 칸 of ['절점', '부재', '받침', '하중', 'βs', 'βn', '판길이']) if (새[칸]) 과업[칸] = 새[칸];
+  for (const [칸, v] of Object.entries(사람)) 과업[칸] = v;
+  과업.기본안 = 안; 기본안값적기(새);
+  return Object.values(사람).reduce((t, v) => t + Object.keys(v).length, 0);
+}
+async function 기본안따라감() {
+  const 옛 = 과업?.기본안값;
+  if (!옛 || !['A', 'B'].includes(과업.기본안) || 옛.열쇠 === 기본안열쇠값()) return false;
+  await 기본안미리();
+  const a0 = 기본안결과?.됨 ? 기본안결과.안.find(x => x.안 === 과업.기본안) : null;
+  if (!a0) { 알림2('① 값이 변경되었으나 기본안 ' + 과업.기본안 + ' 작성 실패 — ' + (기본안결과?.까닭 || '') + ' → 절점 하중 · 좌표 확인', true); 과업.기본안값.열쇠 = 기본안열쇠값(); return false; }
+  const a = JSON.parse(JSON.stringify(a0)), 이름 = a.이름 || ('기본안 ' + 과업.기본안);
+  if (같음(a.부재, 옛.부재) && 같음(과업.부재, 옛.부재)) {
+    let 고친수 = 0, 둔수 = 0;
+    고침(`① 값 변경 → ${이름} 따라 수정`, () => {
+      for (const 칸 of 따라칸) {
+        const 지금 = 과업[칸] || {}, 그때 = 옛[칸] || {}, 새값 = a[칸] || {}, 결과 = { ...지금 };
+        for (const k of new Set([...Object.keys(그때), ...Object.keys(새값)])) {
+          if (!같음(지금[k], 그때[k])) { if (!같음(지금[k], 새값[k])) 둔수++; continue; }   // 사람이 고친 칸
+          if (같음(지금[k], 새값[k])) continue;
+          if (새값[k] === undefined) delete 결과[k]; else 결과[k] = 새값[k];
+          고친수++;
+        }
+        과업[칸] = 결과;
+      }
+      기본안값적기(a);
+    });
+    if (window.dsmUndo && 고친수) dsmUndo.띠(`① 값이 변경되어 ${이름} 의 절점 좌표 · 하중 · 받침 ${고친수}개를 따라 수정${둔수 ? ' · 설계자가 수정한 ' + 둔수 + '개는 그대로' : ''} · 되돌리기 가능`);
+    return 고친수 > 0;
+  }
+  if (같음(과업.부재, 옛.부재)) {   // 기본안 꼴이 바뀜 (하중 수 등) · 부재는 사람이 안 고침 → 새 꼴로 받고 사람 칸은 같은 부재에 남김
+    let 남김 = 0;
+    고침(`① 값 변경 → ${이름} 새 구성으로`, () => { 남김 = 기본안넣기(a, 과업.기본안); });
+    if (window.dsmUndo) dsmUndo.띠(`① 값이 변경되어 ${이름} 의 구성이 변경됨 → 새 구성으로 반영 · 같은 부재 · 절점의 철근 · 정착 · 폭 ${남김}개는 남김 · 되돌리기 가능`);
+    return true;
+  }
+  과업.기본안값.열쇠 = 기본안열쇠값();   // 부재를 사람이 고친 모델 — 덮지 않고 알림만 (한 번)
+  알림2('<b>확인</b> · ① 값이 변경되었으나 부재를 직접 수정한 모델이라 그대로 둠 — ② 절점 하중 · 좌표가 ① 과 맞는지 확인하십시오 (2-1 기본안을 다시 누르면 새로 반영 · 같은 부재의 철근 · 폭은 남김)', true);
+  if (window.dsmUndo) dsmUndo.띠('① 값 변경 — 부재를 직접 수정한 모델이라 ② 를 그대로 둠 · 절점 하중을 확인하십시오');
+  return false;
+}
+// 정답지 «기대» 는 옛 모델의 부재 · 절점 이름 → 기본안은 이름을 새로 붙여 엇갈림 (DB-1 정답지 AB = 기본안 AC)
+//   좌표로 같은 부재 · 절점을 찾아 열쇠만 바꿈 · 못 찾은 것은 뺌 (다른 부재를 «다름» 으로 대지 않게) · 되돌리기로 살아남
+function 기대옮김(새) {
+  if (!과업.기대 && !과업.기대_폭) return;
+  const 옛점 = 과업.절점 || {}, 새점 = 새.절점 || {}, 옛부 = 과업.부재 || [];
+  const xs = Object.values(옛점).map(p => p[0]), 허용 = Math.max(1, 0.005 * ((Math.max(...xs) - Math.min(...xs)) || 1));
+  // 모양이 같고 통째로 옮겨진 것도 같은 모델 (DB-1 예제 타이 y 0 ↔ 기본안 y 100 = 피복 중심) — 옮김 0 과 왼쪽 아래 맞춤 가운데 더 많이 맞는 쪽
+  const 아래왼 = 점 => [0, 1].map(i => Math.min(...Object.values(점).map(p => p[i])));
+  const 찾점 = (n, d) => { const p = 옛점[n]; return p ? Object.keys(새점).find(k => Math.abs(새점[k][0] - p[0] - d[0]) <= 허용 && Math.abs(새점[k][1] - p[1] - d[1]) <= 허용) : undefined; };
+  const [o0, o1] = [아래왼(옛점), 아래왼(새점)], 옮김 = [[0, 0], [o1[0] - o0[0], o1[1] - o0[1]]]
+    .map(d => [d, Object.keys(옛점).filter(n => 찾점(n, d)).length]).sort((a, b) => b[1] - a[1])[0][0];
+  const 같은점 = n => 찾점(n, 옮김);
+  const 같은부재 = 이름 => { const b = 옛부.find(x => x[0] === 이름); if (!b) return undefined; const i = 같은점(b[1]), j = 같은점(b[2]);
+    return i && j ? (새.부재 || []).find(x => (x[1] === i && x[2] === j) || (x[1] === j && x[2] === i))?.[0] : undefined; };
+  const 새이름 = k => { const r = /^R(.+)([xy])$/.exec(k); if (r && 옛점[r[1]]) { const n = 같은점(r[1]); return n ? 'R' + n + r[2] : undefined; } return 같은부재(k); };
+  for (const 칸 of ['기대', '기대_폭']) {
+    if (!과업[칸]) continue; const 옮 = {};
+    for (const [k, v] of Object.entries(과업[칸])) { const [앞, ...뒤] = k.split(' '); const n = 새이름(앞); if (n) 옮[[n, ...뒤].join(' ')] = v; }
+    과업[칸] = 옮;
+  }
+}
+$('#절점더').onclick = () => {
+  const n = 새이름('n', Object.keys(과업.절점 || {})); const f = 과업.형상, 높 = (f.꼴 === '코핑' ? f.H2 : f.H), 칸 = f.TL / 10, 가까움 = f.TL / 20;
+  // 새 절점이 한 점에 겹치지 않게 (10-26 고칠거리 가) — 가운데 → 좌우로 한 칸씩 → 위 · 아래 줄
+  const 있 = Object.values(과업.절점 || {}), 빔 = ([x, y]) => 있.every(([a, b]) => Math.hypot(a - x, b - y) > 가까움);
+  let 자리 = null;
+  for (const y of [높 / 2, 높 * 0.75, 높 * 0.25]) { for (let k = 0; k <= 10 && !자리; k++) for (const s of k ? [1, -1] : [1]) { const x = f.TL / 2 + s * k * 칸; if (!자리 && x >= 0 && x <= f.TL && 빔([x, y])) 자리 = [Math.round(x), Math.round(y)]; } if (자리) break; }
+  자리 = 자리 || [Math.round(f.TL / 2), Math.round(높 / 2) + 있.length * 10];
+  고침(`절점 ${n} 추가 (${자리.map(글).join(', ')})`, () => { (과업.절점 = 과업.절점 || {})[n] = 자리; });
+};
+$('#부재더').onclick = () => { const 이름 = 새이름('m', (과업.부재 || []).map(p => p[0])), 절 = Object.keys(과업.절점 || {}); if (절.length < 2) { 알림2('부재 추가는 절점 2개 이상 필요', true); return; } 고침(`부재 ${이름} 추가`, () => { (과업.부재 = 과업.부재 || []).push([이름, 절[0], 절[1], '미정']); }); };
+$('#Vu넣기').onclick = () => {
+  if (!조합결과) { 알림2('① 조합 값이 아직 없음', true); return; }
+  const 절 = Object.entries(과업.절점 || {}); const 못 = [];
+  const 넣을 = {};
+  조합결과.줄.forEach(r => { const 후보 = 절.filter(([n, [x]]) => Math.abs(x - r.x) < 1).sort((a, b) => b[1][1] - a[1][1]); if (후보.length) 넣을[후보[0][0]] = [r.Hu || 0, -r.Vu]; else 못.push(r.번호); });
+  if (!Object.keys(넣을).length) { 알림2('받침 x 와 같은 x 의 절점이 없음 — 절점 x 를 받침 위치로 맞추십시오', true); return; }
+  고침('받침 Vu 를 절점 하중으로', () => { Object.assign(과업.하중, 넣을); });
+  if (못.length) 알림2('받침 ' + 못.join(' · ') + ' 은 같은 x 의 절점이 없어 반영 실패', true);
+};
+
+// ══ ③ 검토 판 — 서버 /api/검토 결과를 표 넷 · 그림 · 식 줄로 (셈 없음 · 사람이 넣는 값 : 철근 · 정착 · βs · βn · 있는 폭)
+let 검토결과 = null, 검토때, 탭33 = '타이', 고른 = null, NG만 = false;
+const βs선택 = [[1, '1.00 단면 일정'], [0.75, '0.75 병모양 보강'], [0.6, '0.60 미보강 · 기타'], [0.4, '0.40 인장부']];   // KDS 14 20 24 4.2.2(2) — 03_조문표
+const βn선택 = [[1, '1.00 CCC'], [0.8, '0.80 CCT'], [0.6, '0.60 CTT']];                                                 // KDS 14 20 24 4.4.3(2)
+const 판색 = { 'O.K': 'ok', 'N.G': 'bad', '주의': 'mid', '미정': 'dim', '생략': 'dim' };
+const 판글 = v => v === '미정' ? '미입력' : v === '생략' ? '부재력 0 · 생략' : v;   // «생략» = 힘 0 부재 (10-26 밤) · 판정 값 «미정»(저장 · 서버 값 그대로)은 화면에 «미입력» 으로 보임 (용어 사전 10-26)
+const 면이름들 = ['수평면', '연직면', '사면', '사면2', '사면3'];
+// 절점 n 에 닿을 수 있는 것 : 그 절점의 부재 · 받침 반력 «R+절점+x/y» · 하중 «P:절점» (stm_풀이 절점면 열쇠 꼴 그대로)
+function 닿을것(n) { const m = 과업; return [...(m.부재 || []).filter(q => q[1] === n || q[2] === n).map(q => q[0]), ...((m.받침 || {})[n] || []).map(d => 'R' + n + d), ...((m.하중 || {})[n] ? ['P:' + n] : [])]; }
+function 닿옵(n, 값) { const 목 = 닿을것(n); if (값 && !목.includes(값)) 목.unshift(값); return 목.map(k => `<option ${k === 값 ? 'selected' : ''}>${k}</option>`).join(''); }
+const 선색 = { 'O.K': 'var(--dsm-ok)', 'N.G': 'var(--dsm-bad)', '주의': '#b25000', '미정': 'var(--dsm-faint)', '생략': 'var(--dsm-faint)' };
+// 검토비 표시 — 서버는 소수 둘째 반올림 · 판정은 반올림 전 값 → «1.00 N.G» 가 생김 · 그때만 제공 ÷ 소요 로 소수 셋째 (내림) · 계산서는 그대로 (걷기 11 · 10-28)
+const 참비 = x => { const 있 = x.있는 ?? x.있는폭 ?? x.제공As, 필 = x.필요 ?? x.필요폭 ?? x.필요As; return 있 != null && 필 > 0 ? 있 / 필 : x.비; };
+const 비글 = x => x.비 == null ? '' : x.판정 === 'N.G' && x.비.toFixed(2) === '1.00' ? Math.min(0.999, Math.floor(참비(x) * 1000) / 1000).toFixed(3) : x.비.toFixed(2);
+const 앞선 = (a, b) => (a.판정 === 'N.G') !== (b.판정 === 'N.G') ? (b.판정 === 'N.G' ? b : a) : 참비(b) < 참비(a) ? b : a;   // 지배 — N.G 먼저 · 그다음 작은 검토비
+function 알림3(말, 나쁨) { $('#상태3').className = 'status' + (나쁨 === true ? ' bad' : 나쁨 ? ' ' + 나쁨 : '');   // 점 색 = 판정 색 (true 빨강 · '주의' 주황 · '미입력' 회색)
+  $('#상태3글').innerHTML = 말; }
+async function 검토요청(깊이 = 0) {
+  if (!과업 || !Object.keys(과업.절점 || {}).length || !(과업.부재 || []).length) { 검토결과 = null; if ($('#판3').classList.contains('on')) 그리기3(); return; }
+  try { const r = await 부름('검토', { 과업 }); if (r.오류) { 검토결과 = null; 알림3(r.오류, true); 그리기3(true); return; } 검토결과 = r; }
+  catch (e) { 검토결과 = null; }
+  const 따라 = 깊이 < 2 ? 초안따라감() : 0;
+  if (따라) { 저장요청(); if (window.dsmUndo) dsmUndo.띠(`모델이 변경되어 «미입력 초안» 폭 ${따라}개를 다시 계산 (ACI 318 해설 방법) · 설계자가 수정한 칸은 그대로`, { 단추: false }); return 검토요청(깊이 + 1); }
+  if ($('#판3').classList.contains('on')) 그리기3();
+}
+// «미입력 초안» 이 넣은 폭은 과업.초안폭 에 적어 둠 → ① · ② 가 바뀌어 제안 값이 달라지면 그 칸만 새 값으로 (사람이 고치거나 지운 칸은 표시를 떼고 안 건드림) — 10-28 걷기 진짜 3
+function 초안따라감() {
+  const f = 검토결과?.폭제안, 초 = 과업?.초안폭; if (!f || !초) return 0;
+  let n = 0;
+  for (const [칸, 제, 열쇠] of [['스트럿', f.스트럿 || {}, '스트럿폭'], ['절점', f.절점 || {}, '절점폭']]) {
+    const 값 = 과업[열쇠] = 과업[열쇠] || {}, 표 = 초[칸] = 초[칸] || {};
+    for (const [k, v] of Object.entries(표)) {
+      if (값[k] !== v) { delete 표[k]; continue; }
+      const 새 = 제[k]; if (새 == null || Math.abs(새 - v) < 0.5) continue;
+      값[k] = 새; 표[k] = 새; n++;
+    }
+  }
+  return n;
+}
+function 고르기(이름) { 고른 = 이름; 식보이기(); document.querySelectorAll('#표33 tbody tr,#표32 tbody tr').forEach(tr => tr.classList.toggle('sel', tr.dataset.이름 === 이름)); 검토그림(); }
+function 식보이기() {
+  const c = 검토결과; if (!c || !고른 || !c.식줄[고른]) { $('#식칸').textContent = c ? '부재를 선택하십시오' : '…'; $('#식제목').textContent = '선택한 부재 — 식 → 대입 → 답'; return; }
+  $('#식제목').textContent = `${고른} — 식 → 대입 → 답`;
+  $('#식칸').innerHTML = c.식줄[고른].map(s => '<div>' + s.replace(/^(\s*→?\s*)(㉮|㉯|㉰)/, '$1<span class="h">$2</span>').replace(/\[([^\]]+)\]/g, '<span class="cite">[$1]</span>').replace(/∴ (O\.K)/g, '∴ <span class="ok">$1</span>').replace(/∴ (N\.G)/g, '∴ <span class="bad">$1</span>').replace(/∴ (주의|미정)/g, '∴ <span class="mid">$1</span>').replace(/∴ (부재력 0 — 검토 생략)/g, '∴ <span style="color:var(--dsm-dim)">$1</span>') + '</div>').join('');
+}
+function 그리기3(오류만) {
+  const c = 검토결과;
+  if (!c) {
+    $('#판정칸').className = 'verdict'; $('#판정큰').textContent = '…';
+    $('#판정왜').innerHTML = 오류만 ? '해석 실패 — 위 상태 줄' : (Object.keys(과업?.절점 || {}).length ? '검토 중' : '② 모델에서 절점 · 부재를 먼저 입력하십시오');
+    $('#판정넷').innerHTML = ''; $('#표32 tbody').innerHTML = ''; $('#고칠길칩').innerHTML = ''; $('#표33 thead').innerHTML = ''; $('#표33 tbody').innerHTML = ''; $('#검토요약').innerHTML = ''; $('#검토그림').innerHTML = ''; 식보이기();
+    if (!오류만) 알림3(Object.keys(과업?.절점 || {}).length ? '검토 중' : '모델 없음 — ② 모델부터', !Object.keys(과업?.절점 || {}).length);
+    지금칸(3, ''); $('#다음4').classList.add('흐림');
+    if (!Object.keys(과업?.절점 || {}).length) 할일(3, 기본안없음() ? '② 모델부터 입력하십시오 (직접 입력)' : '② 모델부터 입력하십시오 (기본안 A · B)');
+    return;
+  }
+  // 3-1 판정
+  const 꼴 = c.판정 === 'O.K' ? 'ok' : c.판정 === 'N.G' ? 'bad' : 'mid';
+  $('#판정칸').className = 'verdict ' + 꼴; $('#판정큰').textContent = 판글(c.판정);
+  const 전부 = [...c.스트럿.map(x => ({ ...x, 무엇: '스트럿' })), ...c.타이.map(x => ({ ...x, 무엇: '타이' })), ...c.절점.map(x => ({ ...x, 이름: x.열쇠, 무엇: '절점영역' })), ...c.정착표.map(x => ({ ...x, 무엇: '정착' }))].filter(x => x.비 != null);
+  const 지배 = 전부.length ? 전부.reduce(앞선) : null;
+  // v0.8.0 (10-29 검정) 서버 «왜» 글에서 « · ★ » 로 가른 뒤 ★ 글 (역부호 · 인장 반력) 은 빨강 띠로 따로 한 줄 (글은 그대로 · 목업 검정값_목업 4)
+  const 왜토막 = String(c.왜 || '').split(' · ★ ');
+  $('#판정왜').innerHTML = `<div><b>${왜토막[0]}</b></div>` + 왜토막.slice(1).map(t => `<div class="warn띠" title="★ ${t}">★ ${t}</div>`).join('') + `<div>${지배 ? `지배 부재 ${지배.이름} (${지배.무엇}) 검토비 ${비글(지배)} · ` : ''}하중조합 ${c.조합 || ''} · φ 스트럿 ${c.φ.스트럿} · 타이 ${c.φ.타이} · 절점영역 ${c.φ.절점}</div>`; $('#판정왜').title = $('#판정왜').innerText;
+  $('#판정넷').innerHTML = ['스트럿', '타이', '절점', '정착'].map(k => { const s = c.요약[k]; return `<div class="mini ${s.NG ? 'bad' : s.미정 ? 'mid' : ''}">${k === '절점' ? '절점영역' : k} ${s.수}<b>${s.수 ? `${s.OK} / ${s.수} O.K${s.NG ? ' · N.G ' + s.NG : ''}${s.미정 ? ' · 미입력 ' + s.미정 : ''}${s.생략 ? ' · 부재력 0 생략 ' + s.생략 : ''}` : '—'}</b></div>`; }).join('');
+  // 3-2 N.G · 주의 목록
+  const 표 = c.철근표;
+  const 나쁜 = [];
+  c.타이.forEach(t => { if (t.판정 === 'N.G' || t.판정 === '주의') { const 단 = 표['D' + t.지름]; 나쁜.push({ 이름: t.이름, 무엇: '타이 강도', 있는: t.제공As, 필요: t.필요As, 비: t.비, 판정: t.판정, 길: 단 ? `D${t.지름} 본수 ${글(t.개수)} → ${Math.ceil(t.필요As * 1.11 / 단)} 본이면 O.K (검토비 1.11)` : '규격을 선택하십시오' }); } });
+  c.스트럿.forEach(s => { if (s.판정 === 'N.G' || s.판정 === '주의') 나쁜.push({ 이름: s.이름, 무엇: '스트럿 폭', 있는: s.있는폭, 필요: s.필요폭, 비: s.비, 판정: s.판정, 길: `폭 ${글(s.필요폭 * 1.11)} 이상 (검토비 1.11) 또는 βs 확인` }); });
+  c.절점.forEach(n => { if (n.판정 === 'N.G' || n.판정 === '주의') 나쁜.push({ 이름: n.열쇠, 무엇: '절점영역 폭', 있는: n.있는폭, 필요: n.필요폭, 비: n.비, 판정: n.판정, 길: n.면 === '연직면' ? `타이 중심 높이 ${글(n.필요폭 * 1.11 / 2)} 이상 (타이를 올려 배치 · 연직면 = 2 × 타이 중심 높이)` : `폭 ${글(n.필요폭 * 1.11)} 이상 또는 받침판 ↑` }); });
+  c.정착표.forEach(d => { if (d.판정 === 'N.G' || d.판정 === '주의') 나쁜.push({ 이름: d.이름, 무엇: `정착 (${d.꼴 === '갈고리90' ? '갈고리 90°' : d.꼴})`, 있는: d.있는, 필요: d.필요, 비: d.비, 판정: d.판정, 길: d.고칠길 || 'ℓanc 를 늘림' }); });
+  $('#표32 tbody').innerHTML = 나쁜.map(x => `<tr data-이름="${x.이름}" class="${고른 === x.이름 ? 'sel' : ''}"><td class="l"><b>${x.이름}</b></td><td class="l">${x.무엇}</td><td>${x.있는 != null ? 글(x.있는) : '—'}</td><td>${글(x.필요)}</td><td class="jd ${판색[x.판정]}">${x.비 != null ? 비글(x) : '—'}</td><td class="l">${x.길}</td></tr>`).join('')
+    || `<tr><td colspan="6" class="l" style="color:var(--dsm-faint)">${c.판정 === '미정' ? 'N.G 없음 — 미입력 값은 3-3 표에서 입력' : 'N.G · 주의 없음'}</td></tr>`;
+  $('#표32 tbody').querySelectorAll('tr[data-이름]').forEach(tr => tr.onclick = () => 고르기(tr.dataset.이름));
+  const 갈고리될 = c.정착표.filter(d => d.판정 === 'N.G' && d.고칠길 && /O\.K/.test(d.고칠길)).map(d => d.이름);
+  $('#고칠길칩').innerHTML = (갈고리될.length ? `<span class="chip on" id="갈고리적용" title="정착 형태를 갈고리 90° 로 변경 (되돌리기 가능)">조치 방안 적용 — 갈고리 90° (${갈고리될.join(' · ')})</span>` : '')
+    + (나쁜.some(x => x.판정 === 'N.G') ? `<span class="chip" title="잠그지 않음 — ④ 계산서에 N.G 로 기재">그대로 N.G 로 적기</span>` : '');
+  const 갈 = $('#갈고리적용'); if (갈) 갈.onclick = () => 고침(`정착 갈고리 90° (${갈고리될.join(' · ')})`, () => { 갈고리될.forEach(n => { 과업.정착[n] = Object.assign({}, 과업.정착[n], { 꼴: '갈고리90' }); }); });
+  // 3-3 표 (탭)
+  const 옵 = (목록, 값) => 목록.map(([v, l]) => `<option value="${v}" ${Math.abs(v - 값) < 1e-9 ? 'selected' : ''}>${l}</option>`).join('');
+  const 걸러 = 줄 => NG만 ? 줄.filter(x => x.판정 === 'N.G' || x.판정 === '주의') : 줄;
+  const 판td = x => `<td class="jd ${판색[x.판정]}">${x.비 != null ? 비글(x) + ' ' : ''}${판글(x.판정)}</td>`;
+  let thead, 줄들;
+  $('#제안넣기').style.display = 빈칸수() ? '' : 'none';
+  if (탭33 === '타이') {
+    $('#표33제목').textContent = '타이'; $('#표33설명').textContent = '';
+    thead = '<tr><th>부재</th><th>규격</th><th>본수</th><th>제공</th><th>소요</th><th>검토비</th><th>정착</th><th>ℓanc</th></tr>';
+    const 지름옵 = d => Object.keys(표).map(k => `<option value="${k.slice(1)}" ${String(d) === k.slice(1) ? 'selected' : ''}>${k}</option>`).join('');
+    줄들 = 걸러(c.타이).map(t => `<tr data-이름="${t.이름}" class="${고른 === t.이름 ? 'sel' : ''}"><td class="l"><b>${t.이름}</b>${t.역부호 ? ' ★' : ''}</td><td><select data-타이="${t.이름}" data-칸="지름"><option value="" ${t.지름 ? '' : 'selected'}>—</option>${지름옵(t.지름)}</select></td><td><input data-타이="${t.이름}" data-칸="개수" value="${t.개수 ? 글(t.개수) : ''}"></td><td>${t.제공As != null ? 글(t.제공As) : '—'}</td><td>${글(t.필요As)}</td>${판td(t)}<td><select data-타이="${t.이름}" data-칸="꼴"><option value="" ${t.정착꼴 ? '' : 'selected'}>—</option><option value="직선" ${t.정착꼴 === '직선' ? 'selected' : ''}>직선</option><option value="갈고리90" ${t.정착꼴 === '갈고리90' ? 'selected' : ''}>갈고리 90°</option></select></td><td><input data-타이="${t.이름}" data-칸="l_anc" value="${t.l_anc != null ? 글(t.l_anc) : ''}"></td></tr>`);
+  } else if (탭33 === '스트럿') {
+    $('#표33제목').textContent = '스트럿'; $('#표33설명').textContent = '';
+    thead = '<tr><th>부재</th><th>Fu</th><th>βs</th><th>fce</th><th>소요 폭</th><th>제공 폭</th><th>검토비</th></tr>';
+    줄들 = 걸러(c.스트럿).map(s => `<tr data-이름="${s.이름}" class="${고른 === s.이름 ? 'sel' : ''}"><td class="l"><b>${s.이름}</b>${s.역부호 ? ' ★' : ''}</td><td>${글(s.Fu)}</td><td><select data-스트럿="${s.이름}" data-칸="βs" class="${s.βs미입력 ? '빈βs' : ''}" title="${s.βs미입력 ? 'βs 미입력 — 0.75 (병모양 · 4.2.3 횡철근 만족) 가정값으로 셈 · 설계자 선택 필요' : 'KDS 14 20 24 4.2.2(2)'}">${s.βs미입력 ? '<option value="" selected>— (가정 0.75)</option>' : ''}${옵(βs선택, s.βs미입력 ? NaN : s.βs)}</select></td><td>${s.fce.toFixed(2)}</td><td>${글(s.필요폭)}</td><td><input data-스트럿="${s.이름}" data-칸="폭" value="${s.있는폭 != null ? 글(s.있는폭) : ''}" placeholder="${검토결과?.폭제안?.스트럿?.[s.이름] != null ? '초안 ' + 글(검토결과.폭제안.스트럿[s.이름]) : 'mm'}" title="${검토결과?.폭제안?.식?.[s.이름] || ''}"></td>${판td(s)}</tr>`);
+  } else {
+    $('#표33제목').textContent = '절점영역'; $('#표33설명').textContent = '';
+    // v0.8.0 (10-29 검정) 두께 열 — 어느 면이든 두께가 부재 두께 b 와 다를 때만 (말뚝 · 좁은 받침판) · 깊은보처럼 다 같으면 열 없음 (표 폭 그대로)
+    const 두께열 = c.절점.some(n => n.두께 != null && Math.abs(n.두께 - 수(과업.폭b)) > 0.5);
+    thead = '<tr><th>절점</th><th>경계면</th><th>작용력</th><th>βn</th>' + (두께열 ? '<th title="면 두께 b면 = 힘이 닿는 면의 가로폭 (받침판 가로 · 말뚝 π/4·D 등가 · 그 밖은 부재 두께 b) — KDS 14 20 24 4.4.2(1) An 은 면의 면적 · b 와 다르면 주황">두께</th>' : '') + '<th>소요 폭</th><th>제공 폭</th><th>검토비</th><th></th></tr>';
+    줄들 = 걸러(c.절점).map(n => `<tr data-이름="절점 ${n.절점}" class="${고른 === '절점 ' + n.절점 ? 'sel' : ''}"><td class="l"><b>${n.절점}</b></td><td class="l">${n.면}</td><td><select data-면절점="${n.절점}" data-면="${n.면}" title="이 경계면에 작용하는 부재력 · 반력 · 하중">${닿옵(n.절점, n.면힘)}</select></td><td><select data-절점="${n.절점}" data-칸="βn">${옵(βn선택, n.βn)}</select></td>${두께열 ? `<td class="두께 ${n.두께 != null && Math.abs(n.두께 - 수(과업.폭b)) > 0.5 ? '다름' : ''}" title="${(c.절점두께말 || {})[n.절점] || '부재 두께 b'}">${n.두께 != null ? 글(Math.round(n.두께), 0) : '—'}</td>` : ''}<td>${글(n.필요폭)}</td><td><input data-절점폭="${n.열쇠}" value="${n.있는폭 != null ? 글(n.있는폭) : ''}" placeholder="${검토결과?.폭제안?.절점?.[n.열쇠] != null ? '초안 ' + 글(검토결과.폭제안.절점[n.열쇠]) : '—'}" title="${검토결과?.폭제안?.식?.[n.열쇠] || ''}"></td>${판td(n)}<td><button class="x" data-면지움="${n.절점}|${n.면}" title="절점 ${n.절점} ${n.면} 삭제 (되돌리기 가능)">✕</button></td></tr>`);
+    if (!c.절점.length) 줄들 = ['<tr><td colspan="' + (두께열 ? 9 : 8) + '" class="l" style="color:var(--dsm-faint)">경계면 없음 — 아래 줄에서 절점 · 경계면 · 작용력(부재력 · 반력 · 하중)을 선택해 추가하면 폭을 검토</td></tr>'];
+    const 절점들 = Object.keys(과업.절점 || {});
+    줄들.push(`<tr class="add"><td><select id="새면절점" title="경계면을 추가할 절점">${절점들.map(n => `<option>${n}</option>`).join('')}</select></td><td><select id="새면이름" title="경계면 이름">${면이름들.map(x => `<option>${x}</option>`).join('')}</select></td><td><select id="새면닿음" title="이 경계면의 작용력"></select></td><td colspan="${두께열 ? 6 : 5}" class="l"><button class="chip on" id="면더" title="경계면 한 줄 추가 (되돌리기 가능)">+ 경계면 추가</button></td></tr>`);
+  }
+  $('#표33 thead').innerHTML = thead; $('#표33 tbody').innerHTML = 줄들.join('') || '<tr><td colspan="9" class="l" style="color:var(--dsm-faint)">없음</td></tr>';
+  $('#표33 tbody').querySelectorAll('tr[data-이름]').forEach(tr => tr.onclick = e => { if (!/INPUT|SELECT/.test(e.target.tagName)) 고르기(tr.dataset.이름); });
+  $('#표33').querySelectorAll('[data-타이]').forEach(i => i.onchange = () => {
+    const n = i.dataset.타이, 칸 = i.dataset.칸;
+    if (칸 === '지름' || 칸 === '개수') { const 전 = Object.assign({}, (과업.철근 || {})[n]); const 뒤 = Object.assign({}, 전); if (칸 === '지름') 뒤.지름 = i.value ? +i.value : undefined; else 뒤.개수 = 수(i.value) || undefined; 고침(`타이 ${n} ${칸 === '지름' ? '규격' : '본수'} → ${i.value || '—'}`, () => { (과업.철근 = 과업.철근 || {})[n] = 뒤; }, i); return; }
+    const 전 = Object.assign({ 조건: '조건1' }, (과업.정착 || {})[n]); const 뒤 = Object.assign({}, 전);
+    if (칸 === '꼴') { if (i.value) 뒤.꼴 = i.value; else delete 뒤.꼴; } else 뒤.l_anc = 수(i.value) || undefined;
+    고침(`타이 ${n} 정착 ${칸 === '꼴' ? '정착 형태' : 'ℓanc'} → ${i.value || '—'}`, () => { (과업.정착 = 과업.정착 || {})[n] = 뒤; }, i);
+  });
+  $('#표33').querySelectorAll('[data-스트럿]').forEach(i => i.onchange = () => { const n = i.dataset.스트럿; if (i.dataset.칸 === 'βs') 고침(`스트럿 ${n} βs → ${i.value || '—'}`, () => { 과업.βs = 과업.βs || {}; if (i.value === '') delete 과업.βs[n]; else 과업.βs[n] = +i.value; }, i); else 고침(`스트럿 ${n} 제공 폭 → ${i.value || '—'}`, () => { 과업.스트럿폭 = 과업.스트럿폭 || {}; if (i.value.trim()) 과업.스트럿폭[n] = 수(i.value); else delete 과업.스트럿폭[n]; }, i); });
+  $('#표33').querySelectorAll('[data-절점]').forEach(i => i.onchange = () => { const n = i.dataset.절점; 고침(`절점 ${n} βn → ${i.value}`, () => { (과업.βn = 과업.βn || {})[n] = +i.value; }, i); });
+  $('#표33').querySelectorAll('[data-면절점]').forEach(i => i.onchange = () => { const n = i.dataset.면절점, 면 = i.dataset.면; 고침(`절점 ${n} ${면} 작용력 → ${i.value}`, () => { (과업.절점면[n] = 과업.절점면[n] || {})[면] = i.value; }, i); });
+  $('#표33').querySelectorAll('[data-면지움]').forEach(i => i.onclick = e => { e.stopPropagation(); const [n, 면] = i.dataset.면지움.split('|'); 고침(`절점 ${n} ${면} 삭제`, () => { const f = 과업.절점면 || {}; if (f[n]) { delete f[n][면]; if (!Object.keys(f[n]).length) delete f[n]; } if (과업.절점폭) delete 과업.절점폭[n + ' ' + 면]; }); });
+  if ($('#새면절점')) {
+    const 채움 = () => { const n = $('#새면절점').value, 쓴 = Object.keys((과업.절점면 || {})[n] || {}); $('#새면닿음').innerHTML = 닿옵(n, ''); const 빈 = 면이름들.find(x => !쓴.includes(x)); if (빈) $('#새면이름').value = 빈; };
+    $('#새면절점').onchange = 채움; 채움();
+    $('#면더').onclick = () => { const n = $('#새면절점').value, 면 = $('#새면이름').value, 키 = $('#새면닿음').value;
+      if (!n || !키) { 알림3('작용력이 없는 절점 — ② 모델에서 부재 · 받침 · 하중을 먼저', true); return; }
+      if (((과업.절점면 || {})[n] || {})[면]) { 알림3(`절점 ${n} 에 «${면}» 이 이미 있음 — 다른 경계면 이름을 선택하십시오`, true); return; }
+      고침(`절점 ${n} ${면} (${키}) 추가`, () => { 과업.절점면 = 과업.절점면 || {}; (과업.절점면[n] = 과업.절점면[n] || {})[면] = 키; }); };
+  }
+  $('#표33').querySelectorAll('[data-절점폭]').forEach(i => i.onchange = () => { const k = i.dataset.절점폭; 고침(`절점 ${k} 제공 폭 → ${i.value || '—'}`, () => { 과업.절점폭 = 과업.절점폭 || {}; if (i.value.trim()) 과업.절점폭[k] = 수(i.value); else delete 과업.절점폭[k]; }, i); });
+  // 3-4 요약 칩 · 그림 · 3-5 식 · 상태
+  const 최소 = k => { const s = c.요약[k], 이름 = k === '절점' ? '절점영역' : k, 줄 = 전부.filter(x => x.무엇 === 이름), m = 줄.length ? 줄.reduce(앞선) : null; return m ? `<span class="${s.NG ? 'bad' : ''}">${이름} 최소 검토비 <b>${비글(m)}</b> (${m.이름})</span>` : `<span>${이름} <b>${s.수 ? '미입력' : '—'}</b></span>`; };
+  $('#검토요약').innerHTML = `<span class="num" style="margin:0 2px 0 0">4</span>` + ['스트럿', '타이', '절점', '정착'].map(최소).join('');
+  if (!고른 || !c.식줄[고른]) 고른 = (나쁜[0] && c.식줄[나쁜[0].이름]) ? 나쁜[0].이름 : (c.타이[0] ? c.타이[0].이름 : (c.스트럿[0] ? c.스트럿[0].이름 : null));
+  검토그림(); 식보이기();
+  const ng수 = 나쁜.filter(x => x.판정 === 'N.G').length, 주의수 = 나쁜.length - ng수;
+  접음('카드32', !나쁜.length, 나쁜.length ? `N.G ${ng수} · 주의 ${주의수}` : '없음');
+  지금칸(3, c.판정 === 'N.G' ? '카드32' : c.판정 === '미정' ? '카드33' : '');
+  $('#다음4').classList.toggle('흐림', c.판정 === '미정');   // 흐림만 · 잠그지 않음
+  할일(3, c.판정 === 'N.G' ? '3-2 N.G 줄의 «조치 방안» 을 보십시오' : c.판정 === '미정' ? (빈칸수() ? '3-3 «미입력 초안» 누르고 값 확인' : '3-3 표에 남은 값 입력 (정착 등)') : '판정 O.K — «다음 → ④ 계산서 · 도면»');
+  if (c.판정 === 'N.G') 알림3(`<b>N.G ${ng수}</b> · ${나쁜.filter(x => x.판정 === 'N.G').map(x => x.이름 + ' ' + x.무엇).join(' · ')} — 3-2 조치 방안 · N.G 인 채로 넘기면 계산서에 N.G 로 기재 (잠그지 않음)`, true);
+  else if (c.판정 === '미정') 알림3(`<b>미입력</b> · ${c.왜} — 3-3 표에 입력하면 판정${주의수 ? ' · 주의 ' + 주의수 : ''}`, '미입력');
+  else 알림3(`<b>O.K</b> · 4개 항목 모두 O.K${주의수 ? ' · 주의 ' + 주의수 + ' (검토비 1.11 미만)' : ''} · 다음은 ④ 계산서`, 주의수 ? '주의' : false);
+}
+function 검토그림() {
+  const c = 검토결과, m = 과업, s = $('#검토그림'); if (!c) { s.innerHTML = ''; return; }
+  const t = 틀({ 높: 400, 위: 44, 아래: 60 }), { P, X, Y, 깊이, f } = t, 글들 = [];
+  let g = 외곽그림(t);
+  const 판 = {}; c.스트럿.forEach(x => 판[x.이름] = x); c.타이.forEach(x => 판[x.이름] = x);
+  const 정 = {}; c.정착표.forEach(x => 정[x.이름] = x);
+  for (const [이름, a, b, 종] of m.부재) {
+    if (!m.절점[a] || !m.절점[b]) continue;
+    const [x1, y1] = P(...m.절점[a]), [x2, y2] = P(...m.절점[b]); const x = 판[이름] || {}; const 색 = 선색[x.판정] || 'var(--dsm-dim)';
+    const 굵 = 고른 === 이름 ? 4.5 : 3;
+    g += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${종 === '타이' ? '#e8743b' : 'var(--dsm-dim)'}" stroke-width="${굵}" ${종 === '스트럿' ? 'stroke-dasharray="7 5"' : ''} style="cursor:pointer" data-부재="${이름}"/>`;
+    const 글자 = x.비 != null ? 비글(x) : (x.판정 === '미정' ? '미입력' : x.판정 === '생략' ? '부재력 0' : '');
+    글들.push({ 이름, x1, y1, x2, y2, 값: 글자, 이름색: 색, 값색: 색, 값굵게: true, 제목: x.판정 || '', 속성: { 'data-부재': 이름, style: 'cursor:pointer' } });
+  }
+  for (const [n, [x, y]] of Object.entries(m.절점)) {
+    const [sx, sy] = P(x, y);
+    g += `<circle cx="${sx}" cy="${sy}" r="6" fill="var(--dsm-card)" stroke="var(--dsm-ink)" stroke-width="2"/><text x="${sx + 9}" y="${sy + 14}" font-size="13" fill="var(--dsm-dim)">${n}</text>`;
+  }
+  // 정착 N.G · 주의 는 타이 끝 절점에 빨간 테
+  for (const [이름, d] of Object.entries(정)) { if (d.판정 !== 'N.G' && d.판정 !== '주의') continue; const p = m.부재.find(q => q[0] === 이름); if (!p) continue; for (const n of [p[1], p[2]]) { if (!m.절점[n]) continue; const [sx, sy] = P(...m.절점[n]); g += `<circle cx="${sx}" cy="${sy}" r="13" fill="none" stroke="${선색[d.판정]}" stroke-width="2.5"/>`; } g += `<text x="${P(...m.절점[p[1]])[0]}" y="${P(...m.절점[p[1]])[1] - 20}" font-size="13" font-weight="700" fill="${선색[d.판정]}">정착 ${d.판정} ${d.비}</text>`; }
+  g += `<text x="${X(f.TL / 2)}" y="${t.바닥 + 40}" text-anchor="middle" fill="var(--dsm-dim)">${꼴표[f.꼴]?.칩 || f.꼴} · 검토비 = 제공 ÷ 소요 · 하중조합 ${c.조합 || ''}</text>`;
+  s.innerHTML = g;
+  글자리(s, 글들);
+  s.onclick = e => { const el = e.target.closest && e.target.closest('[data-부재]'); if (el) 고르기(el.dataset.부재); };
+}
+// ─ 3-3 «빈 칸 제안» (10-26 전무님 고르심 «③ 남은 입력 제안값») — 타이 규격 · 본수만
+//   규격 : 그 타이에 고른 것이 있으면 그대로 · 없으면 D25 · 본수 = 필요 As ÷ 1본 단면적 올림 (비 1.00 이상) · 2본 아래면 2본
+//   사람이 넣은 본수는 안 덮음
+// ─ (10-26 전무님 고르심 «ACI 318 해설 꼴») 스트럿 · 절점 «있는 폭» · 면이 없는 절점의 절점면도 — 서버 셈\폭제안.py 값 그대로
+//   판 면 = 판 길이 · 타이 면 = 2 × 타이 중심 높이 · 사면 = lb'·sinθ + wt·cosθ (하중 아래 CCC 는 정수압) · KDS 14 20 24 본문엔 폭 규칙 없음
+//   빈 칸에만 넣음 · 사람이 넣은 폭 · 면은 안 덮음
+function 폭제안줄() {
+  const f = 검토결과?.폭제안; if (!f) return { 스트럿: [], 면: [], 절점: [] };
+  const 스 = 과업.스트럿폭 || {}, 절 = 과업.절점폭 || {}, 면 = 과업.절점면 || {};
+  return {
+    스트럿: Object.entries(f.스트럿 || {}).filter(([k]) => 스[k] == null),
+    면: Object.entries(f.절점면 || {}).filter(([n]) => !Object.keys(면[n] || {}).length),
+    절점: Object.entries(f.절점 || {}).filter(([k]) => 절[k] == null),
+  };
+}
+function 빈칸수() { const w = 폭제안줄(); return 타이제안().length + w.스트럿.length + w.면.length + w.절점.length; }
+function 타이제안() {
+  const c = 검토결과; if (!c) return [];
+  const 표 = c.철근표, 철 = 과업.철근 || {}, 줄 = [];
+  for (const t of c.타이) {
+    const 지금 = 철[t.이름] || {};
+    if (지금.개수 || !(t.필요As > 0)) continue;
+    const d = 지금.지름 || 25, A = 표['D' + d];
+    if (!A) continue;
+    줄.push({ 이름: t.이름, 지름: d, 개수: Math.max(2, Math.ceil(t.필요As * 1.11 / A - 1e-9)) });   // 초안은 검토비 1.11 이상 본수 (3-2 조치 방안과 같음 · 걷기 15)
+  }
+  return 줄;
+}
+$('#제안넣기').onclick = () => {
+  const 줄 = 타이제안(), w = 폭제안줄();
+  if (!빈칸수()) { 알림3('미입력 항목 없음 — 타이 본수 · 제공 폭 · 경계면 입력 완료'); return; }
+  const 글들 = [];
+  if (줄.length) 글들.push('타이 ' + 줄.map(x => `${x.이름} D${x.지름}×${x.개수}`).join(' · '));
+  if (w.스트럿.length) 글들.push(`스트럿 폭 ${w.스트럿.length}`);
+  if (w.면.length) 글들.push(`경계면 ${w.면.map(([n]) => n).join(' · ')}`);
+  if (w.절점.length) 글들.push(`절점영역 폭 ${w.절점.length}`);
+  고침(`미입력 초안 (${글들.join(' / ')})`, () => {
+    과업.철근 = 과업.철근 || {}; 줄.forEach(x => { 과업.철근[x.이름] = Object.assign({}, 과업.철근[x.이름], { 지름: x.지름, 개수: x.개수 }); });
+    const 초 = 과업.초안폭 = 과업.초안폭 || {}; 초.스트럿 = 초.스트럿 || {}; 초.절점 = 초.절점 || {};
+    과업.스트럿폭 = 과업.스트럿폭 || {}; w.스트럿.forEach(([k, v]) => { 과업.스트럿폭[k] = v; 초.스트럿[k] = v; });
+    과업.절점면 = 과업.절점면 || {}; w.면.forEach(([n, f]) => { 과업.절점면[n] = Object.assign({}, f); });
+    과업.절점폭 = 과업.절점폭 || {}; w.절점.forEach(([k, v]) => { 과업.절점폭[k] = v; 초.절점[k] = v; });
+  });
+  if (window.dsmUndo) dsmUndo.띠(`미입력 ${글들.join(' · ')} 초안 입력 — ${줄.length ? '타이 본수는 검토비 1.11 이상 · ' : ''}폭은 ACI 318 해설 방법 · 수정은 표에서 · 되돌리기 가능`);
+};
+$('#탭33').querySelectorAll('span').forEach(sp => sp.onclick = () => { 탭33 = sp.dataset.탭; $('#탭33').querySelectorAll('span').forEach(x => x.classList.toggle('on', x === sp)); 그리기3(); });
+$('#NG만').onclick = () => { NG만 = !NG만; $('#NG만').textContent = NG만 ? '전체 표시' : 'N.G 만 표시'; 그리기3(); };
+
+// ─ ④ 계산서 · 도면 (서버 /api/계산서 가 HTML · 글 · PDF · DXF 를 만듦 · 화면은 보이기만)
+const 화면판 = 'v0.8.0';   // v0.8.0 (10-29 검정 · 목업 검정값_목업) 서버 v0.6.2 새 값 넷 — 3-3 절점 «두께» 열 (b 와 다르면 주황 · 마우스 글 까닭) · 3-3 스트럿 βs 미입력 «— (가정 0.75)» + 주황 테 · 1-3 조합 고르개 (1.2D+1.6L · 1.4D) + 서버 경고 빨강 띠 · 3-1 왜 글 ★ (역부호 · 인장 반력) 빨강 띠 · v0.7.9 (10-28 밤) 글 넘침 — 지금 할 일 한 줄 · 3-1 판정 아래 두 줄 · 카드 설명 짧게 (뜻은 마우스 글) · 형식 칩 → «새 과업 · ○○» (같은 이름이면 2 · 3) · v0.7.8 (10-28 밤) 판정 뜻 — 1.00 N.G 는 소수 셋째 (화면만) · 지배는 N.G 먼저 · 미입력 초안 타이 본수 검토비 1.11 이상 · 상태줄 점 색 = 판정 색 · v0.7.7 (10-28 밤) 용어 권고 39 — 보이는 글만 (부재력 0 · 하중조합 · 절점영역 · 핀 / 롤러 · 미지정 · 설계자 지정 · 되돌리기 가능 · 오류 글 «… 실패 — 사유» 꼴) · 계산 값 같음 · v0.7.6 (10-28) 단계 ③ AI 칸 — ② 2-5 AI 짚어 보기 (누를 때만 · 권하는 안 · 짚음 등급 셋 · 반영 / 넘김은 설계자 · 그림 파란 점선 · 실패면 묻는 글 복사 · 답 붙여 넣기 · 계산서 4절 «모델 정한 까닭») ·   // v0.7.5 (10-28) 용어 보완 10 — 바뀜 → 변경 · 고침 → 수정 · 사람이 → 설계자가 · N곳 → N개 · 꼴 → 구성 · 비움 → 초기화 · 오류 글 «작성 실패 — 사유 → 확인» ·   // v0.7.4 (10-28) 걷기 진짜 5 — 새 과업 · 형식 칩 직후는 «보기 값» : 1-2 펼침 · 맨 위 한 줄 · 점선 칸 · 상태 «치수 확인» (치수 · 하중을 바꾸면 풀림 · 다음 단추 안 막음) ·   // v0.7.3 (10-28) 걷기 진짜 셋 — 롤러로 불안정이면 상태줄 빨강 · 되돌리기 띠를 아래 단추 줄 위로 · ① 이 바뀌면 «미입력 초안» 폭을 다시 셈 (사람이 고친 칸은 그대로) ·   // v0.7.2 (10-28) 아래 띠 «예제 선택» → «과업 열기 ▾» (＋ 새 과업 · 내 과업 최근 순 · 예제 · 이름 찾기 · 새 과업 이름 겹치면 뒤에 2 · 3) · v0.7.1 (10-27 밤) 왼쪽 칸 폭 끌기 (경계를 끌면 네 판이 같이 · 360 ~ 그림 520 남는 데까지 · 두 번 누르면 420 · 폭은 이 PC 에 기억) · v0.7.0 (10-27) 37 2차 시안 — 그림이 칸에 맞춤 (전보다 약 두 배) · 부재 글 비켜 놓기 · 절점 표 받침 한 칸 세 단추 · 카드 제목 안 꺾임 · v0.6.9 (10-26 밤) ① 을 고치면 ② 기본안 칸이 따라감 (사람이 고친 칸은 그대로) · 기본안 다시 받아도 같은 부재의 철근 · 정착 · 폭 남김 · v0.6.8 (10-26 밤) 힘 0 부재 «힘 0 · 생략» 판정 (서버 v0.5.7) · v0.6.7 (10-26 밤) 형식 넷 더함 (코핑 다열 · 말뚝캡 · 확대기초 · 코벨) · 하중판 칸 · 기본안 이름은 서버 것
+let 계산서결과 = null;
+function 알림4(말, 나쁨) { $('#상태4').className = 'status' + (나쁨 === true ? ' bad' : 나쁨 ? ' ' + 나쁨 : '');
+  $('#상태4글').innerHTML = 말; }
+function 낼것() { return ['html', ...[...document.querySelectorAll('#낼것 [data-낼]')].filter(i => i.checked).map(i => i.dataset.낼)]; }
+async function 계산서요청(저장) {
+  if (!과업 || !Object.keys(과업.절점 || {}).length || !(과업.부재 || []).length) { 계산서결과 = null; 그리기4(true); 알림4('② 모델에서 절점 · 부재를 입력하면 계산서가 작성됩니다', true); 할일(4, '② 모델부터 입력하십시오'); return; }
+  알림4(저장 ? '저장 중 … (PDF 는 몇 초)' : '계산서 작성 중 …');
+  try { const r = await 부름('계산서', { 과업, 저장: !!저장, 낼것: 낼것(), 화면판 }); if (r.오류) { 계산서결과 = null; 그리기4(true); 알림4(r.오류, true); return; } 계산서결과 = r; }
+  catch (e) { 계산서결과 = null; 그리기4(true); 알림4('연결 실패 — 서버 응답 없음 → 0_STM 검토기 열기.bat 으로 다시 여십시오', true); return; }
+  그리기4(true);
+  const c = 계산서결과, 판정말 = `판정 <b class="j ${판색[c.판정] || 'dim'}">${판글(c.판정)}</b> — ${c.왜}`;
+  if (저장 && c.경로들) {
+    const g = c.경로들, 난 = ['HTML', g.pdf ? 'PDF' : null, g.dxf ? 'DXF' : null, g.md ? '글' : null].filter(Boolean).join(' · ');
+    const 못 = [g.pdf오류 ? 'PDF 저장 실패 (' + g.pdf오류 + ')' : '', g.dxf오류 ? 'DXF 저장 실패 (' + g.dxf오류 + ')' : ''].filter(Boolean).join(' · ');
+    알림4(`v${g.판번호} 저장 완료 — ${난}` + (못 ? ' · ' + 못 : '') + ' · «폴더 열기» 로 보십시오', !!못);
+  } else 알림4(판정말 + ' · 저장은 오른쪽 아래 버튼', c.판정 === 'N.G' ? true : c.판정 === '미정' ? '미입력' : false);
+  할일(4, 저장 ? '저장 완료 — «폴더 열기» 로 보십시오' : '미리보기 확인 뒤 «저장»');
+}
+function 절판정(c, 번호) {
+  const 요 = c.요약 || {}; const 묶 = { 5: ['스트럿', '타이'], 6: ['절점'], 7: ['정착'] }[번호]; if (!묶) return 번호 === 8 ? c.판정 : '';
+  if (묶.some(k => 요[k] && 요[k].NG)) return 'N.G';
+  if (묶.some(k => !요[k] || !요[k].수 || 요[k].미정)) return '미정';
+  return 'O.K';
+}
+function 그리기4(새쪽) {
+  const c = 계산서결과;
+  $('#출력자리').textContent = (c && c.경로들) ? c.경로들.폴더 : `과업 폴더 안 «${과업 ? 과업.이름 : ''}_출력»`;
+  $('#판정작은').innerHTML = c ? `판정 <b class="j ${판색[c.판정] || 'dim'}">${판글(c.판정)}</b>` : '…';
+  $('#차례').innerHTML = c ? c.절.map(s => { const j = 절판정(c, s.번호); return `<li data-절="${s.번호}"><span class="n">${s.번호}</span>${s.제목}${j ? `<span class="j ${판색[j] || 'dim'}">${판글(j)}</span>` : ''}</li>`; }).join('') : '<li>계산서가 아직 없음</li>';
+  $('#차례').querySelectorAll('li[data-절]').forEach(li => li.onclick = () => { try { $('#쪽').contentDocument.getElementById('절' + li.dataset.절).scrollIntoView({ block: 'start' }); } catch (e) {} });
+  const 대 = c ? c.대조 || [] : [];
+  $('#대조칸').innerHTML = !c ? '' : !대.length ? '<span style="font-size:var(--dsm-fs-small);color:var(--dsm-dim)">기준값이 없는 과업 — 대조 없음 (기준 예제에만 있음)</span>'
+    : '<table><tr><th>항목</th><th>기준값</th><th>계산값</th><th>차이 %</th><th></th></tr>' + 대.map(x => `<tr><td>${x.무엇}</td><td class="n">${글(Math.abs(x.기대))}</td><td class="n">${글(Math.abs(x.셈))}</td><td class="n">${x['차%'].toFixed(2)}</td><td class="j ${x.같음 ? 'ok' : 'bad'}">${x.같음 ? '일치' : '불일치'}</td></tr>`).join('') + '</table>';
+  접음('카드43', !대.length, !c ? '' : !대.length ? '기준값 없음' : `일치 ${대.filter(x => x.같음).length} / ${대.length}`);
+  지금칸(4, c ? '카드41' : '');
+  if (새쪽 || !c) { const f = $('#쪽'); f.onload = () => { try { f.contentDocument.body.style.zoom = '0.78'; } catch (e) {} }; f.srcdoc = c ? c.HTML : ''; }
+  도면그림();
+}
+function 도면그림() {
+  const c = 계산서결과, m = 과업, s = $('#도면'); if (!c || !m) { s.innerHTML = ''; return; }
+  const t = 틀(), { P, X, Y, 깊이, f } = t, 힘 = c.힘 || {};
+  let g = `<g class="외곽4">${외곽그림(t)}</g>`;
+  for (const [이름, a, b, 종] of m.부재) {
+    if (!m.절점[a] || !m.절점[b]) continue;
+    const [x1, y1] = P(...m.절점[a]), [x2, y2] = P(...m.절점[b]);
+    g += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#111" stroke-width="${종 === '타이' ? 3.2 : 1.6}" ${종 === '스트럿' ? 'stroke-dasharray="8 5"' : ''}/>`;
+    let 각 = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI; if (각 > 90) 각 -= 180; if (각 < -90) 각 += 180;
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, F = 힘[이름];
+    g += `<text x="${mx}" y="${my - 6}" text-anchor="middle" font-size="12.5" fill="#111" transform="rotate(${각} ${mx} ${my})">${이름} ${F != null ? 글(F) : ''}</text>`;
+  }
+  for (const [n, [x, y]] of Object.entries(m.절점)) {
+    const [sx, sy] = P(x, y);
+    g += `<circle cx="${sx}" cy="${sy}" r="5" fill="#fff" stroke="#111" stroke-width="1.6"/><text x="${sx + 8}" y="${sy + 15}" font-size="12" fill="#111">${n}</text>`;
+    if ((m.받침 || {})[n]) g += `<path d="M${sx} ${sy + 6} l-8 13 h16 z" fill="none" stroke="#111" stroke-width="1.3"/>`;
+    const h = (m.하중 || {})[n]; if (h && h[1]) g += `<line x1="${sx}" y1="${sy - 52}" x2="${sx}" y2="${sy - 8}" stroke="#111" stroke-width="1.5"/><path d="M${sx} ${sy - 7} l-5 -10 h10 z" fill="#111"/><text x="${sx + 6}" y="${sy - 40}" font-size="12" fill="#111">${글(Math.abs(h[1]))} kN</text>`;
+  }
+  const 밑 = t.바닥;
+  g += `<line x1="${X(0)}" y1="${밑 + 30}" x2="${X(f.TL)}" y2="${밑 + 30}" stroke="#111"/><line x1="${X(0)}" y1="${밑 + 24}" x2="${X(0)}" y2="${밑 + 36}" stroke="#111"/><line x1="${X(f.TL)}" y1="${밑 + 24}" x2="${X(f.TL)}" y2="${밑 + 36}" stroke="#111"/><text x="${X(f.TL / 2)}" y="${밑 + 25}" text-anchor="middle" font-size="12" fill="#111">${글(f.TL)}</text>`;
+  const 위 = Y(0) - 120;     // 그림 둘레를 내용에 맞춰 조임 (하중 화살 · 제목 자리 120)
+  g += `<text x="${X(0) - 30}" y="${위 + 22}" font-size="16" font-weight="700" fill="#111">STM 모델도</text><text x="${X(0) - 30}" y="${위 + 42}" font-size="12.5" fill="#555">${m.이름 || ''} · kN (+ 인장 · − 압축)</text>`;
+  s.setAttribute('viewBox', `${X(0) - 40} ${위} ${f.TL * t.k + 90} ${밑 + 50 - 위}`);
+  s.innerHTML = g;
+}
+$('#뒤로3').onclick = () => 판열기(3);
+$('#내보내기').onclick = () => 계산서요청(true);
+$('#출력폴더').onclick = () => 부름('출력폴더열기', { 과업 }).then(r => { if (r.오류) 알림4(r.오류, true); });
+$('#크게').onclick = () => { if (!계산서결과) return; const w = window.open('', '_blank', 'width=900,height=760'); if (w) { w.document.open(); w.document.write(계산서결과.HTML); w.document.close(); } else 알림4('새 창 열기 실패 — 팝업 차단 → 저장 뒤 «폴더 열기» 로 HTML 열기', true); };
+
+// 옛 예제 json (정답지 꼴) 도 읽히게 — 없는 칸은 채움
+function 채우기(m) {
+  const 꼴 = (m.형상 && 꼴표[m.형상.꼴]) ? m.형상.꼴 : '깊은보';
+  const 빈 = 빈과업(꼴);
+  const 재료 = Object.assign({}, m.재료 || {}); if (재료.fck == null && 재료.fc != null) 재료.fck = 재료.fc;
+  return Object.assign(빈, m, { 형상: Object.assign(빈.형상, m.형상 || {}), 받침표: (m.받침표 && m.받침표.length) ? m.받침표 : 빈.받침표, 재료: Object.assign(빈.재료, 재료), 조합: m.조합 || 빈.조합 });
+}
+
+async function 시작() {
+  try {
+    const 살 = await 받음('살아있나'); $('#판글').textContent = 살.판; $('#서명').textContent = `DSM · 64 STM 검토기 · 서버 ${살.판} · 화면 ${화면판} · 기준 예제 5건 대조 일치 (43/43) · 기준값 출처 KDS 발췌 14건`;
+    const 예 = await 받음('예제');
+    예제목록 = 예.예제 || [];
+    const r = await 받음('열기');                   // 마지막 과업
+    if (r.됨) 과업 = 채우기(r.과업);
+    else { const 첫 = (예.예제 || []).find(x => x.꼴 === '코핑') || (예.예제 || [])[0]; 과업 = 첫 ? 채우기((await 받음('열기?이름=' + encodeURIComponent(첫.파일))).과업) : 빈과업('코핑'); }
+  } catch (e) { 과업 = 빈과업('코핑'); 상태오류 = '연결 실패 — 서버 응답 없음 → 0_STM 검토기 열기.bat 으로 다시 여십시오'; }
+  if (window.dsmUndo) dsmUndo.켜기({ 찍기: () => JSON.parse(JSON.stringify(과업)), 되살리기: s => { 과업 = s; 그리기(); 바뀜(); }, 자리: '.head' });
+  그리기(); 조합요청(); $('#저장글').textContent = '과업마다 .stm.json 자동 저장';
+  if (/^#[1-4]$/.test(location.hash)) 판열기(+location.hash[1]);      // 시험 · 찍기용 (#2 = 모델 판)
+  setInterval(() => 부름('숨').catch(() => {}), 60000);
+}
+시작();
+})();
+</script>
+</body>
+</html>
