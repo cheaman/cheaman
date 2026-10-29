@@ -12,14 +12,14 @@ v0.1 · 만든 날 2026-10-29 · 고친 날 2026-10-29 · 4_캐드도면규칙 /
   6. 시험                    /api/시험/정답지 (받은판 ↔ 고친판 짝 대조)
   7. 요청 가르기             do_GET · do_POST
 원칙 : 원본은 3_자료 에 읽기만 · 결과는 4_결과 · AI 와는 _주고받기 · 말없이 멈추지 않음 (오류는 글로 돌려줌)"""
-import os, sys, io, json, base64, re, threading, webbrowser, datetime, traceback
+import os, sys, io, json, base64, re, threading, webbrowser, datetime, traceback, shutil
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, unquote
 여기 = os.path.dirname(os.path.abspath(__file__)); 뿌리 = os.path.dirname(여기)
 sys.path.insert(0, 여기)
 from 엔진 import 도면읽기, 규칙 as 규칙모듈, AI다리
 
-판 = "v0.1"; 고친날 = "2026-10-29"
+판 = "v0.2"; 고친날 = "2026-10-29"
 창고 = 규칙모듈.창고(뿌리); 다리 = AI다리.다리(창고)
 잠금 = threading.Lock(); 그림잠금 = threading.Lock()   # SVG 그리기는 한 번에 하나 (글꼴 부품이 동시 실행에 깨짐 · 10-29 겪음)
 
@@ -169,6 +169,51 @@ def 시험_정답지():
     기록 = os.path.join(창고.결과, "시험기록.json"); 옛 = 창고._읽기(기록, []); 옛.append(결과); 창고._쓰기(기록, 옛[-50:])
     return 결과
 
+def 시험_검사도구():
+    """시험 4 — 고친 판에 겹침 12곳을 일부러 심어 겹침 세기가 다 잡나 · 깨끗한 판에서 헛잡음 0 인가."""
+    sys.path.insert(0, os.path.join(뿌리, "5_시험")); import 가짜도면
+    임시 = os.path.join(창고.결과, "_시험"); os.makedirs(임시, exist_ok=True)
+    심음 = 가짜도면.틀린도면(os.path.join(임시, "틀린판.dxf"), 12)
+    깨끗 = 가짜도면.그리기(os.path.join(임시, "깨끗한판.dxf"), "고친판", 350, 2, "L", False)
+    잡음 = 도면읽기.겹침세기(도면읽기.dxf열기(os.path.join(임시, "틀린판.dxf")))["겹침수"]
+    헛 = 도면읽기.겹침세기(도면읽기.dxf열기(깨끗))["겹침수"]
+    결과 = {"종류": "검사도구", "때": 규칙모듈.지금(), "규칙판": 창고.규칙()["판"], "심음": 심음, "잡음": 잡음, "헛잡음": 헛, "통과": 잡음 >= 심음 and 헛 == 0}
+    기록 = os.path.join(창고.결과, "시험기록.json"); 옛 = 창고._읽기(기록, []); 옛.append(결과); 창고._쓰기(기록, 옛[-50:]); return 결과
+
+def 시험_되풀이():
+    """시험 5 — 같은 도면을 세 번 세어 숫자 · 겹침이 똑같은가 (프로그램 몫 · AI 판단은 ○ 받은 규칙만 쓰므로 여기선 안 셈)."""
+    폴더 = os.path.join(창고.자료폴더, "원본"); 후보 = [f for f in sorted(os.listdir(폴더)) if f.lower().endswith(".dxf")]
+    if not 후보:
+        sys.path.insert(0, os.path.join(뿌리, "5_시험")); import 가짜도면
+        임시 = os.path.join(창고.결과, "_시험"); os.makedirs(임시, exist_ok=True); 파일 = 가짜도면.짝만들기(임시)[0]; 이름 = "가짜 (원본에 DXF 없음)"
+    else: 파일 = os.path.join(폴더, 후보[0]); 이름 = 후보[0]
+    답 = []
+    for i in range(3):
+        d = 도면읽기.dxf열기(파일); 답.append(json.dumps({"n": 도면읽기.숫자세기(d)["숫자"], "g": 도면읽기.겹침세기(d)["겹침수"]}, ensure_ascii=False, sort_keys=True))
+    같음 = sum(1 for x in 답 if x == 답[0])
+    결과 = {"종류": "되풀이", "때": 규칙모듈.지금(), "규칙판": 창고.규칙()["판"], "도면": 이름, "같음": 같음, "번": 3, "통과": 같음 == 3}
+    기록 = os.path.join(창고.결과, "시험기록.json"); 옛 = 창고._읽기(기록, []); 옛.append(결과); 창고._쓰기(기록, 옛[-50:]); return 결과
+
+시작표 = "<!-- 도면규칙가르치기 13장 시작 -->"; 끝표 = "<!-- 도면규칙가르치기 13장 끝 -->"
+def 스킬에붙이기():
+    """규칙글_13장.md 를 설정의 스킬 파일(SKILL.md) 에 표 사이로 붙인다. 예비본 · 다시 읽혀야 씀 · 줄 한도 넘으면 안 붙임."""
+    설 = 창고.설정(); 경로 = 설.get("스킬경로") or ""
+    if not 경로: return {"오류": "설정 「스킬 파일 경로」 가 비었습니다 — cad-drawing-work 의 SKILL.md 경로를 넣어 주십시오"}
+    if not os.path.exists(경로): return {"오류": "스킬 파일이 없습니다 : " + 경로}
+    글경로 = os.path.join(창고.결과, "규칙글_13장.md")
+    if not os.path.exists(글경로): return {"오류": "아직 올린 규칙이 없습니다 — 먼저 ○ 받은 규칙을 올리십시오"}
+    글 = io.open(글경로, encoding="utf-8").read().strip(); 줄수 = len([l for l in 글.splitlines() if l.strip()])
+    if 줄수 > int(설.get("규칙글_줄한도") or 30): return {"오류": "규칙 글이 %d줄 — 한도 %s줄을 넘어 안 붙입니다. 긴 것은 숫자 표(json)로 빼십시오" % (줄수, 설.get("규칙글_줄한도"))}
+    원 = io.open(경로, encoding="utf-8").read(); 덩이 = 시작표 + "\n" + 글 + "\n" + 끝표
+    if 시작표 in 원 and 끝표 in 원: 새 = 원[:원.index(시작표)] + 덩이 + 원[원.index(끝표) + len(끝표):]
+    else: 새 = 원.rstrip("\n") + "\n\n" + 덩이 + "\n"
+    예비 = 경로 + "." + datetime.datetime.now().strftime("%Y%m%d_%H%M") + ".bak"; shutil.copy2(경로, 예비)
+    io.open(경로, "w", encoding="utf-8", newline="").write(새)
+    되읽 = io.open(경로, encoding="utf-8").read()
+    if 시작표 not in 되읽 or 글[:40] not in 되읽: shutil.copy2(예비, 경로); return {"오류": "붙인 뒤 되읽기가 어긋나 되돌렸습니다"}
+    창고.설정쓰기({"스킬붙인때": 규칙모듈.지금(), "스킬붙인줄": 줄수})
+    return {"됨": True, "줄수": 줄수, "경로": 경로, "예비": 예비}
+
 # ───────────────────────── 7. 요청 가르기 ─────────────────────────
 class 손(BaseHTTPRequestHandler):
     def log_message(self, *a): pass
@@ -221,6 +266,9 @@ class 손(BaseHTTPRequestHandler):
                 return self._json({"올림": n, "판": 새, "시험": 시험})
             if p == "/api/설정": return self._json(창고.설정쓰기(몸))
             if p == "/api/시험/정답지": return self._json(시험_정답지())
+            if p == "/api/시험/검사도구": return self._json(시험_검사도구())
+            if p == "/api/시험/되풀이": return self._json(시험_되풀이())
+            if p == "/api/규칙/스킬에붙이기": return self._json(스킬에붙이기())
             if p == "/api/AI/다시":
                 a = 창고.자료찾기(int(몸["번호"]))
                 if not a: return self._json({"오류": "없음"}, 404)

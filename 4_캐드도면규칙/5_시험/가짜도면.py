@@ -41,6 +41,16 @@ def 그리기(경로, 판="받은판", 벽=350, 단=3, 지시선쪽="R", 겹침=
     msp.add_text("%s · 가짜 횡단면도 · 벽 %d" % (판, 벽), height=200, dxfattribs={"layer": "TXT-NOTE"}).set_placement((x0 - 1500, yT + 800))
     doc.saveas(경로); return 경로
 
+def 틀린도면(경로, 심을수=12):
+    """고친 판 위에 글 겹침을 심을수만큼 일부러 심는다 — 겹침 세기가 다 잡나 (시험 4). 심은 쌍 수를 돌려준다."""
+    그리기(경로, "틀린판", 350, 2, "L", False)
+    doc = ezdxf.readfile(경로); msp = doc.modelspace()
+    for i in range(심을수):   # 같은 자리에 글 둘 → 겹침 한 쌍
+        x, y = 3000 + (i % 4) * 700, 6000 + (i // 4) * 400
+        msp.add_text("심은글A%d" % i, height=125, dxfattribs={"layer": "TXT-NOTE"}).set_placement((x, y), align=TextEntityAlignment.LEFT)
+        msp.add_text("심은글B%d" % i, height=125, dxfattribs={"layer": "TXT-NOTE"}).set_placement((x + 30, y + 20), align=TextEntityAlignment.LEFT)
+    doc.saveas(경로); return 심을수
+
 def 짝만들기(폴더):
     os.makedirs(폴더, exist_ok=True)
     a = 그리기(os.path.join(폴더, "가짜_횡단면도_받은판_01.dxf"), "받은판", 350, 3, "R", True)
