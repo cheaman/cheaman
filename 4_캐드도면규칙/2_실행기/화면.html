@@ -375,7 +375,9 @@
 var 자료 = {목록: []}, 규칙 = {목록: [], 판: "v0"}, 고른 = null, 살아 = {}, 옮길것 = false, 이전이해수 = {}, 교육 = null;
 async function 다음단원(){ var j = await api("/api/교육/다음단원", {}); 교육 = j; 알림("단원 " + j.현황.단원.번호 + " 「" + j.현황.단원.이름 + "」 로 넘어갔습니다 · 넣을 자료 : " + j.현황.단원.자료); 새로고침(); }
 async function 단원고르기(n){ 교육 = await api("/api/교육/단원고르기", {지금: n}); 창열기("교육"); 새로고침(); }
-function 띠로(){ var h = document.querySelector(".col.m .colh"); if (!h) return; var r = h.getBoundingClientRect(); if (r.top < 56 || r.top > window.innerHeight - 220) window.scrollTo({ top: window.scrollY + r.top - 52, behavior: "auto" }); }
+function 고정높이(){ var a = document.querySelector(".head"), b = document.getElementById("페이지띠"); return (a ? a.offsetHeight : 48) + (b ? b.offsetHeight : 0) + 6; }   /* 머리 띠 + 페이지 띠가 가리는 높이 */
+function 띠로(){ var h = document.querySelector(".col.m .colh"); if (!h) return; var q = document.querySelector("#이해칸 .uc:not(.done) .q .btn"); var r = h.getBoundingClientRect(); var 정할보임 = q && (function(b){ return b.top >= 고정높이() && b.bottom <= window.innerHeight - 70; })(q.getBoundingClientRect());
+  if (!정할보임 || r.top < 고정높이() || r.top > window.innerHeight - 220) window.scrollTo({ top: window.scrollY + r.top - 고정높이(), behavior: "auto" }); }   /* 머리가 보여도 정할 단추가 안 보이면 ② 띠 머리부터 (세 페이지 걷기 20번) */
 function 자료옮기기(d){ var i = 자료.목록.findIndex(function(x){ return x.번호 === 고른; }); var j = Math.max(0, Math.min(자료.목록.length - 1, i + d)); 고른 = 자료.목록[j].번호; 옮길것 = true; 그리기(); }   /* 머리가 이미 보이면 안 움직임 (step-flow 8) */
 function esc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 function 알림(t){ var e=document.getElementById("toast"); e.textContent=t; e.classList.add("on"); clearTimeout(e._t); e._t=setTimeout(function(){e.classList.remove("on")},3000); }
@@ -476,7 +478,7 @@ function 그리기(){
 }
 function 펼치기(b){ b.closest(".uc").classList.toggle("done"); }
 async function 판정(번호, id, 어떻게, 글, 까닭){ var j = await api("/api/이해/판정", {번호: +번호, id: id, 어떻게: 어떻게, 글: 글 || "", 까닭: 까닭 || ""}); if (j.됨) 알림({ok:"○ 받았습니다 → ③ 규칙 목록", edit:"고친 문장으로 ○", answer:"물음에 답했습니다 → ③", no:"× 받았습니다 · 지적기록 " + (j.결과.지적수 || "") + "줄", skip:"건너뛰었습니다"}[어떻게]); await 새로고침(); 다음카드로(); }
-function 다음카드로(){ var c = document.querySelector("#이해칸 .uc:not(.done) .q"); if (!c) return; var r = c.getBoundingClientRect(); if (r.bottom > window.innerHeight - 70 || r.top < 56) { var card = c.closest(".uc"); window.scrollTo({ top: window.scrollY + card.getBoundingClientRect().top - 60, behavior: "auto" }); } }   /* 정한 뒤 다음 정할 카드가 안 보이면 그 카드 머리부터 (step-flow 8) */
+function 다음카드로(){ var c = document.querySelector("#이해칸 .uc:not(.done) .q"); if (!c) return; var r = c.getBoundingClientRect(); if (r.bottom > window.innerHeight - 70 || r.top < 고정높이()) { var card = c.closest(".uc"); window.scrollTo({ top: window.scrollY + card.getBoundingClientRect().top - 고정높이() - 4, behavior: "auto" }); } }   /* 정한 뒤 다음 정할 카드가 안 보이면 그 카드 머리부터 (step-flow 8) */
 function 아니다(번호, id){ var 왜 = prompt("어디가 아닌지 한 줄 (지적기록에 쌓입니다)", ""); if (왜 === null || !왜.trim()) return; 판정(번호, id, "no", "", 왜.trim()); }
 function 고쳐서(번호, id, 글){ var t = prompt("한 줄 문장을 고쳐 주십시오 · 고친 대로 ○ 가 됩니다", 글); if (t === null || !t.trim()) return; 판정(번호, id, "edit", t.trim()); }
 async function AI다시(번호){ await api("/api/AI/다시", {번호: 번호}); 알림("AI 에게 다시 보냈습니다"); 새로고침(); }
