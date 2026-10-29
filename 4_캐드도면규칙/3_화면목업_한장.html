@@ -153,7 +153,23 @@
   }
 
   /* 한 장 꼴 */
-  .wrap{display:grid;grid-template-columns:300px minmax(0,1fr) 320px;gap:12px;padding:12px 16px 70px;max-width:1500px;margin:0 auto;align-items:start}
+  .wrap{display:grid;grid-template-columns:1fr;gap:12px;padding:12px 16px 70px;max-width:1500px;margin:0 auto}
+  .band{border-top:3px solid var(--dsm-line);padding-top:8px}
+  .band--ai{border-top-color:var(--dsm-ai-bg)}
+  .col.l .in3{display:grid;grid-template-columns:minmax(220px,1fr) minmax(0,2fr) minmax(220px,1fr);gap:10px;align-items:start}
+  .tiles2{display:flex;flex-wrap:wrap;gap:8px;padding:8px 10px;align-items:flex-start}
+  .tiles2 .tl{flex:0 1 300px;border:1px solid var(--dsm-line);border-radius:10px;background:var(--dsm-in);padding:7px 9px;cursor:pointer;font-size:13px;display:flex;gap:8px;align-items:flex-start;min-height:44px}
+  .tiles2 .tl:hover{border-color:var(--dsm-dim)}
+  .tiles2 .tl.on{background:var(--dsm-c-soft);border:2px solid var(--dsm-ink)}
+  .tiles2 .tl .nm{flex:1;min-width:120px}
+  .tiles2 .tl .thumb{width:56px;flex:none}
+  .tiles2 .tl .nm small{display:block;color:var(--dsm-faint);font-size:12px}
+  .col.m #이해칸{display:grid;grid-template-columns:repeat(auto-fit,minmax(520px,1fr));gap:10px}
+  .col.m .uc{margin-bottom:0}
+  .col.m .uc.done{grid-column:1/-1}
+  .col.r .in2{display:grid;grid-template-columns:minmax(0,3fr) minmax(260px,1fr);gap:10px;align-items:start}
+  .rl .list{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+  .rl .list li{border-right:1px solid var(--dsm-line)}
   .col{min-width:0}
   .col > .card{margin-bottom:10px}
   .colh{display:flex;align-items:center;gap:8px;padding:0 2px 6px;font-size:13px;color:var(--dsm-dim)}
@@ -191,9 +207,9 @@
   .win .wb{padding:12px 14px}
   .set{display:grid;grid-template-columns:150px 1fr;gap:8px 12px;font-size:13px;align-items:center}
   .set input,.set select{font:inherit;font-size:13px;padding:6px 9px;border:1px solid var(--dsm-in-line);border-radius:8px;background:var(--dsm-in);color:var(--dsm-ink);width:100%}
-  @media (max-width:1100px){.wrap{grid-template-columns:260px minmax(0,1fr)}.col.r{grid-column:1/-1}}
+  @media (max-width:1100px){.col.l .in3{grid-template-columns:1fr 1fr}.col.l .in3 > :nth-child(2){grid-column:1/-1;order:3}.col.m #이해칸{grid-template-columns:1fr}.col.r .in2{grid-template-columns:1fr}}
   @media (max-width:760px){
-    .wrap{grid-template-columns:1fr;padding:10px 12px 110px}.uc .ub{grid-template-columns:1fr}.set{grid-template-columns:1fr}
+    .wrap{padding:10px 12px 110px}.col.l .in3{grid-template-columns:1fr}.col.l .in3 > :nth-child(2){order:0}.uc .ub{grid-template-columns:1fr}.set{grid-template-columns:1fr}
     .head{flex-wrap:wrap;height:auto;padding:6px 12px;row-gap:4px}
     .head .who{width:100%}.head .who b{white-space:nowrap;font-size:14px}
     .head .btn{min-height:28px;padding:3px 8px;font-size:12px}.head .sp{display:none}.head .theme{margin-left:auto}
@@ -202,7 +218,7 @@
 </style>
 </head>
 <body>
-<div class="mock"><b>목업 v1.0 · 한 장 꼴</b> · 탭 없이 한 화면입니다. 왼쪽에 자료를 넣으면(목록 줄을 누르면) 가운데에 AI 가 되짚은 것이 바로 뜨고, ○ 를 누르면 오른쪽 규칙 목록에 쌓입니다. 시험 · 기억 창고 · 틀 설정은 오른쪽 위 단추로 작은 창에서 봅니다.</div>
+<div class="mock"><b>목업 v1.1 · 한 장 · 가로 띠 셋</b> · 위 띠에 자료를 넣으면(타일을 누르면) 가운데 띠에 AI 가 되짚은 것이 바로 뜨고, ○ 를 누르면 아래 띠 규칙 목록에 쌓입니다. 시험 · 기억 창고 · 틀 설정은 오른쪽 위 단추로 작은 창에서 봅니다.</div>
 
 <header class="head">
   <div class="who">
@@ -214,7 +230,7 @@
   <button class="btn" style="min-height:30px;padding:4px 10px;background:#2b3036;border-color:#3a3f46;color:#e6e9ed" onclick="창열기('시험')">시험 4 / 6</button>
   <button class="btn" style="min-height:30px;padding:4px 10px;background:#2b3036;border-color:#3a3f46;color:#e6e9ed" onclick="창열기('기억')">기억 창고</button>
   <button class="btn" style="min-height:30px;padding:4px 10px;background:#2b3036;border-color:#3a3f46;color:#e6e9ed" onclick="창열기('설정')">설정</button>
-  <span class="ver" title="판 v1.0 목업 · 고친 날 2026-10-29">v1.0 목업</span>
+  <span class="ver" title="판 v1.1 목업 · 고친 날 2026-10-29">v1.1 목업</span>
   <div class="theme" title="밝기 고르개 · 처음 = 시간">
     <button data-t="">기기</button><button data-t="time" class="on">시간</button><button data-t="light">밝게</button><button data-t="dark">어둡게</button>
   </div>
@@ -223,44 +239,48 @@
 
 <div class="wrap">
   <!-- ① 왼쪽 : 사람이 넣는 자리 -->
-  <div class="col l">
+  <div class="col l band">
     <div class="colh"><b>① 넣기</b> 자료 · 말 <span class="who">사람</span></div>
-    <div class="card" style="position:relative"><span class="kno">1-01</span>
+    <div class="in3">
+    <div class="card" style="position:relative;margin:0"><span class="kno">1-01</span>
       <div class="cb" style="padding:10px">
         <div class="drop small"><b>폴더 · 파일 · 녹음을 여기에</b>도면 짝 · 틀 · 녹음 · 지적기록 무엇이든</div>
         <div class="row" style="margin-top:8px"><button class="btn" onclick="자료더하기()">폴더 고르기</button><button class="btn">파일 더하기</button><button class="btn">녹음</button></div>
       </div>
     </div>
-    <div class="card" style="position:relative"><span class="kno">1-02</span>
-      <div class="ch" style="padding-right:40px"><h2 style="font-size:14px">넣은 자료</h2><span class="st" id="자료수"></span></div>
-      <ul class="list" id="자료목록"></ul>
+    <div class="card" style="position:relative;margin:0"><span class="kno">1-02</span>
+      <div class="ch" style="padding-right:40px"><h2 style="font-size:14px">넣은 자료</h2><span class="st" id="자료수"></span><span class="tip">하나를 누르면 아래 띠가 그 자료로</span></div>
+      <div class="tiles2" id="자료목록"></div>
     </div>
-    <div class="card" style="position:relative"><span class="kno">1-03</span>
+    <div class="card" style="position:relative;margin:0"><span class="kno">1-03</span>
       <div class="ch" style="padding-right:40px"><h2 style="font-size:14px">말로 적기</h2><span class="st">파일 없이 바로</span></div>
       <div class="cb" style="padding:10px">
         <textarea class="say" id="말" placeholder="예 : 지시선은 45도. 자리 없으면 30도도 됨"></textarea>
-        <div class="row" style="margin-top:6px"><button class="btn btn--main" style="min-height:34px" onclick="말보내기()">AI 에게 보내기</button><span class="tip">가운데에 바로 되짚음</span></div>
+        <div class="row" style="margin-top:6px"><button class="btn btn--main" style="min-height:34px" onclick="말보내기()">AI 에게 보내기</button><span class="tip">아래 띠에 바로 되짚음</span></div>
       </div>
+    </div>
     </div>
   </div>
 
   <!-- ② 가운데 : AI 가 바로 되짚는 자리 -->
-  <div class="col m">
-    <div class="colh"><b>② AI 가 이해한 것</b> 바로 되짚음 · ○ 면 오른쪽으로 <span class="who ai">AI</span></div>
+  <div class="col m band band--ai">
+    <div class="colh"><b>② AI 가 이해한 것</b> 바로 되짚음 · ○ 면 아래 목록으로 <span class="who ai">AI</span></div>
     <div id="이해칸"></div>
   </div>
 
   <!-- ③ 오른쪽 : 쌓인 규칙 목록 -->
-  <div class="col r">
+  <div class="col r band">
     <div class="colh"><b>③ 규칙 목록</b> 쌓인 것 <span class="who">규칙 글 · 숫자 표</span></div>
-    <div class="card rl" style="position:relative"><span class="kno">3-01</span>
+    <div class="in2">
+    <div class="card rl" style="position:relative;margin:0"><span class="kno">3-01</span>
       <div class="ch" style="padding-right:40px"><h2 style="font-size:14px">규칙 글 13장</h2><span class="st" id="규칙수"></span></div>
       <ul class="list" id="규칙목록"></ul>
     </div>
-    <div class="card" style="position:relative"><span class="kno">3-02</span>
+    <div class="card" style="position:relative;margin:0"><span class="kno">3-02</span>
       <div class="strip"><span class="num">4 / 6</span><span>시험 통과 · 정답지 시험 못 미침</span><button class="btn btn--view" onclick="창열기('시험')">보기</button></div>
       <div class="strip" style="border-top:1px solid var(--dsm-line)"><span class="num">v0.3</span><span>규칙 판 · 올리려면 시험 여섯 통과</span></div>
       <div class="strip" style="border-top:1px solid var(--dsm-line)"><span class="num">4</span><span>기억 층 · 저절로 읽히는 것 21줄</span><button class="btn btn--view" onclick="창열기('기억')">보기</button></div>
+    </div>
     </div>
   </div>
 </div>
@@ -360,7 +380,7 @@ function 그리기(){
   var ul=document.getElementById("자료목록"); ul.innerHTML="";
   자료.forEach(function(a,i){
     var n=a.이해.length, w=a.이해.filter(function(x){return x.상태!=="ok"}).length;
-    var li=document.createElement("li"); li.className=i===고른자료?"on":"";
+    var li=document.createElement("div"); li.className="tl"+(i===고른자료?" on":"");
     li.innerHTML=(a.fig?'<span class="thumb" data-fig="'+a.fig+'"></span>':'')+'<div class="nm">'+a.이름+'<small>'+a.상태+' · 이해 '+n+(w?' · 남은 '+w:'')+'</small></div><span class="pill pill--ai">'+a.종류+'</span>';
     li.onclick=function(){고른자료=i;그리기();}; ul.appendChild(li);
   });
@@ -386,7 +406,7 @@ function 그리기(){
   규칙.forEach(function(r){ var li=document.createElement("li"); li.innerHTML='<div class="nm">'+r.글+'<small>'+r.판+'</small></div>'+{올림:'<span class="pill pill--ok">올림</span>',물음:'<span class="pill pill--warn">물음</span>','○ 기다림':'<span class="pill pill--mute">○ 기다림</span>','○ 받음':'<span class="pill pill--info">○ 받음 · 올릴 것</span>'}[r.상태]; rl.appendChild(li); });
   var 올릴=규칙.filter(function(r){return r.상태==="○ 받음"}).length;
   document.getElementById("규칙수").textContent=규칙.length+"줄 · 올릴 것 "+올릴;
-  document.getElementById("situ").innerHTML="지금 : 자료 "+자료.length+" → AI 이해 "+전체+" 중 ○ "+(전체-남)+" · 남은 "+남+" → <b>가운데 ○ × 를 누르면 오른쪽에 쌓입니다</b>";
+  document.getElementById("situ").innerHTML="지금 : 자료 "+자료.length+" → AI 이해 "+전체+" 중 ○ "+(전체-남)+" · 남은 "+남+" → <b>② 띠에서 ○ × 를 누르면 ③ 띠에 쌓입니다</b>";
   document.getElementById("footmsg").innerHTML="<b>○ 받음 "+올릴+"줄</b> · 올리면 규칙 v0.3 → v0.4 · 시험 여섯이 먼저 돕니다 (10 ~ 15분)";
   document.getElementById("올리기").disabled=!올릴; document.getElementById("올리기").title=올릴?"":"지금은 못 누름 — ○ 받은 규칙이 없음";
 }
