@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f2328">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="구조부 일정">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-180.png">
+<link rel="icon" href="icons/favicon-32.png">
+<title>구조부 일정</title>
+<style>
+  html,body{margin:0;height:100%;background:#dde1e6;font-family:"Pretendard Variable",Pretendard,"Malgun Gothic",system-ui,sans-serif;color:#1f2328}
+  iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#dde1e6}
+  #cover{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#dde1e6;z-index:2}
+  #cover img{width:96px;height:96px;border-radius:22px}
+  #cover p{margin:0;font-size:15px;color:#545d68}
+  #cover a,#cover button{font:inherit;font-size:15px;padding:10px 18px;border-radius:10px;border:1px solid #aab3bd;background:#f8f9fa;color:#1f2328;text-decoration:none}
+  .hidden{display:none!important}
+  #sign{position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:13px;color:#545d68;z-index:3}
+</style>
+</head>
+<body>
+<div id="cover">
+  <img src="icons/icon-192.png" alt="">
+  <p id="msg">여는 중…</p>
+  <a id="direct" class="hidden" target="_blank" rel="noopener">바로 열기</a>
+  <button id="qr" class="hidden">전무님께 받은 QR 을 다시 찍어 주세요</button>
+</div>
+<iframe id="app" class="hidden" allow="clipboard-write" title="구조부 일정"></iframe>
+<div id="sign">DSM · 구조부 일정</div>
+<script>
+// 구글 앱스 스크립트 웹 앱 주소 — 배포 뒤 전무님이 여기에 한 번 넣습니다 (열쇠는 넣지 않음 · 열쇠는 QR 의 #m= 으로 폰에만 저장)
+const 앱주소 = 'https://script.google.com/macros/s/배포ID/exec';
+const 열쇠이름 = '구조부일정.열쇠';
+const $ = id => document.getElementById(id);
+
+// ① QR 로 들어온 열쇠(#m=…)는 저장하고 주소에서 지움 — 깃허브 서버로는 가지 않음
+const h = new URLSearchParams(location.hash.replace(/^#/, ''));
+if (h.get('m')) { try { localStorage.setItem(열쇠이름, h.get('m')); } catch (e) {} history.replaceState(null, '', location.pathname); }
+let 열쇠 = ''; try { 열쇠 = localStorage.getItem(열쇠이름) || ''; } catch (e) {}
+
+// 이 PC 시험용 : ?화면=<시험 화면 주소> (file · localhost 에서만)
+const q = new URLSearchParams(location.search);
+const 시험 = (location.protocol === 'file:' || location.hostname === 'localhost') && q.get('화면');
+
+if (!열쇠 && !시험) {
+  $('msg').textContent = '부서 열쇠가 없습니다';
+  $('qr').classList.remove('hidden');
+} else {
+  const src = 시험 || (앱주소 + '?m=' + encodeURIComponent(열쇠));
+  $('direct').href = src;
+  $('app').src = src;
+  let 떴음 = false;
+  window.addEventListener('message', e => {
+    const d = e.data || {};
+    if (d.부서일정 === '떴음') { 떴음 = true; $('cover').classList.add('hidden'); $('app').classList.remove('hidden'); $('sign').classList.add('hidden'); }
+    if (d.부서일정 === '못받음') { $('msg').textContent = '열쇠가 맞지 않습니다'; try { localStorage.removeItem(열쇠이름); } catch (x) {} $('qr').classList.remove('hidden'); $('direct').classList.add('hidden'); }
+  });
+  setTimeout(() => { if (!떴음) { $('msg').textContent = '여기서는 열리지 않네요'; $('direct').classList.remove('hidden'); } }, 20000);
+}
+if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
