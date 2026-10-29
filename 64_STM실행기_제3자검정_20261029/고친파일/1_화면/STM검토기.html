@@ -127,8 +127,9 @@
   #표33 input{width:40px}#표33 select{height:21px;border:1px solid var(--dsm-in-line);background:var(--dsm-in);color:var(--dsm-ink);border-radius:5px;font:inherit;font-size:var(--dsm-fs-small);max-width:64px}
   #표33 th{padding:3px 3px}#표33 td{padding:1px 3px}
   #표33 td.jd{white-space:nowrap}
+  #표33 td.정착칸{white-space:nowrap}#표33 td.정착칸 select{max-width:52px}#표33 td.정착칸 input{width:32px;margin-left:2px}#표33 td.면칸{white-space:nowrap}#표33 td.면칸 .x{padding:0 2px;margin-left:2px}   /* v0.8.1 표 폭 */
   #표33 tbody tr,#표32 tbody tr{cursor:pointer}#표33 tbody tr.sel td,#표32 tbody tr.sel td{background:var(--dsm-c2)}
-  #표32 td,#표33 td{font-size:var(--dsm-fs-ui);padding:1px 4px}#표32 td.l,#표33 td.l{text-align:left}
+  #표32 td,#표33 td{font-size:var(--dsm-fs-ui);padding:1px 4px}#표33 td{padding:1px 2px}#표32 td.l,#표33 td.l{text-align:left}   /* v0.8.1 표 폭 — 3-3 표 셀 좌우 여백 2 px */
   td.jd{font-weight:700}td.jd.ok{color:var(--dsm-ok)}td.jd.bad{color:var(--dsm-bad)}td.jd.mid{color:#b25000}td.jd.dim{color:var(--dsm-faint);font-weight:400}
   .formula{padding:6px 14px 8px;font-size:var(--dsm-fs-ui);line-height:1.5;max-height:118px;overflow-y:auto;color:var(--dsm-ink)}
   .formula .h{display:inline-block;background:var(--dsm-chip);border-radius:4px;padding:0 5px;margin-right:4px;font-weight:700}
@@ -398,7 +399,7 @@
       <div class="cb" style="padding:4px 14px"><ol id="차례"></ol></div>
     </div>
     <div class="card" id="카드43">
-      <div class="ch 접개" data-접기="카드43"><span class="펼">▾</span><span class="k">4-3</span>기준값 대조 <span class="sub">과업에 기준값이 있을 때만 · 차이 0.6 % 이내면 일치</span><span class="값"></span></div>
+      <div class="ch 접개" data-접기="카드43"><span class="펼">▾</span><span class="k">4-3</span>기준값 대조 <span class="sub" title="과업에 기준값이 있을 때만 · 차이 0.6 % 이내면 일치">차이 0.6 % 이내 = 일치</span><span class="값"></span></div>
       <div class="cb" style="padding-top:4px" id="대조칸"></div>
     </div>
   </div>
@@ -1201,7 +1202,17 @@ $('#Vu넣기').onclick = () => {
 // ══ ③ 검토 판 — 서버 /api/검토 결과를 표 넷 · 그림 · 식 줄로 (셈 없음 · 사람이 넣는 값 : 철근 · 정착 · βs · βn · 있는 폭)
 let 검토결과 = null, 검토때, 탭33 = '타이', 고른 = null, NG만 = false;
 const βs선택 = [[1, '1.00 단면 일정'], [0.75, '0.75 병모양 보강'], [0.6, '0.60 미보강 · 기타'], [0.4, '0.40 인장부']];   // KDS 14 20 24 4.2.2(2) — 03_조문표
-const βn선택 = [[1, '1.00 CCC'], [0.8, '0.80 CCT'], [0.6, '0.60 CTT']];                                                 // KDS 14 20 24 4.4.3(2)
+const βn선택 = [[1, '1.00 CCC'], [0.8, '0.80 CCT'], [0.6, '0.60 CTT']];
+// v0.8.1 (10-29 표 폭) 짧은 고르개 — 닫힌 칸엔 짧은 글 (칸 폭이 안 늘어남) · 펼치면 data-긴 의 긴 글 · 마우스 글 = 고른 것의 긴 글 (값 · 저장은 그대로)
+function 짧은고르개(sel) {
+  const 들 = [...sel.querySelectorAll('option[data-긴]')]; if (!들.length) return;
+  들.forEach(o => { o.dataset.짧 = o.textContent; });
+  const 놓기 = 긴 => 들.forEach(o => { o.textContent = 긴 ? o.dataset.긴 : o.dataset.짧; });
+  const 마우스 = () => { const o = sel.selectedOptions[0]; if (o && o.dataset.긴 && !sel.classList.contains('빈βs')) sel.title = o.dataset.긴 + (sel.dataset.칸 === 'βs' ? ' — KDS 14 20 24 4.2.2(2)' : sel.dataset.칸 === 'βn' ? ' — KDS 14 20 24 4.4.3(2)' : ''); };
+  sel.addEventListener('mousedown', () => 놓기(true)); sel.addEventListener('keydown', () => 놓기(true));
+  sel.addEventListener('change', () => { 놓기(false); 마우스(); }); sel.addEventListener('blur', () => 놓기(false));
+  마우스();
+}                                                 // KDS 14 20 24 4.4.3(2)
 const 판색 = { 'O.K': 'ok', 'N.G': 'bad', '주의': 'mid', '미정': 'dim', '생략': 'dim' };
 const 판글 = v => v === '미정' ? '미입력' : v === '생략' ? '부재력 0 · 생략' : v;   // «생략» = 힘 0 부재 (10-26 밤) · 판정 값 «미정»(저장 · 서버 값 그대로)은 화면에 «미입력» 으로 보임 (용어 사전 10-26)
 const 면이름들 = ['수평면', '연직면', '사면', '사면2', '사면3'];
@@ -1278,31 +1289,32 @@ function 그리기3(오류만) {
     + (나쁜.some(x => x.판정 === 'N.G') ? `<span class="chip" title="잠그지 않음 — ④ 계산서에 N.G 로 기재">그대로 N.G 로 적기</span>` : '');
   const 갈 = $('#갈고리적용'); if (갈) 갈.onclick = () => 고침(`정착 갈고리 90° (${갈고리될.join(' · ')})`, () => { 갈고리될.forEach(n => { 과업.정착[n] = Object.assign({}, 과업.정착[n], { 꼴: '갈고리90' }); }); });
   // 3-3 표 (탭)
-  const 옵 = (목록, 값) => 목록.map(([v, l]) => `<option value="${v}" ${Math.abs(v - 값) < 1e-9 ? 'selected' : ''}>${l}</option>`).join('');
+  const 옵 = (목록, 값) => 목록.map(([v, l]) => `<option value="${v}" data-긴="${l}" ${Math.abs(v - 값) < 1e-9 ? 'selected' : ''}>${l.split(' ')[0]}</option>`).join('');   // v0.8.1 표 폭 — 닫힌 칸엔 값만 · 펼치면 긴 글 (짧은고르개)
   const 걸러 = 줄 => NG만 ? 줄.filter(x => x.판정 === 'N.G' || x.판정 === '주의') : 줄;
   const 판td = x => `<td class="jd ${판색[x.판정]}">${x.비 != null ? 비글(x) + ' ' : ''}${판글(x.판정)}</td>`;
   let thead, 줄들;
   $('#제안넣기').style.display = 빈칸수() ? '' : 'none';
   if (탭33 === '타이') {
     $('#표33제목').textContent = '타이'; $('#표33설명').textContent = '';
-    thead = '<tr><th>부재</th><th>규격</th><th>본수</th><th>제공</th><th>소요</th><th>검토비</th><th>정착</th><th>ℓanc</th></tr>';
+    thead = '<tr><th>부재</th><th>규격</th><th>본수</th><th>제공</th><th>소요</th><th>검토비</th><th title="정착 형태 (직선 · 갈고리 90°) 와 정착 길이 ℓanc (mm)">정착 · ℓanc</th></tr>';
     const 지름옵 = d => Object.keys(표).map(k => `<option value="${k.slice(1)}" ${String(d) === k.slice(1) ? 'selected' : ''}>${k}</option>`).join('');
-    줄들 = 걸러(c.타이).map(t => `<tr data-이름="${t.이름}" class="${고른 === t.이름 ? 'sel' : ''}"><td class="l"><b>${t.이름}</b>${t.역부호 ? ' ★' : ''}</td><td><select data-타이="${t.이름}" data-칸="지름"><option value="" ${t.지름 ? '' : 'selected'}>—</option>${지름옵(t.지름)}</select></td><td><input data-타이="${t.이름}" data-칸="개수" value="${t.개수 ? 글(t.개수) : ''}"></td><td>${t.제공As != null ? 글(t.제공As) : '—'}</td><td>${글(t.필요As)}</td>${판td(t)}<td><select data-타이="${t.이름}" data-칸="꼴"><option value="" ${t.정착꼴 ? '' : 'selected'}>—</option><option value="직선" ${t.정착꼴 === '직선' ? 'selected' : ''}>직선</option><option value="갈고리90" ${t.정착꼴 === '갈고리90' ? 'selected' : ''}>갈고리 90°</option></select></td><td><input data-타이="${t.이름}" data-칸="l_anc" value="${t.l_anc != null ? 글(t.l_anc) : ''}"></td></tr>`);
+    줄들 = 걸러(c.타이).map(t => `<tr data-이름="${t.이름}" class="${고른 === t.이름 ? 'sel' : ''}"><td class="l"><b>${t.이름}</b>${t.역부호 ? ' ★' : ''}</td><td><select data-타이="${t.이름}" data-칸="지름"><option value="" ${t.지름 ? '' : 'selected'}>—</option>${지름옵(t.지름)}</select></td><td><input data-타이="${t.이름}" data-칸="개수" value="${t.개수 ? 글(t.개수) : ''}"></td><td>${t.제공As != null ? 글(t.제공As) : '—'}</td><td>${글(t.필요As)}</td>${판td(t)}<td class="정착칸"><select data-타이="${t.이름}" data-칸="꼴" title="정착 형태"><option value="" ${t.정착꼴 ? '' : 'selected'}>—</option><option value="직선" data-긴="직선" ${t.정착꼴 === '직선' ? 'selected' : ''}>직선</option><option value="갈고리90" data-긴="갈고리 90°" ${t.정착꼴 === '갈고리90' ? 'selected' : ''}>갈 90</option></select><input data-타이="${t.이름}" data-칸="l_anc" value="${t.l_anc != null ? 글(t.l_anc) : ''}" placeholder="ℓanc" title="정착 길이 ℓanc (mm)"></td></tr>`);
   } else if (탭33 === '스트럿') {
     $('#표33제목').textContent = '스트럿'; $('#표33설명').textContent = '';
     thead = '<tr><th>부재</th><th>Fu</th><th>βs</th><th>fce</th><th>소요 폭</th><th>제공 폭</th><th>검토비</th></tr>';
-    줄들 = 걸러(c.스트럿).map(s => `<tr data-이름="${s.이름}" class="${고른 === s.이름 ? 'sel' : ''}"><td class="l"><b>${s.이름}</b>${s.역부호 ? ' ★' : ''}</td><td>${글(s.Fu)}</td><td><select data-스트럿="${s.이름}" data-칸="βs" class="${s.βs미입력 ? '빈βs' : ''}" title="${s.βs미입력 ? 'βs 미입력 — 0.75 (병모양 · 4.2.3 횡철근 만족) 가정값으로 셈 · 설계자 선택 필요' : 'KDS 14 20 24 4.2.2(2)'}">${s.βs미입력 ? '<option value="" selected>— (가정 0.75)</option>' : ''}${옵(βs선택, s.βs미입력 ? NaN : s.βs)}</select></td><td>${s.fce.toFixed(2)}</td><td>${글(s.필요폭)}</td><td><input data-스트럿="${s.이름}" data-칸="폭" value="${s.있는폭 != null ? 글(s.있는폭) : ''}" placeholder="${검토결과?.폭제안?.스트럿?.[s.이름] != null ? '초안 ' + 글(검토결과.폭제안.스트럿[s.이름]) : 'mm'}" title="${검토결과?.폭제안?.식?.[s.이름] || ''}"></td>${판td(s)}</tr>`);
+    줄들 = 걸러(c.스트럿).map(s => `<tr data-이름="${s.이름}" class="${고른 === s.이름 ? 'sel' : ''}"><td class="l"><b>${s.이름}</b>${s.역부호 ? ' ★' : ''}</td><td>${글(s.Fu)}</td><td><select data-스트럿="${s.이름}" data-칸="βs" class="${s.βs미입력 ? '빈βs' : ''}" title="${s.βs미입력 ? 'βs 미입력 — 0.75 (병모양 · 4.2.3 횡철근 만족) 가정값으로 셈 · 설계자 선택 필요' : 'KDS 14 20 24 4.2.2(2)'}">${s.βs미입력 ? '<option value="" data-긴="— 미입력 (가정 0.75)" selected>—</option>' : ''}${옵(βs선택, s.βs미입력 ? NaN : s.βs)}</select></td><td>${s.fce.toFixed(2)}</td><td>${글(s.필요폭)}</td><td><input data-스트럿="${s.이름}" data-칸="폭" value="${s.있는폭 != null ? 글(s.있는폭) : ''}" placeholder="${검토결과?.폭제안?.스트럿?.[s.이름] != null ? '초안 ' + 글(검토결과.폭제안.스트럿[s.이름]) : 'mm'}" title="${검토결과?.폭제안?.식?.[s.이름] || ''}"></td>${판td(s)}</tr>`);
   } else {
     $('#표33제목').textContent = '절점영역'; $('#표33설명').textContent = '';
     // v0.8.0 (10-29 검정) 두께 열 — 어느 면이든 두께가 부재 두께 b 와 다를 때만 (말뚝 · 좁은 받침판) · 깊은보처럼 다 같으면 열 없음 (표 폭 그대로)
     const 두께열 = c.절점.some(n => n.두께 != null && Math.abs(n.두께 - 수(과업.폭b)) > 0.5);
-    thead = '<tr><th>절점</th><th>경계면</th><th>작용력</th><th>βn</th>' + (두께열 ? '<th title="면 두께 b면 = 힘이 닿는 면의 가로폭 (받침판 가로 · 말뚝 π/4·D 등가 · 그 밖은 부재 두께 b) — KDS 14 20 24 4.4.2(1) An 은 면의 면적 · b 와 다르면 주황">두께</th>' : '') + '<th>소요 폭</th><th>제공 폭</th><th>검토비</th><th></th></tr>';
-    줄들 = 걸러(c.절점).map(n => `<tr data-이름="절점 ${n.절점}" class="${고른 === '절점 ' + n.절점 ? 'sel' : ''}"><td class="l"><b>${n.절점}</b></td><td class="l">${n.면}</td><td><select data-면절점="${n.절점}" data-면="${n.면}" title="이 경계면에 작용하는 부재력 · 반력 · 하중">${닿옵(n.절점, n.면힘)}</select></td><td><select data-절점="${n.절점}" data-칸="βn">${옵(βn선택, n.βn)}</select></td>${두께열 ? `<td class="두께 ${n.두께 != null && Math.abs(n.두께 - 수(과업.폭b)) > 0.5 ? '다름' : ''}" title="${(c.절점두께말 || {})[n.절점] || '부재 두께 b'}">${n.두께 != null ? 글(Math.round(n.두께), 0) : '—'}</td>` : ''}<td>${글(n.필요폭)}</td><td><input data-절점폭="${n.열쇠}" value="${n.있는폭 != null ? 글(n.있는폭) : ''}" placeholder="${검토결과?.폭제안?.절점?.[n.열쇠] != null ? '초안 ' + 글(검토결과.폭제안.절점[n.열쇠]) : '—'}" title="${검토결과?.폭제안?.식?.[n.열쇠] || ''}"></td>${판td(n)}<td><button class="x" data-면지움="${n.절점}|${n.면}" title="절점 ${n.절점} ${n.면} 삭제 (되돌리기 가능)">✕</button></td></tr>`);
-    if (!c.절점.length) 줄들 = ['<tr><td colspan="' + (두께열 ? 9 : 8) + '" class="l" style="color:var(--dsm-faint)">경계면 없음 — 아래 줄에서 절점 · 경계면 · 작용력(부재력 · 반력 · 하중)을 선택해 추가하면 폭을 검토</td></tr>'];
+    thead = '<tr><th>절점</th><th>경계면</th><th>작용력</th><th>βn</th>' + (두께열 ? '<th title="면 두께 b면 = 힘이 닿는 면의 가로폭 (받침판 가로 · 말뚝 π/4·D 등가 · 그 밖은 부재 두께 b) — KDS 14 20 24 4.4.2(1) An 은 면의 면적 · b 와 다르면 주황">두께</th>' : '') + '<th>소요 폭</th><th>제공 폭</th><th>검토비</th></tr>';
+    줄들 = 걸러(c.절점).map(n => `<tr data-이름="절점 ${n.절점}" class="${고른 === '절점 ' + n.절점 ? 'sel' : ''}"><td class="l"><b>${n.절점}</b></td><td class="l 면칸">${n.면}<button class="x" data-면지움="${n.절점}|${n.면}" title="절점 ${n.절점} ${n.면} 삭제 (되돌리기 가능)">✕</button></td><td><select data-면절점="${n.절점}" data-면="${n.면}" title="이 경계면에 작용하는 부재력 · 반력 · 하중">${닿옵(n.절점, n.면힘)}</select></td><td><select data-절점="${n.절점}" data-칸="βn">${옵(βn선택, n.βn)}</select></td>${두께열 ? `<td class="두께 ${n.두께 != null && Math.abs(n.두께 - 수(과업.폭b)) > 0.5 ? '다름' : ''}" title="${(c.절점두께말 || {})[n.절점] || '부재 두께 b'}">${n.두께 != null ? 글(Math.round(n.두께), 0) : '—'}</td>` : ''}<td>${글(n.필요폭)}</td><td><input data-절점폭="${n.열쇠}" value="${n.있는폭 != null ? 글(n.있는폭) : ''}" placeholder="${검토결과?.폭제안?.절점?.[n.열쇠] != null ? '초안 ' + 글(검토결과.폭제안.절점[n.열쇠]) : '—'}" title="${검토결과?.폭제안?.식?.[n.열쇠] || ''}"></td>${판td(n)}</tr>`);
+    if (!c.절점.length) 줄들 = ['<tr><td colspan="' + (두께열 ? 8 : 7) + '" class="l" style="color:var(--dsm-faint)">경계면 없음 — 아래 줄에서 절점 · 경계면 · 작용력(부재력 · 반력 · 하중)을 선택해 추가하면 폭을 검토</td></tr>'];
     const 절점들 = Object.keys(과업.절점 || {});
-    줄들.push(`<tr class="add"><td><select id="새면절점" title="경계면을 추가할 절점">${절점들.map(n => `<option>${n}</option>`).join('')}</select></td><td><select id="새면이름" title="경계면 이름">${면이름들.map(x => `<option>${x}</option>`).join('')}</select></td><td><select id="새면닿음" title="이 경계면의 작용력"></select></td><td colspan="${두께열 ? 6 : 5}" class="l"><button class="chip on" id="면더" title="경계면 한 줄 추가 (되돌리기 가능)">+ 경계면 추가</button></td></tr>`);
+    줄들.push(`<tr class="add"><td><select id="새면절점" title="경계면을 추가할 절점">${절점들.map(n => `<option>${n}</option>`).join('')}</select></td><td><select id="새면이름" title="경계면 이름">${면이름들.map(x => `<option>${x}</option>`).join('')}</select></td><td><select id="새면닿음" title="이 경계면의 작용력"></select></td><td colspan="${두께열 ? 5 : 4}" class="l"><button class="chip on" id="면더" title="경계면 한 줄 추가 (되돌리기 가능)">+ 경계면 추가</button></td></tr>`);
   }
   $('#표33 thead').innerHTML = thead; $('#표33 tbody').innerHTML = 줄들.join('') || '<tr><td colspan="9" class="l" style="color:var(--dsm-faint)">없음</td></tr>';
+  $('#표33').querySelectorAll('select').forEach(짧은고르개);
   $('#표33 tbody').querySelectorAll('tr[data-이름]').forEach(tr => tr.onclick = e => { if (!/INPUT|SELECT/.test(e.target.tagName)) 고르기(tr.dataset.이름); });
   $('#표33').querySelectorAll('[data-타이]').forEach(i => i.onchange = () => {
     const n = i.dataset.타이, 칸 = i.dataset.칸;
@@ -1412,7 +1424,7 @@ $('#탭33').querySelectorAll('span').forEach(sp => sp.onclick = () => { 탭33 = 
 $('#NG만').onclick = () => { NG만 = !NG만; $('#NG만').textContent = NG만 ? '전체 표시' : 'N.G 만 표시'; 그리기3(); };
 
 // ─ ④ 계산서 · 도면 (서버 /api/계산서 가 HTML · 글 · PDF · DXF 를 만듦 · 화면은 보이기만)
-const 화면판 = 'v0.8.0';   // v0.8.0 (10-29 검정 · 목업 검정값_목업) 서버 v0.6.2 새 값 넷 — 3-3 절점 «두께» 열 (b 와 다르면 주황 · 마우스 글 까닭) · 3-3 스트럿 βs 미입력 «— (가정 0.75)» + 주황 테 · 1-3 조합 고르개 (1.2D+1.6L · 1.4D) + 서버 경고 빨강 띠 · 3-1 왜 글 ★ (역부호 · 인장 반력) 빨강 띠 · v0.7.9 (10-28 밤) 글 넘침 — 지금 할 일 한 줄 · 3-1 판정 아래 두 줄 · 카드 설명 짧게 (뜻은 마우스 글) · 형식 칩 → «새 과업 · ○○» (같은 이름이면 2 · 3) · v0.7.8 (10-28 밤) 판정 뜻 — 1.00 N.G 는 소수 셋째 (화면만) · 지배는 N.G 먼저 · 미입력 초안 타이 본수 검토비 1.11 이상 · 상태줄 점 색 = 판정 색 · v0.7.7 (10-28 밤) 용어 권고 39 — 보이는 글만 (부재력 0 · 하중조합 · 절점영역 · 핀 / 롤러 · 미지정 · 설계자 지정 · 되돌리기 가능 · 오류 글 «… 실패 — 사유» 꼴) · 계산 값 같음 · v0.7.6 (10-28) 단계 ③ AI 칸 — ② 2-5 AI 짚어 보기 (누를 때만 · 권하는 안 · 짚음 등급 셋 · 반영 / 넘김은 설계자 · 그림 파란 점선 · 실패면 묻는 글 복사 · 답 붙여 넣기 · 계산서 4절 «모델 정한 까닭») ·   // v0.7.5 (10-28) 용어 보완 10 — 바뀜 → 변경 · 고침 → 수정 · 사람이 → 설계자가 · N곳 → N개 · 꼴 → 구성 · 비움 → 초기화 · 오류 글 «작성 실패 — 사유 → 확인» ·   // v0.7.4 (10-28) 걷기 진짜 5 — 새 과업 · 형식 칩 직후는 «보기 값» : 1-2 펼침 · 맨 위 한 줄 · 점선 칸 · 상태 «치수 확인» (치수 · 하중을 바꾸면 풀림 · 다음 단추 안 막음) ·   // v0.7.3 (10-28) 걷기 진짜 셋 — 롤러로 불안정이면 상태줄 빨강 · 되돌리기 띠를 아래 단추 줄 위로 · ① 이 바뀌면 «미입력 초안» 폭을 다시 셈 (사람이 고친 칸은 그대로) ·   // v0.7.2 (10-28) 아래 띠 «예제 선택» → «과업 열기 ▾» (＋ 새 과업 · 내 과업 최근 순 · 예제 · 이름 찾기 · 새 과업 이름 겹치면 뒤에 2 · 3) · v0.7.1 (10-27 밤) 왼쪽 칸 폭 끌기 (경계를 끌면 네 판이 같이 · 360 ~ 그림 520 남는 데까지 · 두 번 누르면 420 · 폭은 이 PC 에 기억) · v0.7.0 (10-27) 37 2차 시안 — 그림이 칸에 맞춤 (전보다 약 두 배) · 부재 글 비켜 놓기 · 절점 표 받침 한 칸 세 단추 · 카드 제목 안 꺾임 · v0.6.9 (10-26 밤) ① 을 고치면 ② 기본안 칸이 따라감 (사람이 고친 칸은 그대로) · 기본안 다시 받아도 같은 부재의 철근 · 정착 · 폭 남김 · v0.6.8 (10-26 밤) 힘 0 부재 «힘 0 · 생략» 판정 (서버 v0.5.7) · v0.6.7 (10-26 밤) 형식 넷 더함 (코핑 다열 · 말뚝캡 · 확대기초 · 코벨) · 하중판 칸 · 기본안 이름은 서버 것
+const 화면판 = 'v0.8.1';   // v0.8.1 (10-29 걷기 묶음 나 «표 폭» 7 · 8 · 목업 표폭_목업) 3-3 타이 «정착 · ℓanc» 한 칸 («갈 90») · βs · βn 닫힌 칸엔 값만 (펼치면 긴 글 · 마우스 글) · 절점 ✕ 는 경계면 칸 끝 · 4-3 설명 짧게 · 값 · 저장 그대로 · v0.8.0 (10-29 검정 · 목업 검정값_목업) 서버 v0.6.2 새 값 넷 — 3-3 절점 «두께» 열 (b 와 다르면 주황 · 마우스 글 까닭) · 3-3 스트럿 βs 미입력 «— (가정 0.75)» + 주황 테 · 1-3 조합 고르개 (1.2D+1.6L · 1.4D) + 서버 경고 빨강 띠 · 3-1 왜 글 ★ (역부호 · 인장 반력) 빨강 띠 · v0.7.9 (10-28 밤) 글 넘침 — 지금 할 일 한 줄 · 3-1 판정 아래 두 줄 · 카드 설명 짧게 (뜻은 마우스 글) · 형식 칩 → «새 과업 · ○○» (같은 이름이면 2 · 3) · v0.7.8 (10-28 밤) 판정 뜻 — 1.00 N.G 는 소수 셋째 (화면만) · 지배는 N.G 먼저 · 미입력 초안 타이 본수 검토비 1.11 이상 · 상태줄 점 색 = 판정 색 · v0.7.7 (10-28 밤) 용어 권고 39 — 보이는 글만 (부재력 0 · 하중조합 · 절점영역 · 핀 / 롤러 · 미지정 · 설계자 지정 · 되돌리기 가능 · 오류 글 «… 실패 — 사유» 꼴) · 계산 값 같음 · v0.7.6 (10-28) 단계 ③ AI 칸 — ② 2-5 AI 짚어 보기 (누를 때만 · 권하는 안 · 짚음 등급 셋 · 반영 / 넘김은 설계자 · 그림 파란 점선 · 실패면 묻는 글 복사 · 답 붙여 넣기 · 계산서 4절 «모델 정한 까닭») ·   // v0.7.5 (10-28) 용어 보완 10 — 바뀜 → 변경 · 고침 → 수정 · 사람이 → 설계자가 · N곳 → N개 · 꼴 → 구성 · 비움 → 초기화 · 오류 글 «작성 실패 — 사유 → 확인» ·   // v0.7.4 (10-28) 걷기 진짜 5 — 새 과업 · 형식 칩 직후는 «보기 값» : 1-2 펼침 · 맨 위 한 줄 · 점선 칸 · 상태 «치수 확인» (치수 · 하중을 바꾸면 풀림 · 다음 단추 안 막음) ·   // v0.7.3 (10-28) 걷기 진짜 셋 — 롤러로 불안정이면 상태줄 빨강 · 되돌리기 띠를 아래 단추 줄 위로 · ① 이 바뀌면 «미입력 초안» 폭을 다시 셈 (사람이 고친 칸은 그대로) ·   // v0.7.2 (10-28) 아래 띠 «예제 선택» → «과업 열기 ▾» (＋ 새 과업 · 내 과업 최근 순 · 예제 · 이름 찾기 · 새 과업 이름 겹치면 뒤에 2 · 3) · v0.7.1 (10-27 밤) 왼쪽 칸 폭 끌기 (경계를 끌면 네 판이 같이 · 360 ~ 그림 520 남는 데까지 · 두 번 누르면 420 · 폭은 이 PC 에 기억) · v0.7.0 (10-27) 37 2차 시안 — 그림이 칸에 맞춤 (전보다 약 두 배) · 부재 글 비켜 놓기 · 절점 표 받침 한 칸 세 단추 · 카드 제목 안 꺾임 · v0.6.9 (10-26 밤) ① 을 고치면 ② 기본안 칸이 따라감 (사람이 고친 칸은 그대로) · 기본안 다시 받아도 같은 부재의 철근 · 정착 · 폭 남김 · v0.6.8 (10-26 밤) 힘 0 부재 «힘 0 · 생략» 판정 (서버 v0.5.7) · v0.6.7 (10-26 밤) 형식 넷 더함 (코핑 다열 · 말뚝캡 · 확대기초 · 코벨) · 하중판 칸 · 기본안 이름은 서버 것
 let 계산서결과 = null;
 function 알림4(말, 나쁨) { $('#상태4').className = 'status' + (나쁨 === true ? ' bad' : 나쁨 ? ' ' + 나쁨 : '');
   $('#상태4글').innerHTML = 말; }
