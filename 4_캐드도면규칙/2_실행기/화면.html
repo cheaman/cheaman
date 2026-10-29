@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="ko" class="dsm">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>도면 규칙 가르치기</title>
+<style>
+  /* DSM 부품 값 (dsm.css v1.9 ~ v1.12 의 값을 목업용으로 손으로 옮김 · 실제 도구는 부품 사본을 씀) */
+  :root{
+    --dsm-bg:#dde1e6; --dsm-panel:#f2f4f6; --dsm-line:#cdd3da; --dsm-panel2:#e9ecef;
+    --dsm-ink:#1f2328; --dsm-dim:#545d68; --dsm-faint:#626a73;
+    --dsm-head:#1f2328; --dsm-head2:#2b3036;
+    --dsm-c:#76b900; --dsm-c-soft:#eef7dc; --dsm-c-ink:#3d6400; --dsm-c-mark:#568800;
+    --dsm-c-btn:#3f7300; --dsm-on-btn:#ffffff; --dsm-brand:#e8743b;
+    --dsm-btn:#f8f9fa; --dsm-in:#f8f9fa; --dsm-in-line:#b9c1ca;
+    --dsm-ok:#1f7a3a; --dsm-warn:#b25000; --dsm-bad:#b42318; --dsm-info:#5b4bb5;
+    --dsm-ai-bg:#fbe4ee; --dsm-ai-ink:#1f2328;
+    --dsm-edit-bg:#fff3b0; --dsm-edit-ink:#1f2328;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --dsm-bg:#0d0f12; --dsm-panel:#1c1f24; --dsm-line:#30353c; --dsm-panel2:#24282e;
+      --dsm-ink:#e6e9ed; --dsm-dim:#a3abb5; --dsm-faint:#8a929c;
+      --dsm-head:#08090b; --dsm-head2:#121417;
+      --dsm-c:#e8743b; --dsm-c-soft:#3a2a20; --dsm-c-ink:#f0955f; --dsm-c-mark:#e8743b;
+      --dsm-c-btn:#e8743b; --dsm-on-btn:#111111;
+      --dsm-btn:#24282e; --dsm-in:#15181c; --dsm-in-line:#6b737d;
+      --dsm-ok:#6cc08a; --dsm-warn:#d9b648; --dsm-bad:#f08078; --dsm-info:#9d9be0;
+      --dsm-ai-bg:#4a2a3a; --dsm-ai-ink:#f3e6ec;
+      --dsm-edit-bg:#4a4320; --dsm-edit-ink:#f3efd6;
+    }
+  }
+  :root[data-theme="dark"]{
+    --dsm-bg:#0d0f12; --dsm-panel:#1c1f24; --dsm-line:#30353c; --dsm-panel2:#24282e;
+    --dsm-ink:#e6e9ed; --dsm-dim:#a3abb5; --dsm-faint:#8a929c;
+    --dsm-head:#08090b; --dsm-head2:#121417;
+    --dsm-c:#e8743b; --dsm-c-soft:#3a2a20; --dsm-c-ink:#f0955f; --dsm-c-mark:#e8743b;
+    --dsm-c-btn:#e8743b; --dsm-on-btn:#111111;
+    --dsm-btn:#24282e; --dsm-in:#15181c; --dsm-in-line:#6b737d;
+    --dsm-ok:#6cc08a; --dsm-warn:#d9b648; --dsm-bad:#f08078; --dsm-info:#9d9be0;
+    --dsm-ai-bg:#4a2a3a; --dsm-ai-ink:#f3e6ec;
+    --dsm-edit-bg:#4a4320; --dsm-edit-ink:#f3efd6;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--dsm-bg);color:var(--dsm-ink);
+    font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:14px;line-height:1.5}
+  button{font:inherit}
+  .mock{background:var(--dsm-edit-bg);color:var(--dsm-edit-ink);font-size:13px;padding:8px 16px}
+  .mock b{font-weight:700}
+
+  /* 머리 띠 */
+  .head{background:var(--dsm-head);color:#e6e9ed;display:flex;align-items:center;gap:12px;padding:0 16px;height:48px}
+  .who{display:flex;align-items:center;gap:8px;min-width:0}
+  .who .ico{width:28px;height:28px;border-radius:6px;background:#1f6fb2;display:grid;place-items:center;flex:none}
+  .who .ico svg{width:18px;height:18px}
+  .who b{font-size:15px;white-space:nowrap}
+  .who .what{color:#aab2bb;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sp{flex:1}
+  .ver{color:#aab2bb;font-size:12px;white-space:nowrap}
+  .theme{display:flex;border:1px solid #3a3f46;border-radius:6px;overflow:hidden}
+  .theme button{background:none;border:none;color:#aab2bb;padding:3px 7px;font-size:12px;cursor:pointer;min-height:28px}
+  .theme button.on{background:#3a3f46;color:#fff}
+
+  /* 단계 띠 */
+  .stepbar{background:var(--dsm-head2);padding:6px 16px;display:flex;gap:4px;flex-wrap:wrap}
+  .step{border:none;background:none;color:#aab2bb;display:flex;align-items:center;gap:7px;padding:6px 10px;border-radius:8px;cursor:pointer;min-height:40px}
+  .step .n{width:22px;height:22px;border-radius:50%;border:1.5px solid #6b737d;display:grid;place-items:center;font-size:12px;flex:none}
+  .step.done{color:#e6e9ed}
+  .step.done .n{background:#6b737d;border-color:#6b737d;color:#fff}
+  .step.now{color:#fff;background:rgba(255,255,255,.07);box-shadow:inset 0 -4px 0 var(--dsm-c)}
+  .step.now .n{background:var(--dsm-c);border-color:var(--dsm-c);color:#111}
+  .step.off{opacity:.45;cursor:not-allowed}
+  .situ{padding:8px 16px;color:var(--dsm-dim);font-size:13px;border-bottom:1px solid var(--dsm-line);background:var(--dsm-panel)}
+  .situ b{color:var(--dsm-ink);font-weight:600}
+
+  main{padding:14px 16px 80px;max-width:1180px;margin:0 auto}
+  .card{position:relative;background:var(--dsm-panel);border:1px solid var(--dsm-line);border-radius:14px;margin-bottom:12px;overflow:hidden}
+  .card.now{box-shadow:inset 4px 0 0 var(--dsm-c)}
+  .card.wait{opacity:.6}
+  .ch{display:flex;align-items:center;gap:10px;padding:9px 46px 9px 14px;background:var(--dsm-panel2);border-bottom:1px solid var(--dsm-line);min-height:40px;flex-wrap:wrap}
+  .ch .no{font-weight:700;color:var(--dsm-c-ink);font-size:13px}
+  .ch h2{margin:0;font-size:15px;font-weight:700}
+  .ch .st{font-size:13px;color:var(--dsm-dim)}
+  .ch .st.ok{color:var(--dsm-ok)}
+  .ch .st.now{color:var(--dsm-c-ink);font-weight:600}
+  .kno{position:absolute;top:7px;right:10px;font-size:11px;color:var(--dsm-faint);font-variant-numeric:tabular-nums}
+  .cb{padding:12px 14px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .hint{color:var(--dsm-dim);font-size:13px;margin-top:6px}
+  .btn{background:var(--dsm-btn);border:1px solid var(--dsm-line);color:var(--dsm-ink);border-radius:8px;padding:6px 12px;min-height:32px;cursor:pointer}
+  .btn:hover{border-color:var(--dsm-dim)}
+  .btn--main{background:var(--dsm-c-btn);color:var(--dsm-on-btn);border-color:var(--dsm-c-btn);font-weight:700;min-height:40px;padding:8px 16px}
+  .btn--view{background:none;border-color:transparent;color:var(--dsm-c-ink);text-decoration:underline;padding:4px 6px;min-height:28px}
+  .btn[disabled]{opacity:.5;cursor:not-allowed}
+  .drop{border:2px dashed var(--dsm-in-line);border-radius:12px;padding:26px 14px;text-align:center;color:var(--dsm-dim);background:var(--dsm-in)}
+  .drop b{display:block;color:var(--dsm-ink);font-size:15px;margin-bottom:4px}
+  .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--dsm-line);background:var(--dsm-panel2);border-radius:999px;padding:4px 11px;min-height:30px;font-size:13px}
+  .chip.on{background:var(--dsm-c-soft);border:2px solid var(--dsm-ink);color:var(--dsm-c-ink);font-weight:600}
+  .pill{display:inline-block;border-radius:6px;padding:1px 7px;font-size:12px;font-weight:600;white-space:nowrap}
+  .pill--ok{background:rgba(31,122,58,.12);color:var(--dsm-ok)}
+  .pill--warn{background:rgba(178,80,0,.12);color:var(--dsm-warn)}
+  .pill--bad{background:rgba(180,35,24,.12);color:var(--dsm-bad)}
+  .pill--mute{background:var(--dsm-panel2);color:var(--dsm-faint)}
+  .pill--ai{background:var(--dsm-ai-bg);color:var(--dsm-ai-ink)}
+  .pill--info{background:rgba(91,75,181,.12);color:var(--dsm-info)}
+  .ai{background:var(--dsm-ai-bg);color:var(--dsm-ai-ink);border-radius:4px;padding:0 4px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;font-weight:600;color:var(--dsm-dim);background:var(--dsm-panel2);padding:6px 8px;border-bottom:1px solid var(--dsm-line);white-space:nowrap}
+  td{padding:6px 8px;border-bottom:1px solid var(--dsm-line);vertical-align:top}
+  td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+  tr.now td{background:var(--dsm-c-soft)}
+  .tbl{overflow-x:auto;margin:0 -14px;padding:0 14px}
+  .cap{font-size:12px;color:var(--dsm-faint);margin-bottom:4px}
+  .res{margin-top:10px;background:var(--dsm-in);border:1px solid var(--dsm-line);border-radius:10px;padding:10px 12px;font-size:13px}
+  .res.hide{display:none}
+  .res b{font-weight:600}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+  .layer{border:1px solid var(--dsm-line);border-radius:10px;padding:10px 12px;background:var(--dsm-in)}
+  .layer h3{margin:0 0 4px;font-size:14px;display:flex;align-items:center;gap:8px}
+  .layer .k{display:grid;grid-template-columns:62px 1fr;gap:2px 8px;font-size:12.5px;margin-top:6px}
+  .layer .k span:nth-child(odd){color:var(--dsm-faint)}
+  pre{margin:6px 0 0;background:var(--dsm-panel);border:1px solid var(--dsm-line);border-radius:8px;padding:8px 10px;font-size:12px;white-space:pre-wrap;line-height:1.45;color:var(--dsm-ink)}
+  .q{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+  .num{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+  .num.bad{color:var(--dsm-bad)}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+  .tile{background:var(--dsm-in);border:1px solid var(--dsm-line);border-radius:10px;padding:8px 10px}
+  .tile .l{font-size:12px;color:var(--dsm-faint)}
+  .chain{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px}
+  .chain .c{border:1px solid var(--dsm-line);background:var(--dsm-in);border-radius:8px;padding:5px 9px}
+  .chain .a{color:var(--dsm-faint)}
+  .foot{position:fixed;left:0;right:0;bottom:0;background:var(--dsm-panel);border-top:1px solid var(--dsm-line);display:flex;align-items:center;gap:10px;padding:8px 16px;z-index:5}
+  .foot .msg{flex:1;font-size:13px;color:var(--dsm-dim);min-width:0}
+  .foot .msg b{color:var(--dsm-ink);font-weight:600}
+  .sign{text-align:center;color:var(--dsm-faint);font-size:12px;padding:14px 0 0}
+  .tip{font-size:12px;color:var(--dsm-faint)}
+  .fig{background:var(--dsm-in);border:1px solid var(--dsm-line);border-radius:10px;padding:6px 8px 4px}
+  .fig svg{width:100%;height:auto;max-height:240px;display:block;margin:0 auto;color:var(--dsm-ink)}
+  .fig .fl{font-size:12px;color:var(--dsm-faint);display:flex;justify-content:space-between;gap:8px;margin-top:2px}
+  .fig .fl b{color:var(--dsm-ink);font-weight:600}
+  .figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+  .figs.three{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+  .thumb{display:inline-block;width:72px;vertical-align:middle;border:1px solid var(--dsm-line);border-radius:6px;background:var(--dsm-in);margin-right:6px}
+  .thumb svg{width:100%;height:auto;display:block;color:var(--dsm-ink)}
+  .sec{display:none}.sec.on{display:block}
+  @media (max-width:640px){
+    .who .what{display:none}
+    .theme{display:none}
+    .who b{white-space:normal;line-height:1.2}
+    .step .t{display:none}.step.now .t{display:inline}
+    .foot{flex-wrap:wrap}.foot .msg{width:100%}
+    .ch{padding-right:40px}
+  }
+
+  /* 한 장 꼴 */
+  .wrap{display:grid;grid-template-columns:1fr;gap:12px;padding:12px 16px 70px;max-width:1500px;margin:0 auto}
+  .band{border-top:3px solid var(--dsm-line);padding-top:8px}
+  .band--ai{border-top-color:var(--dsm-ai-bg)}
+  .col.l .in3{display:grid;grid-template-columns:minmax(220px,1fr) minmax(0,2fr) minmax(220px,1fr);gap:10px;align-items:start}
+  .tiles2{display:flex;flex-wrap:wrap;gap:8px;padding:8px 10px;align-items:flex-start}
+  .tiles2 .tl{flex:0 1 300px;border:1px solid var(--dsm-line);border-radius:10px;background:var(--dsm-in);padding:7px 9px;cursor:pointer;font-size:13px;display:flex;gap:8px;align-items:flex-start;min-height:44px}
+  .tiles2 .tl:hover{border-color:var(--dsm-dim)}
+  .tiles2 .tl.on{background:var(--dsm-c-soft);border:2px solid var(--dsm-ink)}
+  .tiles2 .tl .nm{flex:1;min-width:120px}
+  .tiles2 .tl .thumb{width:56px;flex:none}
+  .tiles2 .tl img.thumb{height:40px;object-fit:cover}
+  .tiles2 .tl .thumbs{display:flex;gap:3px;flex:none}
+  .tiles2 .tl .thumbs img,.tiles2 .tl .thumbs .thumb{width:40px;height:40px;object-fit:cover;margin:0;border-radius:5px}
+  .tiles2 .tl .thumbs .more{width:40px;height:40px;border:1px solid var(--dsm-line);border-radius:5px;display:grid;place-items:center;font-size:12px;color:var(--dsm-faint)}
+  .tiles2 .tl .see{font-size:12px;color:var(--dsm-c-ink);text-decoration:underline;white-space:nowrap}
+  .busy{display:inline-block;width:12px;height:12px;border:2px solid var(--dsm-line);border-top-color:var(--dsm-c);border-radius:50%;animation:spin 1s linear infinite;vertical-align:-2px;margin-right:4px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .viewer{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
+  .viewer .v{border:1px solid var(--dsm-line);border-radius:10px;background:var(--dsm-in);padding:8px}
+  .viewer .v img,.viewer .v svg{max-width:100%;max-height:60vh;display:block;margin:0 auto;color:var(--dsm-ink)}
+  .viewer .v .t{font-size:13px;margin-top:6px}
+  .viewer .v .t b{font-size:12px;color:var(--dsm-faint);display:block}
+  .cap{position:relative;border:1px solid var(--dsm-line);border-radius:10px;background:var(--dsm-in);padding:6px;text-align:center}
+  .cap img{max-width:100%;max-height:260px;border-radius:6px}
+  .cap svg{max-height:220px;width:auto;display:block;margin:0 auto;color:var(--dsm-ink)}
+  .cap .fl{font-size:12px;color:var(--dsm-faint);display:flex;justify-content:space-between;gap:8px;margin-top:4px;text-align:left}
+  .cap .fl b{color:var(--dsm-ink)}
+  .pasteon .drop{border-color:var(--dsm-c);background:var(--dsm-c-soft)}
+  .toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);background:var(--dsm-head);color:#e6e9ed;border-radius:10px;padding:8px 14px;font-size:13px;z-index:60;display:none;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+  .toast.on{display:block}
+  .tiles2 .tl .nm small{display:block;color:var(--dsm-faint);font-size:12px}
+  .col.m #이해칸{display:grid;grid-template-columns:repeat(auto-fit,minmax(520px,1fr));gap:10px;align-items:start}
+  .col.m .uc{margin-bottom:0}
+  .col.m .uc.done{grid-column:1/-1}
+  .col.r .in2{display:grid;grid-template-columns:minmax(0,3fr) minmax(260px,1fr);gap:10px;align-items:start}
+  .rl .list{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+  .rl .list li{border-right:1px solid var(--dsm-line)}
+  .col{min-width:0}
+  .col > .card{margin-bottom:10px}
+  .colh{display:flex;align-items:center;gap:8px;padding:0 2px 6px;font-size:13px;color:var(--dsm-dim)}
+  .colh b{color:var(--dsm-ink);font-size:14px}
+  .colh .who{margin-left:auto;font-size:12px;border:1px solid var(--dsm-line);border-radius:999px;padding:1px 8px}
+  .colh .who.ai{background:var(--dsm-ai-bg);color:var(--dsm-ai-ink);border-color:transparent}
+  .list{list-style:none;margin:0;padding:0}
+  .list li{display:flex;gap:8px;align-items:flex-start;padding:7px 10px;border-bottom:1px solid var(--dsm-line);cursor:pointer;font-size:13px}
+  .list li:last-child{border-bottom:none}
+  .list li:hover{background:var(--dsm-panel2)}
+  .list li.on{background:var(--dsm-c-soft);box-shadow:inset 3px 0 0 var(--dsm-c)}
+  .list li .nm{flex:1;min-width:0}
+  .list li .nm small{display:block;color:var(--dsm-faint);font-size:12px}
+  .drop.small{padding:14px 10px}
+  .drop.small b{font-size:14px}
+  textarea.say{width:100%;font:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--dsm-in-line);border-radius:8px;background:var(--dsm-in);color:var(--dsm-ink);resize:vertical;min-height:64px}
+  .uc{border:1px solid var(--dsm-line);border-radius:12px;background:var(--dsm-panel);margin-bottom:10px;overflow:hidden}
+  .uc .uh{display:flex;gap:8px;align-items:center;padding:8px 12px;background:var(--dsm-panel2);border-bottom:1px solid var(--dsm-line);font-size:13px;flex-wrap:wrap}
+  .uc .uh b{font-size:14px}
+  .uc .ub{padding:10px 12px;display:grid;grid-template-columns:minmax(220px,1fr) minmax(220px,1fr);gap:10px}
+  .uc.done .ub{display:none}
+  .uc.done{opacity:.75}
+  .uc .line{font-size:14px;margin-bottom:6px}
+  .uc .k4{display:grid;grid-template-columns:62px 1fr;gap:2px 8px;font-size:12.5px;background:var(--dsm-in);border:1px solid var(--dsm-line);border-radius:8px;padding:7px 9px}
+  .uc .k4 span:nth-child(odd){color:var(--dsm-faint)}
+  .uc .src{font-size:12px;color:var(--dsm-faint);margin-top:6px}
+  .rl .list li{cursor:default}
+  .strip{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:9px 12px;font-size:13px}
+  .strip .num{font-size:16px}
+  .ov{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;z-index:50;padding:24px}
+  .ov.on{display:flex;align-items:flex-start;justify-content:center}
+  .win{background:var(--dsm-panel);border:1px solid var(--dsm-line);border-radius:14px;max-width:1100px;width:100%;max-height:calc(100vh - 48px);overflow:auto}
+  .win .wh{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--dsm-head);color:#e6e9ed;position:sticky;top:0}
+  .win .wh b{font-size:15px}
+  .win .wb{padding:12px 14px}
+  .set{display:grid;grid-template-columns:150px 1fr;gap:8px 12px;font-size:13px;align-items:center}
+  .set input,.set select{font:inherit;font-size:13px;padding:6px 9px;border:1px solid var(--dsm-in-line);border-radius:8px;background:var(--dsm-in);color:var(--dsm-ink);width:100%}
+  @media (max-width:1100px){.col.l .in3{grid-template-columns:1fr 1fr}.col.l .in3 > :nth-child(2){grid-column:1/-1;order:3}.col.m #이해칸{grid-template-columns:1fr}.col.r .in2{grid-template-columns:1fr}}
+  @media (max-width:760px){
+    .wrap{padding:10px 12px 110px}.col.l .in3{grid-template-columns:1fr}.col.l .in3 > :nth-child(2){order:0}.uc .ub{grid-template-columns:1fr}.set{grid-template-columns:1fr}
+    .head{flex-wrap:wrap;height:auto;padding:6px 12px;row-gap:4px}
+    .head .who{width:100%}.head .who b{white-space:nowrap;font-size:14px}
+    .head .btn{min-height:28px;padding:3px 8px;font-size:12px}.head .sp{display:none}.head .theme{margin-left:auto}
+    .foot{flex-wrap:wrap;padding:8px 12px}.foot .msg{width:100%}.foot .btn--main{width:100%}
+  }
+
+  .numtbl td.n,.numtbl th.n{text-align:right}
+  .svgbox{border:1px solid var(--dsm-line);border-radius:10px;background:#fff;padding:4px;cursor:zoom-in}
+  .svgbox img{width:100%;max-height:260px;object-fit:contain;display:block}
+  .cap img{cursor:zoom-in}
+  .win img.big,.win object.big{max-width:100%;max-height:80vh;display:block;margin:0 auto;background:#fff}
+  .need{background:var(--dsm-edit-bg);color:var(--dsm-edit-ink);border-radius:6px;padding:2px 7px;font-size:12px}
+  .err{color:var(--dsm-bad);font-size:12.5px;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<header class="head">
+  <div class="who">
+    <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M4 18h16M6 18V8M18 18V8M4 8h16"/><path d="M9 12h6"/></svg></span>
+    <b>도면 규칙 가르치기</b>
+    <span class="what">· 넣으면 AI 가 바로 되짚고, ○ 하면 규칙이 된다</span>
+  </div>
+  <div class="sp"></div>
+  <button class="btn" style="min-height:30px;padding:4px 10px;background:#2b3036;border-color:#3a3f46;color:#e6e9ed" onclick="창열기('시험')" id="시험단추">시험</button>
+  <button class="btn" style="min-height:30px;padding:4px 10px;background:#2b3036;border-color:#3a3f46;color:#e6e9ed" onclick="창열기('기억')">기억 창고</button>
+  <button class="btn" style="min-height:30px;padding:4px 10px;background:#2b3036;border-color:#3a3f46;color:#e6e9ed" onclick="창열기('설정')">설정</button>
+  <span class="ver" id="판" title="판 · 고친 날">v0.1</span>
+  <div class="theme" title="밝기 고르개 · 처음 = 시간">
+    <button data-t="">기기</button><button data-t="time" class="on">시간</button><button data-t="light">밝게</button><button data-t="dark">어둡게</button>
+  </div>
+</header>
+<div class="situ" id="situ">지금 : 서버에 묻는 중 …</div>
+
+<div class="wrap">
+  <div class="col l band">
+    <div class="colh"><b>① 넣기</b> 자료 · 말 <span class="who">사람</span></div>
+    <div class="in3">
+    <div class="card" style="position:relative;margin:0"><span class="kno">1-01</span>
+      <div class="cb" style="padding:10px">
+        <div class="drop small" id="drop"><b>폴더 · 파일 · 캡처를 여기에</b>DXF · DWG 도면 짝 · 질문지 답 · 지적기록 · 캡처 그림(여러 장도) · 캡처는 <b style="display:inline">Ctrl+V</b> 로 어디서나</div>
+        <div class="row" style="margin-top:8px">
+          <button class="btn" onclick="document.getElementById('폴더입력').click()">폴더 고르기</button>
+          <button class="btn" onclick="document.getElementById('파일입력').click()">파일 더하기</button>
+          <button class="btn" onclick="알림('화면을 찍은 뒤 이 창에서 Ctrl+V — 어느 칸에 있든 됩니다')">캡처 붙여넣기</button>
+          <input type="file" id="폴더입력" webkitdirectory multiple style="display:none" onchange="파일들넣기(this.files)">
+          <input type="file" id="파일입력" multiple style="display:none" onchange="파일들넣기(this.files)">
+        </div>
+        <div class="hint" id="넣기상태"></div>
+      </div>
+    </div>
+    <div class="card" style="position:relative;margin:0"><span class="kno">1-02</span>
+      <div class="ch" style="padding-right:40px"><h2 style="font-size:14px">넣은 자료</h2><span class="st" id="자료수"></span><span class="tip">하나를 누르면 아래 띠가 그 자료로</span></div>
+      <div class="tiles2" id="자료목록"><div class="tip" style="padding:6px">아직 없음 → 왼쪽에 폴더 · 파일을 넣거나 Ctrl+V</div></div>
+    </div>
+    <div class="card" style="position:relative;margin:0"><span class="kno">1-03</span>
+      <div class="ch" style="padding-right:40px"><h2 style="font-size:14px">말로 적기</h2><span class="st">파일 없이 바로</span></div>
+      <div class="cb" style="padding:10px">
+        <textarea class="say" id="말" placeholder="예 : 지시선은 45도. 자리 없으면 30도도 됨"></textarea>
+        <div class="row" style="margin-top:6px"><button class="btn btn--main" style="min-height:34px" onclick="말보내기()">AI 에게 보내기</button><span class="tip">아래 띠에 되짚음</span></div>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <div class="col m band band--ai">
+    <div class="colh"><b>② AI 가 이해한 것</b> 되짚음 · ○ 면 아래 목록으로 <span class="who ai">AI</span></div>
+    <div id="이해칸"><div class="tip">자료를 고르면 여기에</div></div>
+  </div>
+
+  <div class="col r band">
+    <div class="colh"><b>③ 규칙 목록</b> 쌓인 것 <span class="who">규칙 글 · 숫자 표</span></div>
+    <div class="in2">
+    <div class="card rl" style="position:relative;margin:0"><span class="kno">3-01</span>
+      <div class="ch" style="padding-right:40px"><h2 style="font-size:14px">규칙 글 13장</h2><span class="st" id="규칙수"></span></div>
+      <ul class="list" id="규칙목록"></ul>
+    </div>
+    <div class="card" style="position:relative;margin:0"><span class="kno">3-02</span>
+      <div class="strip"><span class="num" id="시험요약">—</span><span>정답지 시험 · 마지막</span><button class="btn btn--view" onclick="창열기('시험')">보기</button></div>
+      <div class="strip" style="border-top:1px solid var(--dsm-line)"><span class="num" id="규칙판">v0</span><span>규칙 판 · 올리면 시험이 먼저 돎</span></div>
+      <div class="strip" style="border-top:1px solid var(--dsm-line)"><span class="num" id="지적수">0</span><span>지적기록 줄</span><button class="btn btn--view" onclick="창열기('기억')">보기</button></div>
+    </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<footer class="foot" id="foot"><div class="msg" id="footmsg"></div><button class="btn btn--main" id="올리기" onclick="올리기()">○ 받은 규칙 → 규칙 글 · 숫자 표에 올리기</button></footer>
+<div class="ov" id="ov" onclick="if(event.target===this)창닫기()">
+  <div class="win" role="dialog">
+    <div class="wh"><b id="창제목"></b><div class="sp"></div><button class="btn" style="min-height:28px;padding:3px 10px" onclick="창닫기()">닫기 Esc</button></div>
+    <div class="wb" id="창몸"></div>
+  </div>
+</div>
+
+<script>
+/* 생김새 : "v0.1 2026-10-29 · 무엇" ← 판 글자는 서버 /api/살아있나 가 준다 */
+var 자료 = {목록: []}, 규칙 = {목록: [], 판: "v0"}, 고른 = null, 살아 = {};
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+function 알림(t){ var e=document.getElementById("toast"); e.textContent=t; e.classList.add("on"); clearTimeout(e._t); e._t=setTimeout(function(){e.classList.remove("on")},3000); }
+async function api(주소, 몸){ var r = await fetch(주소, 몸 ? {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(몸)} : undefined); var j = await r.json(); if (j && j.오류) 알림("안 됨 · " + j.오류); return j; }
+
+/* ── 넣기 ── */
+function 읽어서base64(f){ return new Promise(function(ok, no){ var r = new FileReader(); r.onload = function(){ ok(r.result.split(",")[1]); }; r.onerror = no; r.readAsDataURL(f); }); }
+async function 파일들넣기(files){
+  files = [].slice.call(files).filter(function(f){ return !/^\./.test(f.name); });
+  if (!files.length) return;
+  if (files.length > 300) { 알림("한 번에 300개까지 — " + (files.length - 300) + "개는 못 넣었습니다"); files = files.slice(0, 300); }
+  document.getElementById("넣기상태").innerHTML = '<span class="busy"></span>' + files.length + "개 보내는 중 …";
+  var 파일들 = [];
+  for (var f of files) 파일들.push({이름: f.webkitRelativePath || f.name, base64: await 읽어서base64(f)});
+  var j = await api("/api/자료/넣기", {파일들: 파일들});
+  if (j.넣음) { 고른 = j.넣음[j.넣음.length - 1]; document.getElementById("넣기상태").textContent = "넣었습니다 · " + j.넣음.length + "건 → 셈 · AI 가 보는 중"; 알림(files.length + "개를 넣었습니다 → ② 띠"); }
+  새로고침();
+}
+async function 말보내기(){ var t = document.getElementById("말").value.trim(); if (!t) { 알림("적은 것이 없습니다"); return; } var j = await api("/api/말", {글: t}); if (j.넣음) { document.getElementById("말").value = ""; 고른 = j.넣음[0]; 알림("보냈습니다 → ② 띠에 되짚기"); } 새로고침(); }
+document.addEventListener("paste", function(e){
+  var items = (e.clipboardData || {}).items || [], fs = [];
+  for (var i = 0; i < items.length; i++) if (items[i].type.indexOf("image") === 0) fs.push(new File([items[i].getAsFile()], "붙여넣기.png", {type: items[i].type}));
+  if (fs.length) { e.preventDefault(); 파일들넣기(fs); }
+  else if (e.target.tagName !== "TEXTAREA" && e.target.tagName !== "INPUT") 알림("붙여 넣을 그림이 없습니다 — 화면을 먼저 찍으십시오 (Win+Shift+S)");
+});
+["dragenter","dragover"].forEach(function(ev){ document.addEventListener(ev, function(e){ e.preventDefault(); document.body.classList.add("pasteon"); }); });
+["dragleave","drop"].forEach(function(ev){ document.addEventListener(ev, function(e){ e.preventDefault(); if (ev === "drop" || !e.relatedTarget) document.body.classList.remove("pasteon"); }); });
+document.addEventListener("drop", function(e){ if (e.dataTransfer.files && e.dataTransfer.files.length) 파일들넣기(e.dataTransfer.files); });
+
+/* ── 보기 ── */
+function 상태말(s){ return {ok:'<span class="pill pill--ok">○ 받음</span>', wait:'<span class="pill pill--mute">○ × 기다림</span>', ask:'<span class="pill pill--warn">물음</span>', unknown:'<span class="pill pill--bad">못 알아들음</span>', no:'<span class="pill pill--bad">× 아니다</span>', skip:'<span class="pill pill--mute">건너뜀</span>'}[s] || s; }
+function 그리기(){
+  var ul = document.getElementById("자료목록"); ul.innerHTML = "";
+  if (!자료.목록.length) ul.innerHTML = '<div class="tip" style="padding:6px">아직 없음 → 왼쪽에 폴더 · 파일을 넣거나 Ctrl+V</div>';
+  if (고른 == null && 자료.목록.length) 고른 = 자료.목록[자료.목록.length - 1].번호;
+  자료.목록.forEach(function(a){
+    var d = document.createElement("div"); d.className = "tl" + (a.번호 === 고른 ? " on" : "");
+    var th = a.그림.length ? '<span class="thumbs">' + a.그림.slice(0, 2).map(function(u){ return '<img class="thumb" src="' + u + '" alt="">'; }).join("") + (a.그림.length > 2 ? '<span class="more">+' + (a.그림.length - 2) + '</span>' : '') + '</span>' : '';
+    var 보는중 = /보는 중/.test(a.상태) && !a.이해수;
+    d.innerHTML = th + '<div class="nm">' + esc(a.이름) + '<small>' + (보는중 ? '<span class="busy"></span>' : '') + esc(a.상태) + ' · 이해 ' + a.이해수 + (a.남은 ? ' · 남은 ' + a.남은 : '') + '</small></div><span class="pill pill--ai">' + esc(a.종류) + '</span>' + (a.그림.length ? '<span class="see" onclick="event.stopPropagation();그림보기(' + a.번호 + ')">' + (a.종류 === "도면" ? "도면 그림 보기" : "그림 " + a.그림.length + "장 보기") + '</span>' : '');
+    d.onclick = function(){ 고른 = a.번호; 그리기(); }; ul.appendChild(d);
+  });
+  var 전체 = 0, 남 = 0; 자료.목록.forEach(function(a){ 전체 += a.이해수; 남 += a.남은; });
+  document.getElementById("자료수").textContent = 자료.목록.length + "개 · 이해 " + 전체 + " · 남은 " + 남;
+  var a = 자료.목록.filter(function(x){ return x.번호 === 고른; })[0], box = document.getElementById("이해칸"); box.innerHTML = "";
+  if (!a) { box.innerHTML = '<div class="tip">자료를 고르면 여기에</div>'; }
+  else {
+    if (a.숫자) {   // 프로그램이 센 숫자 — 근거 있음
+      var n = a.숫자, 요약 = '단수 ' + esc(n["치수선.단수_최대"].값) + ' · 간격 ' + esc(n["치수선.단_간격"].값) + ' · 글자 ' + esc(n["글자.높이"].값) + ' · 지시선 ' + esc(n["지시선.각"].값) + '° · 겹침 ' + (a.겹침 ? a.겹침.겹침수 : "-");
+      var t = '<div class="uc done" id="숫자카드"><div class="uh"><b>프로그램이 센 숫자</b><span class="pill pill--ok">근거 있음</span><span class="tip">' + 요약 + ' · 객체 ' + a.객체수 + '</span><span class="sp"></span><button class="btn btn--view" onclick="펼치기(this)">펴기 / 접기</button></div><div class="ub"><div><div class="tbl"><table class="numtbl"><tr><th>무엇</th><th class="n">값</th><th>출처</th></tr>';
+      Object.keys(a.숫자).forEach(function(k){ var v = a.숫자[k]; t += '<tr><td>' + esc(k) + '</td><td class="n">' + esc(v.값) + '</td><td class="tip">' + esc(v.출처) + '</td></tr>'; });
+      t += '</table></div>' + (a.겹침 && a.겹침.목록.length ? '<div class="hint">겹침 ' + a.겹침.겹침수 + '곳 · ' + a.겹침.목록.slice(0, 5).map(function(x){ return esc(x.a) + ' ↔ ' + esc(x.b); }).join(" / ") + '</div>' : '<div class="hint">겹침 0</div>') + (a.못읽음 && a.못읽음.length ? '<div class="err">못 읽음 ' + a.못읽음.length + ' : ' + esc(a.못읽음.slice(0, 3).join(" · ")) + '</div>' : '') + '</div>';
+      t += '<div><div class="svgbox" onclick="큰그림(\'/api/그림/' + a.번호 + '/svg\')"><img src="/api/그림/' + a.번호 + '/svg" alt="도면 그림"></div><div class="tip" style="margin-top:4px">누르면 크게 · DXF → SVG (글꼴은 바뀔 수 있음)</div></div></div></div>';
+      box.insertAdjacentHTML("beforeend", t);
+    }
+    if (!a.이해수) {
+      var w = /보는 중/.test(a.상태) ? '<span class="busy"></span>AI 가 보는 중 · 보통 30 ~ 90초 · 끝나면 여기 카드가 생깁니다' : a.AI길 === "파일" ? '봐주세요 파일을 썼습니다 → 클로드 대화창에 「봐주세요 봐 줘」 라고 하시면 파악한것 파일이 오고 여기 카드가 생깁니다' : esc(a.상태);
+      box.insertAdjacentHTML("beforeend", '<div class="uc"><div class="uh"><b>되짚기</b><span class="tip">' + w + '</span><span class="sp"></span>' + (a.AI오류 ? '<button class="btn" onclick="AI다시(' + a.번호 + ')">AI 에게 다시</button>' : '') + '</div>' + (a.AI오류 ? '<div class="ub"><div class="err">' + esc(a.AI오류) + '</div></div>' : '') + '</div>');
+    }
+    (a.이해 || []).forEach(function(u){
+      var 끝 = (u.상태 === "ok" || u.상태 === "no" || u.상태 === "skip");
+      var h = '<div class="uh"><b>' + (u.상태 === "unknown" ? "못 알아들음" : "되짚기") + '</b>' + 상태말(u.상태) + (u.확인필요 ? '<span class="need" title="AI 가 적은 숫자가 센 숫자에 없음">확인 필요 · ' + esc(u.확인필요) + '</span>' : '') + '<span class="tip">' + esc(a.이름.split(" ")[0]) + '</span><span class="sp"></span>' + (끝 ? '<span class="tip">' + esc(u.한줄.slice(0, 34)) + '…</span><button class="btn btn--view" onclick="펼치기(this)">펴기</button>' : '') + '</div>';
+      var left = '<div><div class="line">' + (u.상태 === "unknown" ? '' : '<span class="ai">') + esc(u.한줄) + (u.상태 === "unknown" ? '' : '</span>') + '</div><div class="k4"><span>어디</span><span>' + esc(u.어디) + '</span><span>무엇이</span><span>' + esc(u.무엇이) + '</span><span>어떻게</span><span>' + esc(u.어떻게) + '</span><span>안 건드림</span><span>' + esc(u.안건드림) + '</span></div><div class="src">어디서 왔나 · ' + esc(u.출처) + '</div>';
+      var q = '"' + a.번호 + '","' + u.id + '"';
+      if (u.상태 === "ask") left += '<div class="res"><b>물음</b> · ' + esc(u.물음) + '<div class="q">' + (u.답 || []).map(function(t){ return '<button class="btn" onclick=\'판정(' + q + ',"answer",' + JSON.stringify(t) + ')\'>' + esc(t) + '</button>'; }).join("") + '</div></div>';
+      else if (u.상태 === "unknown") left += '<div class="q"><button class="btn btn--main" style="min-height:34px" onclick="document.getElementById(\'말\').focus();알림(\'위 띠 「말로 적기」 에 그 부분을 다시 적어 주십시오\')">그 부분 다시 말하기</button><button class="btn" onclick=\'판정(' + q + ',"skip")\'>건너뜀</button></div>';
+      else if (u.상태 === "no") left += '<div class="res"><b>× 받음</b> · 까닭 : ' + esc(u.까닭) + ' → 지적기록에 쌓임</div>';
+      else if (u.상태 !== "ok") left += '<div class="q"><button class="btn btn--main" style="min-height:34px" onclick=\'판정(' + q + ',"ok")\'>○ 맞게 이해함</button><button class="btn" onclick=\'아니다(' + q + ')\'>× 아니다</button><button class="btn" onclick=\'고쳐서(' + q + ',' + JSON.stringify(u.한줄) + ')\'>고쳐서 ○</button></div>';
+      left += '</div>';
+      var right = a.그림.length ? '<div>' + a.그림.slice(0, 2).map(function(url, i){ return '<div class="cap" style="margin-bottom:6px"><img src="' + url + '" onclick="큰그림(\'' + url + '\')" alt=""><div class="fl"><b>' + (url.indexOf("svg") > 0 ? "도면 그림" : "붙여 넣은 캡처 " + (i + 1)) + '</b><span>' + (url.indexOf("svg") > 0 ? "DXF → SVG · 숫자는 프로그램이 셈" : "AI 가 직접 봄 · 벡터 없음 → 숫자는 눈으로") + '</span></div></div>'; }).join("") + '</div>' : '<div class="tip">그림 없음 · 글 규칙</div>';
+      box.insertAdjacentHTML("beforeend", '<div class="uc' + (끝 ? ' done' : '') + '">' + h + '<div class="ub">' + left + right + '</div></div>');
+    });
+  }
+  var rl = document.getElementById("규칙목록"); rl.innerHTML = "";
+  if (!규칙.목록.length) rl.innerHTML = '<li><div class="nm tip">아직 없음 — ② 띠에서 ○ 를 누르면 여기 쌓입니다</div></li>';
+  규칙.목록.slice().reverse().forEach(function(r){ var li = document.createElement("li"); li.innerHTML = '<div class="nm">' + esc(r.글) + '<small>' + esc(r.판) + ' · ' + esc(r.출처) + '</small></div>' + ({올림:'<span class="pill pill--ok">올림</span>', '○ 받음':'<span class="pill pill--info">○ 받음 · 올릴 것</span>'}[r.상태] || esc(r.상태)); rl.appendChild(li); });
+  var 올릴 = 규칙.목록.filter(function(r){ return r.상태 === "○ 받음"; }).length;
+  document.getElementById("규칙수").textContent = 규칙.목록.length + "줄 · 올릴 것 " + 올릴;
+  document.getElementById("규칙판").textContent = 규칙.판 || "v0";
+  document.getElementById("situ").innerHTML = "지금 : 자료 " + 자료.목록.length + " → AI 이해 " + 전체 + " 중 ○ " + (전체 - 남) + " · 남은 " + 남 + " → <b>" + (자료.목록.length ? (남 ? "② 띠에서 ○ × 를 누르면 ③ 띠에 쌓입니다" : 올릴 ? "바닥 단추로 규칙을 올리십시오" : "자료를 더 넣거나 말로 적으십시오") : "① 띠에 자료를 넣으십시오") + "</b>";
+  document.getElementById("footmsg").innerHTML = "<b>○ 받음 " + 올릴 + "줄</b> · 올리면 규칙 " + (규칙.판 || "v0") + " → 다음 판 · 정답지 시험이 먼저 돕니다";
+  document.getElementById("올리기").disabled = !올릴; document.getElementById("올리기").title = 올릴 ? "" : "지금은 못 누름 — ○ 받은 규칙이 없음";
+}
+function 펼치기(b){ b.closest(".uc").classList.toggle("done"); }
+async function 판정(번호, id, 어떻게, 글, 까닭){ var j = await api("/api/이해/판정", {번호: +번호, id: id, 어떻게: 어떻게, 글: 글 || "", 까닭: 까닭 || ""}); if (j.됨) 알림({ok:"○ 받았습니다 → ③ 규칙 목록", edit:"고친 문장으로 ○", answer:"물음에 답했습니다 → ③", no:"× 받았습니다 · 지적기록 " + (j.결과.지적수 || "") + "줄", skip:"건너뛰었습니다"}[어떻게]); 새로고침(); }
+function 아니다(번호, id){ var 왜 = prompt("어디가 아닌지 한 줄 (지적기록에 쌓입니다)", ""); if (왜 === null || !왜.trim()) return; 판정(번호, id, "no", "", 왜.trim()); }
+function 고쳐서(번호, id, 글){ var t = prompt("한 줄 문장을 고쳐 주십시오 · 고친 대로 ○ 가 됩니다", 글); if (t === null || !t.trim()) return; 판정(번호, id, "edit", t.trim()); }
+async function AI다시(번호){ await api("/api/AI/다시", {번호: 번호}); 알림("AI 에게 다시 보냈습니다"); 새로고침(); }
+async function 올리기(){ var j = await api("/api/규칙/올리기", {}); if (j.올림 != null) { 알림("○ 받은 " + j.올림 + "줄을 규칙 " + j.판 + " 에 올렸습니다 · 규칙글_13장.md 를 썼습니다"); 새로고침(); if (j.시험) 창열기("시험", j.시험); } }
+function 큰그림(url){ document.getElementById("창제목").textContent = "크게 보기"; document.getElementById("창몸").innerHTML = '<img class="big" src="' + url + '" alt="">'; document.getElementById("ov").classList.add("on"); }
+function 그림보기(번호){ var a = 자료.목록.filter(function(x){ return x.번호 === 번호; })[0]; if (!a) return; document.getElementById("창제목").textContent = a.이름 + " · 그림 " + a.그림.length + "장"; document.getElementById("창몸").innerHTML = '<div class="viewer">' + a.그림.map(function(u, k){ var 이해 = (a.이해 || [])[k]; return '<div class="v"><img src="' + u + '" onclick="큰그림(\'' + u + '\')" alt=""><div class="t"><b>그림 ' + (k + 1) + ' / ' + a.그림.length + '</b>' + (이해 ? esc(이해.한줄) : (a.이해수 ? "" : "AI 가 보는 중 · 또는 봐주세요 파일")) + '</div></div>'; }).join("") + '</div>'; document.getElementById("ov").classList.add("on"); }
+
+/* ── 작은 창 ── */
+async function 창열기(k, 미리){
+  var 제목 = {시험: "정답지 시험 · 받은판 ↔ 고친판", 기억: "기억 창고 · 네 층", 설정: "설정"}[k], 몸 = "";
+  if (k === "시험") {
+    var 기록 = await api("/api/시험기록"); var r = 미리 || 기록[기록.length - 1];
+    몸 = '<div class="row" style="margin-bottom:10px"><button class="btn btn--main" onclick="시험돌리기()">정답지 시험 돌리기</button><span class="tip">3_자료\\원본 의 「…받은판…dxf」 ↔ 「…고친판…dxf」 짝 · 지금 판은 고친 판의 겹침과 바뀐 객체를 셉니다 (규칙으로 자리 다시 잡기는 다음 판)</span></div>';
+    if (r) {
+      몸 += '<div class="hint">' + r.때 + ' · 규칙 ' + r.규칙판 + ' · 적정 ' + r.적정 + ' / ' + r.벌수 + ' · ' + (r.통과 ? '<span class="pill pill--ok">통과</span>' : '<span class="pill pill--bad">못 미침</span>') + ' · 잣대 적정 ' + r.잣대.적정_벌수 + '/' + r.잣대.전체_벌수 + ' · 겹침 ' + r.잣대.겹침 + '</div><div class="tbl"><table><tr><th>판</th><th class="n">겹침 · 받은판</th><th class="n">겹침 · 고친판</th><th class="n">다른 객체</th><th>종류별</th><th>판정</th></tr>';
+      r.줄.forEach(function(x){ 몸 += '<tr><td>' + esc(x.판) + '</td><td class="n">' + (x.겹침_받은판 == null ? "—" : x.겹침_받은판) + '</td><td class="n">' + (x.겹침_고친판 == null ? "—" : x.겹침_고친판) + '</td><td class="n">' + (x.다른객체 == null ? "—" : x.다른객체) + '</td><td class="tip">' + esc(x.종류별 ? Object.keys(x.종류별).map(function(k){ return k + " " + x.종류별[k]; }).join(" · ") : (x.까닭 || "")) + '</td><td>' + {적정:'<span class="pill pill--ok">적정</span>', '보완 필요':'<span class="pill pill--bad">보완 필요</span>', '자료 미비':'<span class="pill pill--mute">자료 미비</span>'}[x.판정] + '</td></tr>'; });
+      몸 += '</table></div>';
+      if (기록.length > 1) 몸 += '<div class="hint" style="margin-top:8px">시험 기록 ' + 기록.length + '줄 · ' + 기록.slice(-6).map(function(x){ return x.규칙판 + " 적정 " + x.적정 + "/" + x.벌수; }).join(" → ") + '</div>';
+    } else 몸 += '<div class="hint">아직 돌린 적 없음 · 짝 도면을 넣고 위 단추</div>';
+  } else if (k === "기억") {
+    var 지적 = await api("/api/지적"); var 설 = await api("/api/설정");
+    몸 = '<div class="tbl"><table><tr><th>층</th><th>무엇</th><th>어디</th><th class="n">크기</th><th>언제 읽히나</th></tr>'
+      + '<tr><td>① 규칙 글</td><td>13장 치수선 · 지시선 · 기호 자리 (올린 것만)</td><td>4_결과\\규칙글_13장.md → 스킬 cad-drawing-work 에 붙임</td><td class="n">' + 규칙.목록.filter(function(r){ return r.상태 === "올림"; }).length + '줄 / ' + 설.규칙글_줄한도 + '</td><td>클로드가 대화를 열 때 <span class="pill pill--ok">저절로</span> (스킬에 붙인 뒤)</td></tr>'
+      + '<tr><td>② 숫자 표</td><td>규칙.json (출처 · 판 · 상태까지)</td><td>4_결과\\규칙.json</td><td class="n">' + 규칙.목록.length + '줄</td><td>이 도구가 돌 때 <span class="pill pill--info">도구</span></td></tr>'
+      + '<tr><td>③ 프로그램</td><td>숫자 세기 · 겹침 세기 · 그림 · 대조</td><td>2_실행기\\엔진\\도면읽기.py</td><td class="n">4</td><td>자료를 넣을 때 <span class="pill pill--info">도구</span></td></tr>'
+      + '<tr><td>④ 정답지</td><td>받은판 ↔ 고친판 짝 · 지적기록 · 시험 기록</td><td>3_자료\\원본 · 4_결과\\지적기록.md · 시험기록.json</td><td class="n">지적 ' + 지적.수 + '줄</td><td>시험 때 <span class="pill pill--mute">사람이 시킴</span></td></tr>'
+      + '<tr><td>원본</td><td>넣은 도면 · 캡처 · 글 · AI 와 주고받은 파일</td><td>3_자료\\ · _주고받기\\봐주세요 · 파악한것</td><td class="n">' + 자료.목록.length + '건</td><td><span class="pill pill--mute">안 읽음 · 출처로만</span></td></tr></table></div>'
+      + '<div class="hint" style="margin-top:10px">「저절로」 는 규칙글_13장.md 를 스킬에 붙인 뒤부터입니다 (지금 판은 사람이 붙임 · 다음 판에서 단추로). 그림은 클로드 머릿속에 남지 않고 3_자료\\캡처 에 파일로 남습니다</div>'
+      + (지적.글 ? '<h3 style="font-size:14px;margin:12px 0 4px">지적기록</h3><pre>' + esc(지적.글) + '</pre>' : '');
+  } else if (k === "설정") {
+    var s = await api("/api/설정");
+    몸 = '<div class="set"><span>도면 종류</span><select id="s_도면종류">' + ["횡단면도","일반도","구조도","종평면도"].map(function(x){ return '<option' + (s.도면종류 === x ? " selected" : "") + '>' + x + '</option>'; }).join("") + '</select>'
+      + '<span>출력 배율 1 :</span><input id="s_출력배율" value="' + s.출력배율 + '"><span>회사 틀 (dwt)</span><input id="s_회사틀" value="' + esc(s.회사틀) + '" placeholder="다음 판에서 읽음">'
+      + '<span>정답지 잣대 · 적정 벌수</span><input id="s_적정" value="' + s.시험잣대.적정_벌수 + '"><span>정답지 잣대 · 전체 벌수</span><input id="s_전체" value="' + s.시험잣대.전체_벌수 + '"><span>정답지 잣대 · 겹침</span><input id="s_겹침" value="' + s.시험잣대.겹침 + '">'
+      + '<span>규칙 글 줄 한도</span><input id="s_한도" value="' + s.규칙글_줄한도 + '"><span>AI 모델 (비우면 계정 기본)</span><input id="s_모델" value="' + esc(s.AI모델) + '" placeholder="예 : claude-sonnet-5"></div>'
+      + '<div class="row" style="margin-top:12px"><button class="btn btn--main" onclick="설정저장()">저장</button><button class="btn" onclick="창닫기()">취소</button><span class="tip">클로드 명령 ' + (살아.클로드 ? "있음 · 서버가 바로 부름" : "없음 · 파일로 주고받음") + '</span></div>';
+  }
+  document.getElementById("창제목").textContent = 제목; document.getElementById("창몸").innerHTML = 몸; document.getElementById("ov").classList.add("on");
+}
+async function 시험돌리기(){ document.getElementById("창몸").insertAdjacentHTML("afterbegin", '<div class="hint"><span class="busy"></span>대조 중 …</div>'); var r = await api("/api/시험/정답지", {}); 창열기("시험", r); 새로고침(); }
+async function 설정저장(){ var g = function(id){ return document.getElementById(id).value; }; await api("/api/설정", {도면종류: g("s_도면종류"), 출력배율: +g("s_출력배율") || 50, 회사틀: g("s_회사틀"), 규칙글_줄한도: +g("s_한도") || 30, AI모델: g("s_모델"), 시험잣대: {적정_벌수: +g("s_적정") || 7, 전체_벌수: +g("s_전체") || 8, 겹침: +g("s_겹침") || 0, 자리차이_mm: 1, 새시킴_x: 2}}); 창닫기(); 알림("설정을 저장했습니다"); }
+function 창닫기(){ document.getElementById("ov").classList.remove("on"); }
+document.addEventListener("keydown", function(e){ if (e.key === "Escape") 창닫기(); });
+document.querySelectorAll(".theme button").forEach(function(b){ b.onclick = function(){ document.querySelectorAll(".theme button").forEach(function(x){ x.classList.remove("on"); }); b.classList.add("on"); var t = b.dataset.t, h = new Date().getHours(); if (t === "time") t = (h >= 18 || h < 7) ? "dark" : "light"; if (t) document.documentElement.setAttribute("data-theme", t); else document.documentElement.removeAttribute("data-theme"); try { localStorage.setItem("dsm-theme", b.dataset.t); } catch (e) {} }; });
+(function(){ var t = ""; try { t = localStorage.getItem("dsm-theme") || "time"; } catch (e) { t = "time"; } var h = new Date().getHours(); var v = t === "time" ? ((h >= 18 || h < 7) ? "dark" : "light") : t; if (v) document.documentElement.setAttribute("data-theme", v); document.querySelectorAll(".theme button").forEach(function(b){ b.classList.toggle("on", b.dataset.t === t); }); })();
+
+/* ── 서버와 맞추기 ── */
+async function 새로고침(){
+  try {
+    var r = await fetch("/api/자료"); 자료 = await r.json(); var q = await fetch("/api/규칙"); 규칙 = await q.json();
+    var z = await fetch("/api/지적"); document.getElementById("지적수").textContent = (await z.json()).수;
+    var k = await fetch("/api/시험기록"); var kk = await k.json(); var last = kk[kk.length - 1]; document.getElementById("시험요약").textContent = last ? (last.적정 + " / " + last.벌수) : "—";
+    그리기();
+  } catch (e) { document.getElementById("situ").innerHTML = '<span class="err">서버가 답하지 않습니다 — 실행.bat 을 다시 켜 주십시오 (' + esc(e.message) + ')</span>'; }
+}
+(async function(){ try { 살아 = await (await fetch("/api/살아있나")).json(); document.getElementById("판").textContent = 살아.판; document.getElementById("판").title = "판 " + 살아.판 + " · 고친 날 " + 살아.고친날 + " · 클로드 " + (살아.클로드 ? "있음" : "없음"); } catch (e) {} 새로고침(); setInterval(새로고침, 3000); })();
+</script>
+</body>
+</html>
