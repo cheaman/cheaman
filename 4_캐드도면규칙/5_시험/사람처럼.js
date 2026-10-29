@@ -59,8 +59,9 @@ const 걸음 = [], 막힘 = [];
     await 걷기((await p.getByRole('button', { name: '○ 맞게 이해함' }).count()) ? '「○ 맞게 이해함」' : '물음에 답 (첫 보기)', ok, async () => { await ok.click(); await p.waitForFunction(() => /○ 받음/.test(document.querySelector('#규칙목록').textContent), null, { timeout: 5000 }); }, /올리십시오|○ ×/, async () => !(await p.locator('#올리기').isDisabled()));
     const no = p.getByRole('button', { name: '× 아니다' }).first();
     if (await no.count()) await 걷기('「× 아니다」 → 까닭 한 줄', no, async () => { await no.click(); await p.waitForTimeout(600); }, null, async () => /× 받았습니다/.test(await 알림글()) || /× 아니다/.test(await p.locator('#이해칸').innerText()));
+    // 사람은 「보이는 정할 단추」 부터 누른다 — 고쳐서 ○ 가 화면 밑이어도 다른 정할 단추가 보이면 막힘이 아님 (그때는 스크롤해 누름)
     const fix = p.getByRole('button', { name: '고쳐서 ○' }).first();
-    if (await fix.count()) await 걷기('「고쳐서 ○」', fix, async () => { await fix.click(); await p.waitForTimeout(600); }, null, async () => /고친 문장으로/.test(await 알림글()) || true);
+    if (await fix.count()) { const 보이는정할 = await 보이나(p.locator('#이해칸 .uc:not(.done) .q .btn').first()); if (!(await 보이나(fix)) && 보이는정할) await fix.scrollIntoViewIfNeeded(); await 걷기('「고쳐서 ○」' + (보이는정할 ? '' : ' (정할 단추가 하나도 안 보임)'), 보이는정할 ? null : fix, async () => { await fix.click(); await p.waitForTimeout(600); }, null, async () => /고친 문장으로/.test(await 알림글()) || true); }
     await 걷기('바닥 「올리기」 → 시험 창', p.locator('#올리기'), async () => { await p.locator('#올리기').click(); await p.waitForFunction(() => document.getElementById('ov').classList.contains('on') && /적정/.test(document.getElementById('창몸').textContent), null, { timeout: 40000 }); }, null, async () => /통과|못 미침/.test(await p.locator('#창몸').innerText()));
     await 걷기('시험 창 닫기 → 상황 줄 (3초 되묻기)', null, async () => { await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.getElementById('ov').classList.contains('on')); await p.waitForTimeout(3200); }, /.+/, null);
   }

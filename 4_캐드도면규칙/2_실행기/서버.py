@@ -17,9 +17,9 @@ from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, unquote
 여기 = os.path.dirname(os.path.abspath(__file__)); 뿌리 = os.path.dirname(여기)
 sys.path.insert(0, 여기)
-from 엔진 import 도면읽기, 규칙 as 규칙모듈, AI다리
+from 엔진 import 도면읽기, 규칙 as 규칙모듈, AI다리, 자리잡기
 
-판 = "v0.3"; 고친날 = "2026-10-29"
+판 = "v0.4"; 고친날 = "2026-10-29"
 창고 = 규칙모듈.창고(뿌리); 다리 = AI다리.다리(창고)
 잠금 = threading.Lock(); 그림잠금 = threading.Lock()   # SVG 그리기는 한 번에 하나 (글꼴 부품이 동시 실행에 깨짐 · 10-29 겪음)
 
@@ -70,6 +70,15 @@ def 자료처리(항목):
             except Exception as e:
                 항목["못읽음"] = 항목["못읽음"] + ["그림(SVG) 을 못 그림 : %s" % e]
             창고.자료고치기(항목["번호"], 항목)
+            try:   # 규칙대로 자리 다시 잡은 「규칙 판」 — 새 파일 · 원본은 그대로
+                표 = 숫자표(); 규칙판 = os.path.join(창고.결과, "규칙판", "%03d_규칙판.dxf" % 항목["번호"])
+                rp = 자리잡기.규칙판만들기(경로, 표, 규칙판)
+                with 그림잠금: svg2 = 도면읽기.svg로(도면읽기.dxf열기(규칙판))
+                그림2 = os.path.join(창고.결과, "그림", "%03d_규칙판.svg" % 항목["번호"]); io.open(그림2, "w", encoding="utf-8").write(svg2)
+                항목.update({"규칙판": {"경로": 규칙판, "후보": rp["후보"], "겹침": rp["겹침"], "단수": rp["단수"], "표": {k: v for k, v in 표.items() if not k.startswith("_")}, "그림경로": 그림2}})
+            except Exception as e:
+                항목["못읽음"] = 항목.get("못읽음", []) + ["규칙 판을 못 만듦 : %s" % e]
+            창고.자료고치기(항목["번호"], 항목)
         elif 항목["종류"] == "캡처 그림":
             항목["상태"] = "그림 %d장" % len(항목.get("그림들", [])); 창고.자료고치기(항목["번호"], 항목)
         elif 항목["종류"] in ("말", "지적", "기타"):
@@ -92,6 +101,14 @@ def 자료처리(항목):
         창고.자료고치기(항목["번호"], {"AI길": 길, "AI시작": datetime.datetime.now().strftime("%H:%M:%S"), "상태": 항목["상태"] + ((" · AI 차례 기다림 (앞에 %d건)" % 앞) if 길 == "클로드" and 앞 else " · AI 가 보는 중" if 길 == "클로드" else " · 봐주세요 파일 씀 → 대화창에 「봐주세요 봐 줘」")})
     except Exception as e:
         창고.자료고치기(항목["번호"], {"상태": "읽다가 멈춤 : %s" % e, "AI오류": traceback.format_exc()[-600:]})
+
+def 숫자표():
+    """숫자 표(② 층) — 센 숫자와 ○ 규칙에서. 올릴 때 주석규칙_<도면종류>.json 으로 써 둔다."""
+    설 = 창고.설정(); 표 = 자리잡기.숫자표만들기(창고.자료()["목록"], 설, 창고.규칙()["목록"]); return 표
+
+def 숫자표쓰기():
+    설 = 창고.설정(); 표 = 숫자표(); 표["규칙판"] = 창고.규칙()["판"]; 표["때"] = 규칙모듈.지금()
+    경로 = os.path.join(창고.결과, "주석규칙_%s.json" % 설["도면종류"]); 창고._쓰기(경로, 표); return 경로
 
 def 자료넣기(파일들, 묶음이름=None):
     """파일들 = [{이름, base64}] · 그림은 한 묶음으로 · 나머지는 하나씩."""
@@ -158,9 +175,16 @@ def 시험_정답지():
             줄.append({"판": f, "판정": "자료 미비", "까닭": "고친 판 없음"}); continue
         try:
             da = 도면읽기.dxf열기(os.path.join(폴더, f)); db = 도면읽기.dxf열기(os.path.join(폴더, g))
-            ga = 도면읽기.겹침세기(da)["겹침수"]; gb = 도면읽기.겹침세기(db)["겹침수"]; dj = 도면읽기.대조(da, db)
-            판정 = "적정" if gb <= 잣대["겹침"] else "보완 필요"
-            줄.append({"판": f, "겹침_받은판": ga, "겹침_고친판": gb, "다른객체": dj["다른객체"], "종류별": dj["종류별"], "판정": 판정})
+            ga = 도면읽기.겹침세기(da)["겹침수"]; gb = 도면읽기.겹침세기(db)["겹침수"]
+            규 = next((a for a in 창고.자료()["목록"] if a.get("이름") == f and a.get("규칙판")), None)
+            if 규 and os.path.exists(규["규칙판"]["경로"]):      # 규칙 판 ↔ 전무님 판 — 진짜 시험
+                dr = 도면읽기.dxf열기(규["규칙판"]["경로"]); gr = 도면읽기.겹침세기(dr)["겹침수"]; dj = 도면읽기.대조(dr, db)
+                nr = 도면읽기.숫자세기(dr)["숫자"]["치수선.단수_최대"]["값"]; nb = 도면읽기.숫자세기(db)["숫자"]["치수선.단수_최대"]["값"]
+                판정 = "적정" if gr <= 잣대["겹침"] and nr == nb else "보완 필요"
+                줄.append({"판": f, "겹침_받은판": ga, "겹침_규칙판": gr, "겹침_고친판": gb, "단수_규칙판": nr, "단수_고친판": nb, "다른객체": dj["다른객체"], "종류별": dj["종류별"], "판정": 판정, "규칙판": True})
+            else:
+                dj = 도면읽기.대조(da, db); 판정 = "적정" if gb <= 잣대["겹침"] else "보완 필요"
+                줄.append({"판": f, "겹침_받은판": ga, "겹침_고친판": gb, "다른객체": dj["다른객체"], "종류별": dj["종류별"], "판정": 판정, "규칙판": False})
         except Exception as e:
             줄.append({"판": f, "판정": "자료 미비", "까닭": str(e)})
     적정 = sum(1 for r in 줄 if r["판정"] == "적정")
@@ -245,6 +269,7 @@ class 손(BaseHTTPRequestHandler):
                 a = 창고.자료찾기(int(m.group(1)))
                 if not a: return self._json({"오류": "없음"}, 404)
                 if m.group(2) == "svg": return self._파일(a.get("그림경로", ""), "image/svg+xml; charset=utf-8")
+                if m.group(2) == "rule": return self._파일((a.get("규칙판") or {}).get("그림경로", ""), "image/svg+xml; charset=utf-8")
                 g = a.get("그림들", [])[int(m.group(2))]; e = os.path.splitext(g)[1].lower().strip(".")
                 return self._파일(g, "image/" + ("jpeg" if e in ("jpg", "jpeg") else e))
             self._json({"오류": "모르는 주소 " + p}, 404)
@@ -263,8 +288,8 @@ class 손(BaseHTTPRequestHandler):
                 threading.Thread(target=자료처리, args=(a,), daemon=True).start(); return self._json({"넣음": [a["번호"]]})
             if p == "/api/이해/판정": return self._json(판정(int(몸["번호"]), 몸["id"], 몸["어떻게"], 몸.get("글", ""), 몸.get("까닭", "")))
             if p == "/api/규칙/올리기":
-                n, 새 = 창고.규칙올리기(); 시험 = 시험_정답지() if n else None
-                return self._json({"올림": n, "판": 새, "시험": 시험})
+                n, 새 = 창고.규칙올리기(); 표경로 = 숫자표쓰기() if n else ""; 시험 = 시험_정답지() if n else None
+                return self._json({"올림": n, "판": 새, "시험": 시험, "숫자표": 표경로})
             if p == "/api/설정": return self._json(창고.설정쓰기(몸))
             if p == "/api/교육/다음단원": return self._json(dict(창고.다음단원(), 현황=창고.단원현황()))
             if p == "/api/교육/단원고르기": v = 창고.교육(); v["지금"] = max(0, min(int(몸["지금"]), len(v["단원"]) - 1)); 창고.교육쓰기(v); return self._json(dict(v, 현황=창고.단원현황()))

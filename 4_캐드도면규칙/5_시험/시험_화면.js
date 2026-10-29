@@ -22,6 +22,9 @@ fs.mkdirSync(그림, { recursive: true });
   const 숫자카드 = await p.locator('#이해칸 .numtbl').count(); 재기('② 띠에 「프로그램이 센 숫자」 카드', 숫자카드 >= 1, 숫자카드);
   const svg = await p.locator('#이해칸 .svgbox img').first().evaluate(i => i.naturalWidth).catch(() => 0); 재기('도면 그림(SVG) 이 뜸 (접힌 카드 안)', svg > 100, svg);
   await p.locator('#숫자카드 .btn--view').click(); 재기('숫자 카드 「펴기」 → 표가 보임', await p.locator('#숫자카드 .numtbl').isVisible(), 'ok'); await p.locator('#숫자카드 .btn--view').click();
+  await p.waitForFunction(() => /규칙대로 자리 다시 잡은 판/.test(document.getElementById('이해칸').textContent), null, { timeout: 20000 }).catch(() => {});
+  const 규칙판글 = (await p.locator('#이해칸').innerText()).replace(/\s+/g, ' '); 재기('「규칙대로 자리 다시 잡은 판」 카드 · 단수 2 · 겹침 0', /규칙대로 자리 다시 잡은 판.*단수 2 · 겹침 0/.test(규칙판글), 규칙판글.match(/단수 \d · 겹침 \d/) ? 규칙판글.match(/단수 \d · 겹침 \d/)[0] : '없음');
+  const 규칙그림 = await p.locator('#이해칸 img[src*="/rule"]').first().evaluate(i => i.naturalWidth).catch(() => 0); 재기('규칙 판 그림이 뜸', 규칙그림 > 100, 규칙그림);
   await p.screenshot({ path: path.join(그림, '02_도면넣음.png') });
   // ② 캡처 붙여넣기 (Ctrl+V 흉내) — 받은판 SVG 를 PNG 로 찍어 그림으로
   await p.locator('#숫자카드 .btn--view').click(); await p.locator('#숫자카드 .svgbox img').first().waitFor({ state: 'visible' });
@@ -61,6 +64,7 @@ fs.mkdirSync(그림, { recursive: true });
       await p.getByRole('button', { name: /규칙 글 · 숫자 표에 올리기/ }).click();
       await p.waitForFunction(() => document.getElementById('ov').classList.contains('on'), null, { timeout: 30000 });
       const 창 = await p.locator('#창몸').innerText(); 재기('올리기 → 시험 창 (적정 · 통과/못 미침)', /적정/.test(창), 창.slice(0, 80).replace(/\n/g, ' '));
+      재기('시험 1 이 규칙판 ↔ 고친판으로 (겹침 · 규칙판 열에 숫자)', /겹침 · 규칙판/.test(창) && !/—\s+0\s+—/.test(창), 창.match(/가짜[^\n]*/) ? 창.match(/가짜[^\n]*/)[0] : '줄 없음');
       await p.screenshot({ path: path.join(그림, '04_시험창.png') });
       await 창닫음();
       const 규칙 = await (await p.request.get(URL + '/api/규칙')).json(); 재기('규칙.json 에 올림 1 · 판 v0.1', 규칙.목록.filter(r => r.상태 === '올림').length === 1 && 규칙.판 === 'v0.1', 규칙.판 + ' · ' + 규칙.목록.length);
