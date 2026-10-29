@@ -25,6 +25,9 @@ const 걸음 = [], 막힘 = [];
   }
   // ── 자료 없음 ──
   await 걷기('열기 (자료 없음)', null, async () => { await p.goto(URL, { waitUntil: 'networkidle' }); await p.waitForTimeout(400); }, /넣으십시오/, async () => 보이나(p.getByRole('button', { name: '파일 더하기' })));
+  await 걷기('교육 띠 — 지금 단원 · 넣을 자료가 보이나', null, async () => {}, null, async () => /단원 0.*바탕.*넣을 자료/.test((await p.locator('#교육띠').innerText()).replace(/\s+/g, ' ')));
+  await 걷기('「교육 계획 보기」 → 단원 표', p.getByRole('button', { name: '교육 계획 보기' }), async () => { await p.getByRole('button', { name: '교육 계획 보기' }).click(); await p.waitForFunction(() => document.getElementById('ov').classList.contains('on') && /단원/.test(document.getElementById('창몸').textContent)); }, null, async () => /치수선.*지시선.*종합/s.test(await p.locator('#창몸').innerText()));
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.getElementById('ov').classList.contains('on'));
   await 걷기('올리기 단추 — 잠김 + 까닭', p.locator('#올리기'), async () => { await p.locator('#올리기').hover(); }, null, async () => (await p.locator('#올리기').isDisabled()) && /못 누름/.test(await p.locator('#올리기').getAttribute('title')));
   await 걷기('「시험」 — 아직 없음 안내', p.getByRole('button', { name: '시험' }), async () => { await p.getByRole('button', { name: '시험' }).click(); await p.waitForFunction(() => document.getElementById('ov').classList.contains('on') && document.getElementById('창몸').textContent.length > 20); }, null, async () => /아직 돌린 적 없음/.test(await p.locator('#창몸').innerText()));
   await 걷기('창 닫기 Esc', null, async () => { await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.getElementById('ov').classList.contains('on')); }, /넣으십시오/, null);

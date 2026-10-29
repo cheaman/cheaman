@@ -19,7 +19,7 @@ from urllib.parse import urlparse, unquote
 sys.path.insert(0, 여기)
 from 엔진 import 도면읽기, 규칙 as 규칙모듈, AI다리
 
-판 = "v0.2"; 고친날 = "2026-10-29"
+판 = "v0.3"; 고친날 = "2026-10-29"
 창고 = 규칙모듈.창고(뿌리); 다리 = AI다리.다리(창고)
 잠금 = threading.Lock(); 그림잠금 = threading.Lock()   # SVG 그리기는 한 번에 하나 (글꼴 부품이 동시 실행에 깨짐 · 10-29 겪음)
 
@@ -103,7 +103,7 @@ def 자료넣기(파일들, 묶음이름=None):
         for i, f in enumerate(그림, 1):
             p = os.path.join(창고.자료폴더, "캡처", "캡처%03d_%d%s" % (n, i, os.path.splitext(f["이름"])[1].lower() or ".png"))
             io.open(p, "wb").write(base64.b64decode(f["base64"])); 경로들.append(p)
-        a = 창고.자료더하기({"이름": 묶음이름 or ("캡처 %d · %s" % (n, datetime.datetime.now().strftime("%H:%M")) + (" · %d장 묶음" % len(그림) if len(그림) > 1 else "")), "종류": "캡처 그림", "그림들": 경로들})
+        a = 창고.자료더하기({"단원": 창고.교육()["지금"], "이름": 묶음이름 or ("캡처 %d · %s" % (n, datetime.datetime.now().strftime("%H:%M")) + (" · %d장 묶음" % len(그림) if len(그림) > 1 else "")), "종류": "캡처 그림", "그림들": 경로들})
         만든.append(a); threading.Thread(target=자료처리, args=(a,), daemon=True).start()
     for f in 나머지:
         p = os.path.join(창고.자료폴더, "원본", os.path.basename(f["이름"]))
@@ -112,7 +112,7 @@ def 자료넣기(파일들, 묶음이름=None):
             while os.path.exists("%s_%d%s" % (b, k, e)): k += 1
             p = "%s_%d%s" % (b, k, e)
         io.open(p, "wb").write(base64.b64decode(f["base64"]))
-        a = 창고.자료더하기({"이름": os.path.basename(p), "종류": 종류가르기(f["이름"]), "경로": p})
+        a = 창고.자료더하기({"단원": 창고.교육()["지금"], "이름": os.path.basename(p), "종류": 종류가르기(f["이름"]), "경로": p})
         만든.append(a); threading.Thread(target=자료처리, args=(a,), daemon=True).start()
     return 만든
 
@@ -233,6 +233,7 @@ class 손(BaseHTTPRequestHandler):
             if p == "/api/자료": return self._json(자료목록())
             if p == "/api/규칙": return self._json(창고.규칙())
             if p == "/api/설정": return self._json(창고.설정())
+            if p == "/api/교육": return self._json(dict(창고.교육(), 현황=창고.단원현황()))
             if p == "/api/지적": return self._json({"수": 창고.지적수(), "글": io.open(창고.지적경로, encoding="utf-8").read() if os.path.exists(창고.지적경로) else ""})
             if p == "/api/시험기록": return self._json(창고._읽기(os.path.join(창고.결과, "시험기록.json"), []))
             m = re.match(r"^/api/주고받기/(\d+)/(봐주세요|파악한것|사용량)$", p)
@@ -258,13 +259,15 @@ class 손(BaseHTTPRequestHandler):
             if p == "/api/말":
                 글 = (몸.get("글") or "").strip()
                 if not 글: return self._json({"오류": "글이 비었습니다"}, 400)
-                a = 창고.자료더하기({"이름": "말로 적음 · " + datetime.datetime.now().strftime("%H:%M"), "종류": "말", "글": 글})
+                a = 창고.자료더하기({"단원": 창고.교육()["지금"], "이름": "말로 적음 · " + datetime.datetime.now().strftime("%H:%M"), "종류": "말", "글": 글})
                 threading.Thread(target=자료처리, args=(a,), daemon=True).start(); return self._json({"넣음": [a["번호"]]})
             if p == "/api/이해/판정": return self._json(판정(int(몸["번호"]), 몸["id"], 몸["어떻게"], 몸.get("글", ""), 몸.get("까닭", "")))
             if p == "/api/규칙/올리기":
                 n, 새 = 창고.규칙올리기(); 시험 = 시험_정답지() if n else None
                 return self._json({"올림": n, "판": 새, "시험": 시험})
             if p == "/api/설정": return self._json(창고.설정쓰기(몸))
+            if p == "/api/교육/다음단원": return self._json(dict(창고.다음단원(), 현황=창고.단원현황()))
+            if p == "/api/교육/단원고르기": v = 창고.교육(); v["지금"] = max(0, min(int(몸["지금"]), len(v["단원"]) - 1)); 창고.교육쓰기(v); return self._json(dict(v, 현황=창고.단원현황()))
             if p == "/api/시험/정답지": return self._json(시험_정답지())
             if p == "/api/시험/검사도구": return self._json(시험_검사도구())
             if p == "/api/시험/되풀이": return self._json(시험_되풀이())

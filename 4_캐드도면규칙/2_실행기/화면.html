@@ -263,6 +263,7 @@
   </div>
 </header>
 <div class="situ" id="situ">지금 : 서버에 묻는 중 …</div>
+<div class="situ" id="교육띠" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--dsm-line)"></div>
 
 <div class="wrap">
   <div class="col l band">
@@ -327,7 +328,9 @@
 
 <script>
 /* 생김새 : "v0.1 2026-10-29 · 무엇" ← 판 글자는 서버 /api/살아있나 가 준다 */
-var 자료 = {목록: []}, 규칙 = {목록: [], 판: "v0"}, 고른 = null, 살아 = {}, 옮길것 = false, 이전이해수 = {};
+var 자료 = {목록: []}, 규칙 = {목록: [], 판: "v0"}, 고른 = null, 살아 = {}, 옮길것 = false, 이전이해수 = {}, 교육 = null;
+async function 다음단원(){ var j = await api("/api/교육/다음단원", {}); 교육 = j; 알림("단원 " + j.현황.단원.번호 + " 「" + j.현황.단원.이름 + "」 로 넘어갔습니다 · 넣을 자료 : " + j.현황.단원.자료); 새로고침(); }
+async function 단원고르기(n){ 교육 = await api("/api/교육/단원고르기", {지금: n}); 창열기("교육"); 새로고침(); }
 function 띠로(){ var h = document.querySelector(".col.m .colh"); if (!h) return; var r = h.getBoundingClientRect(); if (r.top < 56 || r.top > window.innerHeight - 220) window.scrollTo({ top: window.scrollY + r.top - 52, behavior: "auto" }); }
 function 자료옮기기(d){ var i = 자료.목록.findIndex(function(x){ return x.번호 === 고른; }); var j = Math.max(0, Math.min(자료.목록.length - 1, i + d)); 고른 = 자료.목록[j].번호; 옮길것 = true; 그리기(); }   /* 머리가 이미 보이면 안 움직임 (step-flow 8) */
 function esc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
@@ -407,6 +410,8 @@ function 그리기(){
   if (a) { var 새로 = (이전이해수[a.번호] === 0 || 이전이해수[a.번호] == null) && a.이해수 > 0; if (옮길것 || 새로) { 옮길것 = false; 띠로(); } 이전이해수[a.번호] = a.이해수; }
   var 이동 = document.getElementById("자료이동"), 차례 = 자료.목록.findIndex(function(x){ return a && x.번호 === a.번호; });
   이동.innerHTML = a ? '<button class="btn" style="min-height:28px;padding:2px 8px" onclick="자료옮기기(-1)" ' + (차례 <= 0 ? 'disabled title="첫 자료"' : 'title="이전 자료 (위 띠 타일과 같음)"') + '>◂ 이전 자료</button><span class="tip">' + (차례 + 1) + ' / ' + 자료.목록.length + ' · ' + esc(a.이름.slice(0, 22)) + '</span><button class="btn" style="min-height:28px;padding:2px 8px" onclick="자료옮기기(1)" ' + (차례 >= 자료.목록.length - 1 ? 'disabled title="마지막 자료"' : 'title="다음 자료"') + '>다음 자료 ▸</button>' : '';
+  var e = 교육 && 교육.현황, 띠 = document.getElementById("교육띠");
+  if (e) 띠.innerHTML = '<b>교육 ' + esc(e.기) + ' · 단원 ' + e.단원.번호 + ' / ' + (e.전체 - 1) + ' 「' + esc(e.단원.이름) + '」</b><span>다음에 넣을 자료 : ' + esc(e.단원.자료) + '</span><span>끝 조건 : ' + esc(e.단원.끝) + ' → 지금 ○ 규칙 ' + e.받은 + (e.단원.규칙수 ? ' / ' + e.단원.규칙수 : '') + ' · 물음 ' + e.물음 + '</span>' + (e.됨 ? '<span class="pill pill--ok">단원 끝 조건 됨</span><button class="btn btn--main" style="min-height:30px;padding:3px 10px" onclick="다음단원()">단원 끝 → 다음 단원</button>' : '<span class="pill pill--mute">진행 중</span>') + '<span class="sp"></span><button class="btn btn--view" onclick="창열기(\'교육\')">교육 계획 보기</button>';
   var rl = document.getElementById("규칙목록"); rl.innerHTML = "";
   if (!규칙.목록.length) rl.innerHTML = '<li><div class="nm tip">아직 없음 — ② 띠에서 ○ 를 누르면 여기 쌓입니다</div></li>';
   규칙.목록.slice().reverse().forEach(function(r){ var li = document.createElement("li"); li.innerHTML = '<div class="nm">' + esc(r.글) + '<small>' + esc(r.판) + ' · ' + esc(r.출처) + '</small></div>' + ({올림:'<span class="pill pill--ok">올림</span>', '○ 받음':'<span class="pill pill--info">○ 받음 · 올릴 것</span>'}[r.상태] || esc(r.상태)); rl.appendChild(li); });
@@ -418,7 +423,8 @@ function 그리기(){
   document.getElementById("올리기").disabled = !올릴; document.getElementById("올리기").title = 올릴 ? "" : "지금은 못 누름 — ○ 받은 규칙이 없음";
 }
 function 펼치기(b){ b.closest(".uc").classList.toggle("done"); }
-async function 판정(번호, id, 어떻게, 글, 까닭){ var j = await api("/api/이해/판정", {번호: +번호, id: id, 어떻게: 어떻게, 글: 글 || "", 까닭: 까닭 || ""}); if (j.됨) 알림({ok:"○ 받았습니다 → ③ 규칙 목록", edit:"고친 문장으로 ○", answer:"물음에 답했습니다 → ③", no:"× 받았습니다 · 지적기록 " + (j.결과.지적수 || "") + "줄", skip:"건너뛰었습니다"}[어떻게]); 새로고침(); }
+async function 판정(번호, id, 어떻게, 글, 까닭){ var j = await api("/api/이해/판정", {번호: +번호, id: id, 어떻게: 어떻게, 글: 글 || "", 까닭: 까닭 || ""}); if (j.됨) 알림({ok:"○ 받았습니다 → ③ 규칙 목록", edit:"고친 문장으로 ○", answer:"물음에 답했습니다 → ③", no:"× 받았습니다 · 지적기록 " + (j.결과.지적수 || "") + "줄", skip:"건너뛰었습니다"}[어떻게]); await 새로고침(); 다음카드로(); }
+function 다음카드로(){ var c = document.querySelector("#이해칸 .uc:not(.done) .q"); if (!c) return; var r = c.getBoundingClientRect(); if (r.bottom > window.innerHeight - 70 || r.top < 56) { var card = c.closest(".uc"); window.scrollTo({ top: window.scrollY + card.getBoundingClientRect().top - 60, behavior: "auto" }); } }   /* 정한 뒤 다음 정할 카드가 안 보이면 그 카드 머리부터 (step-flow 8) */
 function 아니다(번호, id){ var 왜 = prompt("어디가 아닌지 한 줄 (지적기록에 쌓입니다)", ""); if (왜 === null || !왜.trim()) return; 판정(번호, id, "no", "", 왜.trim()); }
 function 고쳐서(번호, id, 글){ var t = prompt("한 줄 문장을 고쳐 주십시오 · 고친 대로 ○ 가 됩니다", 글); if (t === null || !t.trim()) return; 판정(번호, id, "edit", t.trim()); }
 async function AI다시(번호){ await api("/api/AI/다시", {번호: 번호}); 알림("AI 에게 다시 보냈습니다"); 새로고침(); }
@@ -429,7 +435,13 @@ function 그림보기(번호){ var a = 자료.목록.filter(function(x){ return 
 
 /* ── 작은 창 ── */
 async function 창열기(k, 미리){
-  var 제목 = {시험: "정답지 시험 · 받은판 ↔ 고친판", 기억: "기억 창고 · 네 층", 설정: "설정"}[k], 몸 = "";
+  var 제목 = {시험: "정답지 시험 · 받은판 ↔ 고친판", 기억: "기억 창고 · 네 층", 설정: "설정", 교육: "교육 계획 · " + (교육 ? 교육.기 : "")}[k], 몸 = "";
+  if (k === "교육") {
+    var g = await api("/api/교육"); 교육 = g;
+    몸 = '<div class="hint" style="margin-bottom:8px">목표 : 횡단면도 다섯 단원의 규칙을 전무님 ○ 로 확정해 규칙 글 30줄 안 + 숫자 표 한 벌 → 정답지 8벌 중 7 적정 · 겹침 0 → 스킬에 붙임. 한 회 = 자료 2 ~ 3개 · 되짚기 8줄 안 · 한 번에 한 단원 (1_계획\\교육계획.md)</div><div class="tbl"><table><tr><th>단원</th><th>무엇을 가르치나</th><th>넣을 자료</th><th>AI 초점</th><th>끝 조건</th><th>짐작</th><th>상태</th></tr>';
+    g.단원.forEach(function(d){ var 지금 = d.번호 === g.지금; 몸 += '<tr' + (지금 ? ' class="now"' : '') + '><td>' + d.번호 + ' ' + esc(d.이름) + '</td><td>' + esc(d.가르침) + '</td><td>' + esc(d.자료) + '</td><td class="tip">' + esc(d.초점) + '</td><td>' + esc(d.끝) + '</td><td class="n">' + esc(d.짐작) + '</td><td>' + (d.끝낸때 ? '<span class="pill pill--ok">끝 ' + d.끝낸때.slice(5) + '</span>' : 지금 ? '<span class="pill pill--info">지금 · ○ ' + g.현황.받은 + (d.규칙수 ? '/' + d.규칙수 : '') + ' · 물음 ' + g.현황.물음 + '</span>' : '<span class="pill pill--mute">아직</span>') + (지금 ? '' : ' <button class="btn btn--view" onclick="단원고르기(' + d.번호 + ')">여기로</button>') + '</td></tr>'; });
+    몸 += '</table></div><div class="hint" style="margin-top:8px">단원이 끝 조건에 못 미치면 자료를 더 넣는 것이 아니라 어긋난 것(물음 · ×)부터 풉니다. 「여기로」 는 되돌아갈 때만</div>';
+  }
   if (k === "시험") {
     var 기록 = await api("/api/시험기록"); var r = 미리 || 기록[기록.length - 1];
     var 검사 = 기록.filter(function(x){ return x.종류 === "검사도구"; }).pop(), 되풀 = 기록.filter(function(x){ return x.종류 === "되풀이"; }).pop();
@@ -476,7 +488,7 @@ document.querySelectorAll(".theme button").forEach(function(b){ b.onclick = func
 /* ── 서버와 맞추기 ── */
 async function 새로고침(){
   try {
-    var r = await fetch("/api/자료"); 자료 = await r.json(); var q = await fetch("/api/규칙"); 규칙 = await q.json();
+    var r = await fetch("/api/자료"); 자료 = await r.json(); var q = await fetch("/api/규칙"); 규칙 = await q.json(); 교육 = await (await fetch("/api/교육")).json();
     var z = await fetch("/api/지적"); document.getElementById("지적수").textContent = (await z.json()).수;
     var k = await fetch("/api/시험기록"); var kk = await k.json(); var last = kk[kk.length - 1]; document.getElementById("시험요약").textContent = last ? (last.적정 + " / " + last.벌수) : "—";
     그리기();
