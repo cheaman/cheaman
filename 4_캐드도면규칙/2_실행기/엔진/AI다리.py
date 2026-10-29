@@ -70,13 +70,20 @@ class 다리:
         except Exception as e: return {"오류": "파악한것_%03d.json 을 읽지 못함 : %s" % (번호, e)}
 
     def 되받아검사(self, 자료, 이해):
-        """AI 가 적은 숫자가 센 숫자 · 출처 글에 없으면 확인 필요. 캡처(눈으로)는 건너뜀."""
+        """AI 가 적은 숫자가 센 숫자(도면 mm · 종이 mm = ÷출력배율) 와 출처 글에 없으면 확인 필요. 캡처(눈으로)는 건너뜀."""
         if not 자료.get("숫자"): return 이해
+        배율 = float(self.창고.설정().get("출력배율") or 50)
         풀 = " ".join(str(v["값"]) + " " + v["출처"] for v in 자료["숫자"].values()) + " " + json.dumps(자료.get("겹침", {}), ensure_ascii=False)
-        있는수 = set(re.findall(r"\d+(?:\.\d+)?", 풀))
+        있는수 = set()
+        for t in re.findall(r"\d+(?:\.\d+)?", 풀):
+            x = float(t); 있는수.add(round(x, 3)); 있는수.add(round(x / 배율, 3))      # 도면 mm 와 종이 mm 둘 다
         for u in 이해:
             if "눈으로" in (u.get("한줄") or ""): continue
-            없음 = [n for n in re.findall(r"\d+(?:\.\d+)?", u.get("한줄", "")) if n not in 있는수 and n not in ("1", "2", "3", "13")]
+            없음 = []
+            for t in re.findall(r"\d+(?:\.\d+)?", u.get("한줄", "")):
+                x = round(float(t), 3)
+                if x in 있는수 or x <= 3 or x == 13: continue             # 작은 수(단 수 · 차례) 와 13장 번호는 안 봄
+                없음.append(t)
             if 없음: u["확인필요"] = "센 숫자에 없는 수 : " + " · ".join(없음)
         return 이해
 
